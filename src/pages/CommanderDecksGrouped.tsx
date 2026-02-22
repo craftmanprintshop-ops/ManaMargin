@@ -114,7 +114,7 @@ const PricePopup: React.FC<{ deck: CommanderDeckValue; onClose: () => void; mtgs
                   rel="noopener noreferrer"
                   className="text-[10px] font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20 hover:bg-amber-500/20 transition-colors"
                 >
-                  MTGStocks: ${(mtgstocksPrice.market_price ?? mtgstocksPrice.avg_price)?.toFixed(2)}
+                  Market: ${(mtgstocksPrice.market_price ?? mtgstocksPrice.avg_price)?.toFixed(2)}
                 </a>
               )}
             </div>
@@ -248,7 +248,26 @@ export const CommanderDecksGrouped: React.FC<CommanderDecksGroupedProps> = ({ on
       if (error) throw new Error(error.message)
       if (attempts > 1) console.log(`Commander decks loaded after ${attempts} attempts`)
 
-      const sorted = [...(data ?? [])].sort((a: any, b: any) => {
+      // Resolve set names from cards table for any decks missing set_name
+      const rows = (data ?? []) as any[]
+      const codesNeedingNames = [...new Set(rows.filter(d => !d.set_name).map(d => d.code))]
+      if (codesNeedingNames.length > 0) {
+        const { data: cardRows } = await supabase
+          .from('cards')
+          .select('set_code, set_name')
+          .in('set_code', codesNeedingNames)
+          .not('set_name', 'is', null)
+          .limit(1000)
+        const nameMap = new Map<string, string>()
+        ;(cardRows as any[] ?? []).forEach((c: any) => {
+          if (c.set_name && !nameMap.has(c.set_code)) nameMap.set(c.set_code, c.set_name)
+        })
+        rows.forEach(d => {
+          if (!d.set_name && nameMap.has(d.code)) d.set_name = nameMap.get(d.code)
+        })
+      }
+
+      const sorted = [...rows].sort((a: any, b: any) => {
         const dateCompare = new Date(b.release_date).getTime() - new Date(a.release_date).getTime()
         if (dateCompare !== 0) return dateCompare
         return (a.set_name || '').localeCompare(b.set_name || '')
@@ -501,7 +520,7 @@ export const CommanderDecksGrouped: React.FC<CommanderDecksGroupedProps> = ({ on
                 <th className="px-3 sm:px-6 py-4 text-right text-[var(--accent)]">Value</th>
                 <th className="px-4 py-4 text-right text-blue-300 hidden md:table-cell">&gt;$0.25</th>
                 <th className="px-4 py-4 text-right text-blue-100 hidden md:table-cell">&gt;$1.00</th>
-                <th className="px-3 sm:px-4 py-4 text-right text-amber-400 hidden lg:table-cell">MTGStocks</th>
+                <th className="px-3 sm:px-4 py-4 text-right text-amber-400 hidden lg:table-cell">Ref Price</th>
                 <th className="px-3 sm:px-4 py-4 text-right text-green-400">Market</th>
               </tr>
             </thead>
@@ -524,12 +543,14 @@ export const CommanderDecksGrouped: React.FC<CommanderDecksGroupedProps> = ({ on
                             className="w-5 h-5 invert opacity-70"
                             onError={(e) => (e.currentTarget.style.display = 'none')}
                           />
-                          <span className="text-sm font-bold text-white uppercase tracking-tight">
+                          <span className="text-sm font-bold text-white tracking-tight">
                             {first.set_name || first.code.toUpperCase()}
                           </span>
-                          <span className="font-mono text-[var(--text-2)] bg-white/5 px-2 py-0.5 rounded text-[10px] hidden sm:inline">
-                            {first.code}
-                          </span>
+                          {first.set_name && (
+                            <span className="font-mono text-[var(--text-2)] bg-white/5 px-2 py-0.5 rounded text-[10px] hidden sm:inline uppercase">
+                              {first.code}
+                            </span>
+                          )}
                           <span className="text-[10px] text-[var(--text-2)] opacity-60 hidden sm:inline">
                             {first.release_date}
                           </span>
@@ -621,7 +642,7 @@ export const CommanderDecksGrouped: React.FC<CommanderDecksGroupedProps> = ({ on
                                   rel="noopener noreferrer"
                                   onClick={(e) => e.stopPropagation()}
                                   className="inline-flex flex-col items-end px-2 py-0.5 rounded-lg hover:bg-amber-500/10 transition-all group/mtg"
-                                  title={`MTGStocks: Avg $${mtgPrice.avg_price?.toFixed(2) ?? 'N/A'} / Market $${mtgPrice.market_price?.toFixed(2) ?? 'N/A'}`}
+                                  title={`Avg $${mtgPrice.avg_price?.toFixed(2) ?? 'N/A'} / Market $${mtgPrice.market_price?.toFixed(2) ?? 'N/A'}`}
                                 >
                                   <span className="font-bold font-mono text-amber-400 text-xs">
                                     ${displayPrice.toFixed(2)}

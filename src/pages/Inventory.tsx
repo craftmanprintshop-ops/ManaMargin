@@ -365,7 +365,7 @@ export const Inventory: React.FC = () => {
                         />
                       </td>
 
-                      {/* Avg Value (MTGStocks) */}
+                      {/* Avg Value */}
                       <td className="px-3 py-3 text-right font-mono text-xs text-amber-400">
                         {avgPrice !== null ? `$${avgPrice.toFixed(2)}` : '\u2014'}
                       </td>

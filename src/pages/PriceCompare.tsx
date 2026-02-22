@@ -995,7 +995,7 @@ export const PriceCompare: React.FC = () => {
                         <div className="px-3 py-1.5 border-t border-amber-500/10 bg-amber-500/[0.03]">
                           <div className="flex justify-between items-center">
                             <div className="flex items-center gap-2">
-                              <span className="text-[9px] font-bold text-amber-400/70 uppercase tracking-wider">MTGStocks</span>
+                              <span className="text-[9px] font-bold text-amber-400/70 uppercase tracking-wider">Ref Price</span>
                               {ref.fetched_at && (
                                 <span className="text-[8px] text-amber-400/40 font-mono">
                                   {new Date(ref.fetched_at).toLocaleDateString()}
@@ -1027,7 +1027,7 @@ export const PriceCompare: React.FC = () => {
                             const match = botboxEvs.get(pt)
                             if (!match || !match.expected_value) return null
                             return (
-                              <span className="font-bold text-purple-400" title={`BotBox EV | Ratio: ${match.ev_to_price_ratio?.toFixed(2) ?? 'N/A'}`}>
+                              <span className="font-bold text-purple-400" title={`EV | Ratio: ${match.ev_to_price_ratio?.toFixed(2) ?? 'N/A'}`}>
                                 EV: ${match.expected_value.toFixed(2)}
                               </span>
                             )

@@ -21,8 +21,10 @@ export const Footer: React.FC = () => {
           <div>
             <h3 className="text-white font-semibold mb-4">ManaMargin</h3>
             <p className="text-sm text-gray-400">
-              Magic: The Gathering price comparison and pack simulator.
-              Find the best deals on sealed products and calculate expected value.
+              Your edge in the Magic: The Gathering sealed-product market.
+              Compare prices across multiple marketplaces, track expected value,
+              and find the best deals on booster boxes, bundles, and collector
+              products — all in one place.
             </p>
           </div>
 

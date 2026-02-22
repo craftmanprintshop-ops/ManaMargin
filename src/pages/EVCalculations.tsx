@@ -1,7 +1,7 @@
 /**
  * EV Calculations Page
  *
- * Displays expected value data from BotBox alongside the best marketplace price.
+ * Displays expected value data alongside the best marketplace price.
  * Uses the v_ev_with_best_offers view which JOINs through canonical_products
  * for reliable matching instead of frontend fuzzy matching.
  */
@@ -29,6 +29,17 @@ interface EVRow {
   best_shipping: number | null
   best_total: number | null
   best_url: string | null
+  individual_deck_count: number | null
+  individual_decks_matched: number | null
+}
+
+interface DeckOffer {
+  deck_name: string
+  price: number
+  shipping: number
+  total: number
+  marketplace: string
+  url: string
 }
 
 type SortKey = 'set_name' | 'product_type' | 'expected_value' | 'botbox_market_price' | 'ev_to_price_ratio' | 'best_total'
@@ -43,6 +54,60 @@ export const EVCalculations: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [sortConfig, setSortConfig] = useState<{ key: SortKey; dir: SortDir }>({ key: 'ev_to_price_ratio', dir: 'desc' })
   const [ratioFilter, setRatioFilter] = useState<'all' | 'above1' | 'above0.8' | 'ev_above_best'>('all')
+  const [deckPopup, setDeckPopup] = useState<{ setName: string; total: number; decks: DeckOffer[] } | null>(null)
+  const [deckPopupLoading, setDeckPopupLoading] = useState(false)
+
+  // Fetch individual deck offers for a Commander Deck Set popup
+  const openDeckPopup = useCallback(async (setName: string, total: number) => {
+    setDeckPopupLoading(true)
+    setDeckPopup({ setName, total, decks: [] })
+
+    try {
+      // Get individual deck canonical products for this set
+      const { data: deckProducts } = await supabase
+        .from('canonical_products')
+        .select('id, product_type')
+        .eq('set_name', setName)
+        .not('product_type', 'in', '("Commander Deck","Commander Deck Set","Commander Deck Collector Edition","Commander Deck Case","Collector Booster Box","Booster Box","Bundle","Booster Pack")')
+
+      if (!deckProducts || deckProducts.length === 0) {
+        setDeckPopup(null)
+        return
+      }
+
+      // For each deck, find the best offer
+      const deckOffers: DeckOffer[] = []
+      for (const dp of deckProducts) {
+        if (dp.product_type.length <= 5) continue
+        const { data: offers } = await supabase
+          .from('offers')
+          .select('price, shipping, marketplace, url')
+          .eq('canonical_product_id', dp.id)
+          .eq('in_stock', true)
+          .eq('is_sealed', true)
+          .order('price', { ascending: true })
+          .limit(1)
+
+        if (offers && offers.length > 0) {
+          const o = offers[0]
+          deckOffers.push({
+            deck_name: dp.product_type,
+            price: o.price,
+            shipping: o.shipping || 0,
+            total: o.price + (o.shipping || 0),
+            marketplace: o.marketplace,
+            url: o.url,
+          })
+        }
+      }
+
+      setDeckPopup({ setName, total, decks: deckOffers })
+    } catch {
+      setDeckPopup(null)
+    } finally {
+      setDeckPopupLoading(false)
+    }
+  }, [])
 
   // Fetch data from unified view
   const loadData = useCallback(async () => {
@@ -171,7 +236,7 @@ export const EVCalculations: React.FC = () => {
       <div className="bg-[#0f111a]/80 backdrop-blur-xl p-6 rounded-xl border border-white/10 shadow-2xl">
         <h2 className="text-xl sm:text-2xl font-bold text-[var(--text-1)] mb-4">EV Calculations</h2>
         <p className="text-sm text-[var(--text-2)] mb-4">
-          Expected value data from BotBox. Products with EV/Price ratio above 1.0 are worth more than their market price.
+          Expected value analysis for sealed products. Products with EV/Price ratio above 1.0 are worth more than their market price.
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -258,7 +323,18 @@ export const EVCalculations: React.FC = () => {
                       {row.ev_to_price_ratio !== null ? row.ev_to_price_ratio.toFixed(4) : '\u2014'}
                     </td>
                     <td className="px-4 py-3 text-right">
-                      {row.best_url ? (
+                      {row.best_marketplace === 'Individual Decks' && row.best_total !== null ? (
+                        <button
+                          onClick={() => openDeckPopup(row.set_name, row.best_total!)}
+                          className="inline-flex items-center gap-1.5 font-mono font-bold text-green-400 hover:text-green-300 transition-colors cursor-pointer"
+                          title={`$${row.best_total.toFixed(2)} total — click to see individual deck prices`}
+                        >
+                          ${row.best_total.toFixed(2)}
+                          <svg className="w-3.5 h-3.5 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                          </svg>
+                        </button>
+                      ) : row.best_url ? (
                         <a
                           href={row.best_url}
                           target="_blank"
@@ -292,7 +368,67 @@ export const EVCalculations: React.FC = () => {
       {/* Data source footer */}
       {evRows.length > 0 && evRows[0].botbox_fetched_at && (
         <div className="text-center text-xs text-[var(--text-2)]">
-          EV data from BotBox · Last updated {new Date(evRows[0].botbox_fetched_at).toLocaleDateString()}
+          EV data last updated {new Date(evRows[0].botbox_fetched_at).toLocaleDateString()}
+        </div>
+      )}
+
+      {/* Individual Deck Prices Popup */}
+      {deckPopup && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setDeckPopup(null)}>
+          <div
+            className="bg-[#141722] border border-white/10 rounded-xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
+              <div>
+                <h3 className="text-lg font-bold text-[var(--text-1)]">{deckPopup.setName}</h3>
+                <p className="text-xs text-[var(--text-2)]">Commander Deck Set — Individual Prices</p>
+              </div>
+              <button onClick={() => setDeckPopup(null)} className="text-[var(--text-2)] hover:text-white transition-colors p-1">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="px-6 py-4 space-y-3 max-h-[60vh] overflow-y-auto">
+              {deckPopupLoading ? (
+                <div className="py-8 text-center text-[var(--text-2)]">Loading deck prices...</div>
+              ) : deckPopup.decks.length === 0 ? (
+                <div className="py-8 text-center text-[var(--text-2)]">No individual deck offers found.</div>
+              ) : (
+                deckPopup.decks.map((deck) => (
+                  <a
+                    key={deck.deck_name}
+                    href={deck.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-between p-3 rounded-lg bg-white/[0.03] hover:bg-white/[0.07] border border-white/5 transition-colors group"
+                  >
+                    <div>
+                      <div className="text-sm font-medium text-[var(--text-1)]">{deck.deck_name}</div>
+                      <div className="text-xs text-[var(--text-2)]">{deck.marketplace}{deck.shipping > 0 ? ` (+$${deck.shipping.toFixed(2)} shipping)` : ''}</div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono font-bold text-green-400">${deck.total.toFixed(2)}</span>
+                      <svg className="w-3.5 h-3.5 text-[var(--text-2)] group-hover:text-green-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      </svg>
+                    </div>
+                  </a>
+                ))
+              )}
+            </div>
+
+            {!deckPopupLoading && deckPopup.decks.length > 0 && (
+              <div className="px-6 py-3 border-t border-white/10 flex items-center justify-between">
+                <span className="text-sm text-[var(--text-2)]">{deckPopup.decks.length} decks</span>
+                <span className="font-mono font-bold text-green-400">
+                  Total: ${deckPopup.decks.reduce((sum, d) => sum + d.total, 0).toFixed(2)}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

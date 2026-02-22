@@ -6,7 +6,7 @@
  * Uses offers_latest_enriched_mv (materialized view) which has enriched data.
  */
 
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { useSupabaseQuery } from '../hooks/useSupabaseQuery'
 import { supabase } from '../services/supabase'
 import { LoadingSpinner } from '../components/common/LoadingSpinner'
@@ -244,10 +244,28 @@ export const ProductsSimple: React.FC = () => {
   )
 
   const [expandedKey, setExpandedKey] = useState<string | null>(null)
+  const [searchTerm, setSearchTerm] = useState('')
 
   const toggleExpand = (key: string) => {
     setExpandedKey(prev => prev === key ? null : key)
   }
+
+  const filteredGroups = useMemo(() => {
+    if (!groups || !searchTerm) return groups
+    const term = searchTerm.toLowerCase()
+    return groups
+      .map(group => {
+        const setMatches = group.set_name.toLowerCase().includes(term) ||
+          (group.set_type || '').toLowerCase().includes(term)
+        if (setMatches) return group
+        const matchingProducts = group.products.filter(p =>
+          p.product_type.toLowerCase().includes(term)
+        )
+        if (matchingProducts.length === 0) return null
+        return { ...group, products: matchingProducts }
+      })
+      .filter((g): g is SetGroup => g !== null)
+  }, [groups, searchTerm])
 
   if (loading) {
     return (
@@ -276,6 +294,18 @@ export const ProductsSimple: React.FC = () => {
       <h2 className="text-3xl font-bold text-center text-[var(--text-1)] mb-6">
         Product & Set Summary
       </h2>
+
+      {/* Search */}
+      <div className="mb-4">
+        <input
+          type="text"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          placeholder="Search sets or products..."
+          className="w-full max-w-md mx-auto block bg-[var(--bg-2)] border border-white/20 rounded-lg p-2.5 text-sm text-[var(--text-1)] outline-none focus:border-[var(--brand)] placeholder:text-[var(--text-2)]/50 transition-colors"
+        />
+      </div>
+
       <div className="bg-[#0f111a]/80 backdrop-blur-xl rounded-xl border border-white/10 shadow-2xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left border-collapse">
@@ -290,7 +320,7 @@ export const ProductsSimple: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
-              {groups?.map((group) => (
+              {filteredGroups?.map((group) => (
                 <React.Fragment key={group.set_name}>
                   {/* Set Header Row */}
                   <tr className="bg-blue-500/10 border-y border-white/5">
