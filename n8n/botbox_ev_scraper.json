@@ -1,0 +1,197 @@
+{
+  "name": "BotBox EV Calculations Scraper",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 12
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Run Every 12 Hours",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "url": "https://botbox.dev/data/ev_calculations",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "page", "value": "1" },
+            { "name": "per_page", "value": "200" },
+            { "name": "sort_by", "value": "ev_to_price_ratio" },
+            { "name": "order", "value": "desc" }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "User-Agent", "value": "ManaMargin-n8n/1.0" }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": false,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "fetch-page-1",
+      "name": "Fetch Page 1 (get total pages)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [220, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Build an array of page numbers to fetch (page 2 onwards, page 1 already fetched)\nconst firstPage = $input.first().json;\nconst totalPages = firstPage.pagination.total_pages;\nconst allItems = [...firstPage.calculations];\n\n// Return page 1 items + list of remaining pages to fetch\nconst remainingPages = [];\nfor (let p = 2; p <= totalPages; p++) {\n  remainingPages.push({ json: { page: p } });\n}\n\n// Store page 1 data in first item\nif (remainingPages.length === 0) {\n  // Only 1 page total, just return all items\n  return allItems.map(item => ({ json: item }));\n}\n\n// Return remaining page numbers to loop through\nreturn remainingPages;"
+      },
+      "id": "build-page-list",
+      "name": "Build Page List",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [440, 0]
+    },
+    {
+      "parameters": {
+        "url": "=https://botbox.dev/data/ev_calculations?page={{ $json.page }}&per_page=200&sort_by=ev_to_price_ratio&order=desc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "User-Agent", "value": "ManaMargin-n8n/1.0" }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": false,
+              "responseFormat": "json"
+            }
+          },
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 500
+            }
+          }
+        }
+      },
+      "id": "fetch-remaining-pages",
+      "name": "Fetch Remaining Pages",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [660, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Combine page 1 data (from earlier) with all remaining pages\n// Page 1 was fetched by 'Fetch Page 1' node\nconst page1Node = $('Fetch Page 1 (get total pages)').first().json;\nconst page1Items = page1Node.calculations || [];\n\n// Remaining pages come through as the current input\nconst remainingItems = [];\nfor (const item of $input.all()) {\n  const calcs = item.json.calculations || [];\n  remainingItems.push(...calcs);\n}\n\nconst allItems = [...page1Items, ...remainingItems];\n\n// Map to database row format and split into batches of 100\nconst BATCH_SIZE = 100;\nconst batches = [];\n\nfor (let i = 0; i < allItems.length; i += BATCH_SIZE) {\n  const batch = allItems.slice(i, i + BATCH_SIZE).map(item => ({\n    set_code: item.set_code,\n    set_name: item.set_name || null,\n    product_name: item.product_name,\n    expected_value: item.expected_value,\n    market_price: item.market_price,\n    ev_to_price_ratio: item.ev_to_price_ratio,\n    variance: item.variance,\n    expected_value_eur: item.expected_value_eur,\n    market_price_eur: item.market_price_eur,\n    ev_to_price_ratio_eur: item.ev_to_price_ratio_eur,\n    variance_eur: item.variance_eur,\n    calculation_timestamp: item.calculation_timestamp,\n    fetched_at: new Date().toISOString()\n  }));\n  batches.push({ json: { rows: batch, batchNum: Math.floor(i/BATCH_SIZE)+1, totalItems: allItems.length } });\n}\n\nreturn batches;"
+      },
+      "id": "combine-and-batch",
+      "name": "Combine All Pages & Batch",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [880, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://pyjalnjtbhxdcompkyry.supabase.co/rest/v1/botbox_ev_calculations?on_conflict=set_code,product_name",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "YOUR_SERVICE_ROLE_KEY_HERE" },
+            { "name": "Authorization", "value": "Bearer YOUR_SERVICE_ROLE_KEY_HERE" },
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Prefer", "value": "resolution=merge-duplicates" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.rows) }}",
+        "options": {}
+      },
+      "id": "upsert-to-supabase",
+      "name": "Upsert to Supabase",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1100, 0]
+    }
+  ],
+  "connections": {
+    "Run Every 12 Hours": {
+      "main": [
+        [
+          {
+            "node": "Fetch Page 1 (get total pages)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Page 1 (get total pages)": {
+      "main": [
+        [
+          {
+            "node": "Build Page List",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Page List": {
+      "main": [
+        [
+          {
+            "node": "Fetch Remaining Pages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Remaining Pages": {
+      "main": [
+        [
+          {
+            "node": "Combine All Pages & Batch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combine All Pages & Batch": {
+      "main": [
+        [
+          {
+            "node": "Upsert to Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [
+    {
+      "name": "ManaMargin"
+    },
+    {
+      "name": "Scraper"
+    }
+  ]
+}

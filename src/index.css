@@ -1,0 +1,77 @@
+/* Tailwind CSS directives */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* CSS Custom Properties for theming */
+:root {
+  /* Brand colors */
+  --brand: #3b82f6;
+  --accent: #60a5fa;
+
+  /* Text colors */
+  --text-1: #f9fafb;
+  --text-2: #9ca3af;
+
+  /* Background colors */
+  --bg-1: #1e293b;
+  --bg-2: #0f172a;
+
+  /* Primary color mapping to brand */
+  --primary-600: var(--brand);
+  --primary-700: #2563eb;
+}
+
+/* Global styles */
+@layer base {
+  body {
+    @apply bg-gray-900 text-gray-100;
+  }
+
+  * {
+    @apply border-gray-700;
+  }
+}
+
+/* Animation for fade-in */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}
+
+/* Custom utility classes for ManaMargin */
+@layer components {
+  .card {
+    @apply bg-white rounded-lg shadow-md p-6;
+  }
+
+  .btn-primary {
+    @apply bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200;
+  }
+
+  .btn-secondary {
+    @apply bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium py-2 px-4 rounded-lg transition-colors duration-200;
+  }
+
+  .input-field {
+    @apply px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent;
+  }
+
+  .badge-in-stock {
+    @apply inline-block px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800;
+  }
+
+  .badge-out-of-stock {
+    @apply inline-block px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800;
+  }
+}

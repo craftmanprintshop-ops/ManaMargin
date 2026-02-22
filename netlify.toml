@@ -1,0 +1,53 @@
+# Netlify Configuration for ManaMargin
+#
+# This file configures how Netlify builds and deploys your ManaMargin app.
+# Documentation: https://docs.netlify.com/configure-builds/file-based-configuration/
+
+[build]
+  # Command to build the production version of the site
+  command = "npm run build"
+
+  # Directory containing the built site files
+  publish = "dist"
+
+  # Set Node.js version (optional, but recommended for consistency)
+  # environment = { NODE_VERSION = "18" }
+
+# Redirect all requests to index.html for client-side routing
+# This is essential for React Router to work properly
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Optional: Headers for security and caching
+[[headers]]
+  for = "/*"
+  [headers.values]
+    # Security headers
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+    # Cache control for static assets
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    # Don't cache the HTML file
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+# Environment variables (set these in Netlify dashboard)
+# VITE_SUPABASE_URL - Your Supabase project URL
+# VITE_SUPABASE_ANON_KEY - Your Supabase anonymous/public key
+
+# Build settings
+[build.environment]
+  # Use npm for package management
+  NPM_FLAGS = "--legacy-peer-deps"
+
+# Optional: Build plugins
+# [[plugins]]
+#   package = "@netlify/plugin-lighthouse"
