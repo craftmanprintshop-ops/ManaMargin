@@ -57,7 +57,8 @@ export const DatabaseDiagnostic: React.FC = () => {
         }
         setAvailableTables(existing)
       } else {
-        setAvailableTables(data?.map((t: any) => t.table_name) || [])
+        const tableData = (data ?? []) as any[]
+        setAvailableTables(tableData.map((t: any) => t.table_name) || [])
       }
     } catch (err) {
       console.error('Error listing tables:', err)

@@ -11,7 +11,7 @@ async function testConnection() {
     console.log('Testing Supabase connection...')
 
     // Try to fetch a simple count from tracked_products
-    const { data, error, count } = await supabase
+    const { error, count } = await supabase
       .from('tracked_products')
       .select('*', { count: 'exact', head: true })
 

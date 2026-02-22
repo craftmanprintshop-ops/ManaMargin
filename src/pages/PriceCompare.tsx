@@ -8,7 +8,6 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { supabase } from '../services/supabase'
-import { LoadingSpinner } from '../components/common/LoadingSpinner'
 import { useInventory } from '../hooks/useInventory'
 
 // --- Types ---

@@ -145,7 +145,8 @@ export const dashboardService = {
 
       // Count occurrences of each set
       const setCounts = new Map<string, number>()
-      data?.forEach((item) => {
+      const setData = (data ?? []) as any[]
+      setData.forEach((item) => {
         if (item.set_name) {
           setCounts.set(item.set_name, (setCounts.get(item.set_name) || 0) + 1)
         }

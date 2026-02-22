@@ -75,9 +75,9 @@ export const Products: React.FC = () => {
         <h1 className="text-3xl font-bold text-gray-900 mb-6">Products</h1>
         {filterOptions && (
           <OffersFilter
-            filters={filters}
+            filters={filters as any}
             options={filterOptions}
-            onFilterChange={updateFilter}
+            onFilterChange={updateFilter as any}
             onReset={resetFilters}
             loading={false}
           />
@@ -109,9 +109,9 @@ export const Products: React.FC = () => {
       {/* Filter Panel */}
       {filterOptions && (
         <OffersFilter
-          filters={filters}
+          filters={filters as any}
           options={filterOptions}
-          onFilterChange={updateFilter}
+          onFilterChange={updateFilter as any}
           onReset={resetFilters}
           loading={offersLoading}
         />

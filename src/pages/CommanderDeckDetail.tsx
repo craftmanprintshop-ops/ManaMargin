@@ -76,15 +76,12 @@ export const CommanderDeckDetail: React.FC = () => {
       <Card>
         <div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            {deck.name || 'Unknown Deck'}
+            {deck.deck_name || 'Unknown Deck'}
           </h1>
           <div className="flex flex-wrap gap-4 text-sm text-gray-600">
             <span className="font-medium">Code: {deck.code}</span>
             {deck.release_date && (
               <span>Released: {formatDate(deck.release_date, 'long')}</span>
-            )}
-            {deck.type && (
-              <span>Type: {deck.type}</span>
             )}
           </div>
         </div>

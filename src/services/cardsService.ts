@@ -127,7 +127,8 @@ export const cardsService = {
       }
 
       const priceMap = new Map<string, number>()
-      data?.forEach((item) => {
+      const priceData = (data ?? []) as any[]
+      priceData.forEach((item) => {
         if (item.uuid && item.price !== null) {
           priceMap.set(item.uuid, item.price)
         }

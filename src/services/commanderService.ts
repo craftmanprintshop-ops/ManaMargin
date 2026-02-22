@@ -133,20 +133,21 @@ export const commanderService = {
       }
 
       // Calculate total value from cards if view doesn't provide it
-      const totalValue = deckValue.data?.total_value ??
+      const deckValueData = deckValue.data as any
+      const totalValue = deckValueData?.total_value ??
         cards.reduce((sum, card) => sum + (card.total_card_value ?? 0), 0)
 
-      const cardCount = deckValue.data?.card_count ?? cards.length
+      const cardCount = deckValueData?.card_count ?? cards.length
 
       return {
         ...deckInfo,
         cards,
         totalValue,
         cardCount,
-        valueOver25c: deckValue.data?.value_over_25c ?? 0,
-        valueOver1: deckValue.data?.value_over_1 ?? 0,
-        cardsOver25c: deckValue.data?.cards_over_25c ?? 0,
-        cardsOver1: deckValue.data?.cards_over_1 ?? 0,
+        valueOver25c: deckValueData?.value_over_25c ?? 0,
+        valueOver1: deckValueData?.value_over_1 ?? 0,
+        cardsOver25c: deckValueData?.cards_over_25c ?? 0,
+        cardsOver1: deckValueData?.cards_over_1 ?? 0,
       }
     } catch (error) {
       console.error('Error in getDeckWithDetails:', error)

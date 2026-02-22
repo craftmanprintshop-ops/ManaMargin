@@ -68,7 +68,8 @@ export const packSimulatorService = {
       }
 
       // Get unique set codes and sort them
-      const uniqueSets = [...new Set(data.map((card) => card.set_code).filter(Boolean))]
+      const cardData = (data ?? []) as any[]
+      const uniqueSets = [...new Set(cardData.map((card) => card.set_code).filter(Boolean))]
       console.log(`Found ${uniqueSets.length} unique sets:`, uniqueSets)
       return uniqueSets.sort()
     } catch (error) {
@@ -189,10 +190,11 @@ export const packSimulatorService = {
     foil: boolean
   ): Promise<PackCard> {
     // Get price for the card
+    const cardData = card as any
     let price = 0
-    if (card.uuid) {
+    if (cardData.uuid) {
       try {
-        const priceData = await cardsService.getCardPrice(card.uuid)
+        const priceData = await cardsService.getCardPrice(cardData.uuid)
         price = priceData?.price || 0
       } catch (error) {
         // Price not available, use 0
@@ -205,8 +207,8 @@ export const packSimulatorService = {
     }
 
     return {
-      uuid: card.uuid || '',
-      name: card.name || 'Unknown Card',
+      uuid: cardData.uuid || '',
+      name: cardData.name || 'Unknown Card',
       rarity: card.rarity || 'common',
       price,
       foil,

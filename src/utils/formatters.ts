@@ -58,11 +58,12 @@ export function formatDate(
     return formatRelativeDate(date)
   }
 
-  const options: Intl.DateTimeFormatOptions = {
+  const optionsMap: Record<string, Intl.DateTimeFormatOptions> = {
     short: { month: 'short', day: 'numeric', year: 'numeric' },
     medium: { month: 'short', day: 'numeric', year: 'numeric' },
     long: { month: 'long', day: 'numeric', year: 'numeric' },
-  }[format]
+  }
+  const options = optionsMap[format]
 
   return new Intl.DateTimeFormat('en-US', options).format(date)
 }

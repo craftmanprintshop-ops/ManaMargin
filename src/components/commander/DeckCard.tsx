@@ -8,7 +8,7 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import type { CommanderDeckValue } from '../../types/models'
-import { formatCurrency, formatDate } from '../../utils/formatters'
+import { formatCurrency } from '../../utils/formatters'
 import { Card } from '../common/Card'
 
 interface DeckCardProps {

@@ -5,7 +5,7 @@
  * Sets up React Router and wraps all pages with header/footer.
  */
 
-import React, { useState } from 'react'
+import React from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import { Header } from './components/layout/Header'
 import { Footer } from './components/layout/Footer'

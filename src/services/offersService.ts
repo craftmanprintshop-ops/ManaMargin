@@ -117,8 +117,9 @@ export const offersService = {
       }
 
       // Extract unique marketplace names
+      const marketplacesList = (marketplacesData ?? []) as any[]
       const uniqueMarketplaces = Array.from(
-        new Set(marketplacesData?.map((item) => item.marketplace).filter(Boolean) as string[])
+        new Set(marketplacesList.map((item) => item.marketplace).filter(Boolean) as string[])
       ).sort()
 
       return {

@@ -13,7 +13,8 @@
  * ```
  */
 
-import { useState, useEffect, useCallback, DependencyList } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+import type { DependencyList } from 'react'
 import { PostgrestError } from '@supabase/supabase-js'
 
 interface UseQueryOptions {

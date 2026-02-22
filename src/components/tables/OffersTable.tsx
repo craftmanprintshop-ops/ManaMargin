@@ -6,7 +6,6 @@
  */
 
 import React, { useState, useMemo } from 'react'
-import { Link } from 'react-router-dom'
 import type { OffersLatestEnriched } from '../../types/models'
 import { Badge } from '../common/Badge'
 import { formatCurrency, formatDate } from '../../utils/formatters'

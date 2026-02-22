@@ -293,7 +293,8 @@ export const CommanderDecksGrouped: React.FC<CommanderDecksGroupedProps> = ({ on
           if (offerMap.has(deckKey)) continue
 
           const nameLower = deck.deck_name.toLowerCase()
-          const match = (data ?? []).find((o: any) => {
+          const offers = (data ?? []) as any[]
+          const match = offers.find((o) => {
             const titleLower = (o.title || '').toLowerCase()
             return titleLower.includes(nameLower)
           })
@@ -348,10 +349,11 @@ export const CommanderDecksGrouped: React.FC<CommanderDecksGroupedProps> = ({ on
           })
 
           if (match) {
+            const mtgMatch = match as any
             priceMap.set(deckKey, {
-              avg_price: match.avg_price ? parseFloat(String(match.avg_price)) : null,
-              market_price: match.market_price ? parseFloat(String(match.market_price)) : null,
-              url: match.url,
+              avg_price: mtgMatch.avg_price ? parseFloat(String(mtgMatch.avg_price)) : null,
+              market_price: mtgMatch.market_price ? parseFloat(String(mtgMatch.market_price)) : null,
+              url: mtgMatch.url,
             })
           }
         }

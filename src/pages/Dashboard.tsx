@@ -69,10 +69,12 @@ export const Dashboard: React.FC = () => {
         if (decksRes.error || offersRes.error) return
 
         const deckDeals: DeckDeal[] = []
-        for (const deck of decksRes.data ?? []) {
+        const decksData = (decksRes.data ?? []) as any[]
+        for (const deck of decksData) {
           if (deck.set_name && deck.set_name.toLowerCase().includes('secret lair')) continue
           const nameLower = deck.deck_name.toLowerCase()
-          const match = (offersRes.data ?? []).find((o: any) =>
+          const offersData = (offersRes.data ?? []) as any[]
+          const match = offersData.find((o: any) =>
             (o.title || '').toLowerCase().includes(nameLower)
           )
           if (!match) continue
@@ -290,7 +292,7 @@ export const Dashboard: React.FC = () => {
                   </div>
                   <span className="font-medium text-[var(--text-1)]">{set.set_name}</span>
                 </div>
-                <Badge variant="default">
+                <Badge variant="info">
                   {set.count} {set.count === 1 ? 'product' : 'products'}
                 </Badge>
               </div>
@@ -311,7 +313,7 @@ export const Dashboard: React.FC = () => {
       {summary?.lowStockProducts && summary.lowStockProducts.length > 0 && (
         <Card title="Low Stock Alerts">
           <div className="space-y-2">
-            {summary.lowStockProducts.slice(0, 5).map((product) => (
+            {summary.lowStockProducts.slice(0, 5).map((product: any) => (
               <div
                 key={product.offer_id}
                 className="flex justify-between items-center p-3 bg-orange-500/10 border border-orange-500/20 rounded-lg"
