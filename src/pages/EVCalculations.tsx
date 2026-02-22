@@ -2,7 +2,8 @@
  * EV Calculations Page
  *
  * Displays expected value data from BotBox alongside the best marketplace price.
- * Shows set, product type, EV, market price, EV/price ratio, and a link to the best deal.
+ * Uses the v_ev_with_best_offers view which JOINs through canonical_products
+ * for reliable matching instead of frontend fuzzy matching.
  */
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react'
@@ -12,76 +13,51 @@ import { LoadingSpinner } from '../components/common/LoadingSpinner'
 // --- Types ---
 
 interface EVRow {
+  canonical_product_id: number
+  set_name: string
+  product_type: string
+  set_type: string | null
   set_code: string
-  set_name: string | null
-  product_name: string
-  expected_value: number | null
-  market_price: number | null
+  botbox_product_name: string
+  expected_value: number
+  botbox_market_price: number | null
   ev_to_price_ratio: number | null
   calculation_timestamp: string | null
-  fetched_at: string | null
+  botbox_fetched_at: string | null
+  best_marketplace: string | null
+  best_price: number | null
+  best_shipping: number | null
+  best_total: number | null
+  best_url: string | null
 }
 
-interface BestOffer {
-  total: number
-  url: string
-  marketplace: string
-}
-
-type SortKey = 'set_name' | 'product_name' | 'expected_value' | 'market_price' | 'ev_to_price_ratio' | 'best_price'
+type SortKey = 'set_name' | 'product_type' | 'expected_value' | 'botbox_market_price' | 'ev_to_price_ratio' | 'best_total'
 type SortDir = 'asc' | 'desc'
 
 // --- Component ---
 
 export const EVCalculations: React.FC = () => {
   const [evRows, setEvRows] = useState<EVRow[]>([])
-  const [bestOffers, setBestOffers] = useState<Map<string, BestOffer>>(new Map())
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [sortConfig, setSortConfig] = useState<{ key: SortKey; dir: SortDir }>({ key: 'ev_to_price_ratio', dir: 'desc' })
   const [ratioFilter, setRatioFilter] = useState<'all' | 'above1' | 'above0.8' | 'ev_above_best'>('all')
 
-  // Fetch EV data from BotBox table
+  // Fetch data from unified view
   const loadData = useCallback(async () => {
     setIsLoading(true)
     setError(null)
 
     try {
-      const { data, error: evError } = await supabase
-        .from('botbox_ev_calculations')
-        .select('set_code,set_name,product_name,expected_value,market_price,ev_to_price_ratio,calculation_timestamp,fetched_at')
-        .not('expected_value', 'is', null)
+      const { data, error: queryError } = await supabase
+        .from('v_ev_with_best_offers')
+        .select('*')
         .order('ev_to_price_ratio', { ascending: false, nullsFirst: false })
         .limit(2000)
 
-      if (evError) throw evError
+      if (queryError) throw queryError
       setEvRows((data as EVRow[]) || [])
-
-      // Fetch best marketplace prices for matching products
-      // We query the offers MV grouped by set_name + product_type to get the lowest total
-      const { data: offersData, error: offersError } = await supabase
-        .from('offers_latest_enriched_mv')
-        .select('set_name,product_type,price,shipping,url,marketplace')
-        .eq('in_stock', true)
-        .not('product_type', 'is', null)
-        .order('price', { ascending: true })
-        .limit(5000)
-
-      if (!offersError && offersData) {
-        const offerMap = new Map<string, BestOffer>()
-        for (const offer of offersData as any[]) {
-          const setName = (offer.set_name || '').toLowerCase()
-          const productType = (offer.product_type || '').toLowerCase()
-          const key = `${setName}|${productType}`
-          const total = (parseFloat(String(offer.price)) || 0) + (parseFloat(String(offer.shipping ?? 0)) || 0)
-          const existing = offerMap.get(key)
-          if (!existing || total < existing.total) {
-            offerMap.set(key, { total, url: offer.url, marketplace: offer.marketplace })
-          }
-        }
-        setBestOffers(offerMap)
-      }
     } catch (err: any) {
       setError(err.message || 'Failed to load EV data')
     } finally {
@@ -90,22 +66,6 @@ export const EVCalculations: React.FC = () => {
   }, [])
 
   useEffect(() => { loadData() }, [loadData])
-
-  // Match a BotBox product_name to the best offer
-  const findBestOffer = useCallback((setName: string | null, productName: string): BestOffer | null => {
-    if (!setName) return null
-    const sn = setName.replace(/\s*\([A-Z0-9]+\)\s*$/, '').toLowerCase().trim()
-    const pn = productName.toLowerCase()
-
-    // Try each offer key and see if the BotBox product_name contains the offer's product_type
-    for (const [key, offer] of bestOffers) {
-      const [offerSet, offerType] = key.split('|')
-      if (!offerType) continue
-      if (!sn.includes(offerSet) && !offerSet.includes(sn)) continue
-      if (pn.includes(offerType)) return offer
-    }
-    return null
-  }, [bestOffers])
 
   // Sorting
   const requestSort = (key: SortKey) => {
@@ -128,8 +88,9 @@ export const EVCalculations: React.FC = () => {
     if (searchTerm) {
       const term = searchTerm.toLowerCase()
       filtered = filtered.filter(r =>
-        (r.set_name || '').toLowerCase().includes(term) ||
-        r.product_name.toLowerCase().includes(term) ||
+        r.set_name.toLowerCase().includes(term) ||
+        r.product_type.toLowerCase().includes(term) ||
+        r.botbox_product_name.toLowerCase().includes(term) ||
         r.set_code.toLowerCase().includes(term)
       )
     }
@@ -140,28 +101,24 @@ export const EVCalculations: React.FC = () => {
     } else if (ratioFilter === 'above0.8') {
       filtered = filtered.filter(r => r.ev_to_price_ratio !== null && r.ev_to_price_ratio >= 0.8)
     } else if (ratioFilter === 'ev_above_best') {
-      filtered = filtered.filter(r => {
-        if (!r.expected_value) return false
-        const offer = findBestOffer(r.set_name, r.product_name)
-        return offer !== null && r.expected_value > offer.total
-      })
+      filtered = filtered.filter(r =>
+        r.expected_value !== null && r.best_total !== null && r.expected_value > r.best_total
+      )
     }
 
     // Sort
     filtered.sort((a, b) => {
       let aVal: any, bVal: any
 
-      if (sortConfig.key === 'best_price') {
-        const aOffer = findBestOffer(a.set_name, a.product_name)
-        const bOffer = findBestOffer(b.set_name, b.product_name)
-        aVal = aOffer?.total ?? Infinity
-        bVal = bOffer?.total ?? Infinity
-      } else if (sortConfig.key === 'set_name') {
-        aVal = (a.set_name || '').toLowerCase()
-        bVal = (b.set_name || '').toLowerCase()
-      } else if (sortConfig.key === 'product_name') {
-        aVal = a.product_name.toLowerCase()
-        bVal = b.product_name.toLowerCase()
+      if (sortConfig.key === 'set_name') {
+        aVal = a.set_name.toLowerCase()
+        bVal = b.set_name.toLowerCase()
+      } else if (sortConfig.key === 'product_type') {
+        aVal = a.product_type.toLowerCase()
+        bVal = b.product_type.toLowerCase()
+      } else if (sortConfig.key === 'best_total') {
+        aVal = a.best_total ?? Infinity
+        bVal = b.best_total ?? Infinity
       } else {
         aVal = a[sortConfig.key] ?? -Infinity
         bVal = b[sortConfig.key] ?? -Infinity
@@ -174,7 +131,7 @@ export const EVCalculations: React.FC = () => {
     })
 
     return filtered
-  }, [evRows, searchTerm, ratioFilter, sortConfig, findBestOffer])
+  }, [evRows, searchTerm, ratioFilter, sortConfig])
 
   // Ratio color helper
   const ratioColor = (ratio: number | null) => {
@@ -263,18 +220,18 @@ export const EVCalculations: React.FC = () => {
               <tr>
                 {([
                   ['Set', 'set_name'],
-                  ['Product', 'product_name'],
+                  ['Product', 'product_type'],
                   ['Expected Value', 'expected_value'],
-                  ['Market Price', 'market_price'],
+                  ['Market Price', 'botbox_market_price'],
                   ['EV/Price', 'ev_to_price_ratio'],
-                  ['Best Price', 'best_price'],
+                  ['Best Price', 'best_total'],
                 ] as [string, SortKey][]).map(([label, key]) => (
                   <th
                     key={key}
                     className="px-4 py-4 cursor-pointer hover:bg-white/10 transition-colors select-none whitespace-nowrap"
                     onClick={() => requestSort(key)}
                   >
-                    <div className={`flex items-center gap-1 ${['expected_value', 'market_price', 'ev_to_price_ratio', 'best_price'].includes(key) ? 'justify-end' : ''}`}>
+                    <div className={`flex items-center gap-1 ${['expected_value', 'botbox_market_price', 'ev_to_price_ratio', 'best_total'].includes(key) ? 'justify-end' : ''}`}>
                       {label}{renderSortArrow(key)}
                     </div>
                   </th>
@@ -283,47 +240,43 @@ export const EVCalculations: React.FC = () => {
             </thead>
             <tbody className="divide-y divide-white/5">
               {displayRows.length > 0 ? (
-                displayRows.map((row, idx) => {
-                  const offer = findBestOffer(row.set_name, row.product_name)
-                  const setDisplay = (row.set_name || row.set_code).replace(/\s*\([A-Z0-9]+\)\s*$/, '')
-                  return (
-                    <tr key={`${row.set_code}-${row.product_name}-${idx}`} className="group hover:bg-white/[0.03] transition-colors">
-                      <td className="px-4 py-3 text-[var(--text-1)] font-medium max-w-[200px] truncate" title={row.set_name || row.set_code}>
-                        {setDisplay}
-                      </td>
-                      <td className="px-4 py-3 text-[var(--text-2)] max-w-[250px] truncate" title={row.product_name}>
-                        {row.product_name}
-                      </td>
-                      <td className="px-4 py-3 text-right font-mono text-purple-400 font-bold">
-                        {row.expected_value !== null ? `$${row.expected_value.toFixed(2)}` : '\u2014'}
-                      </td>
-                      <td className="px-4 py-3 text-right font-mono text-[var(--text-2)]">
-                        {row.market_price !== null ? `$${row.market_price.toFixed(2)}` : '\u2014'}
-                      </td>
-                      <td className={`px-4 py-3 text-right font-mono font-bold ${ratioColor(row.ev_to_price_ratio)}`}>
-                        {row.ev_to_price_ratio !== null ? row.ev_to_price_ratio.toFixed(4) : '\u2014'}
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        {offer ? (
-                          <a
-                            href={offer.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 font-mono font-bold text-green-400 hover:text-green-300 transition-colors"
-                            title={`Best price at ${offer.marketplace}`}
-                          >
-                            ${offer.total.toFixed(2)}
-                            <svg className="w-3 h-3 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                            </svg>
-                          </a>
-                        ) : (
-                          <span className="text-[var(--text-2)] text-xs">{'\u2014'}</span>
-                        )}
-                      </td>
-                    </tr>
-                  )
-                })
+                displayRows.map((row, idx) => (
+                  <tr key={`${row.canonical_product_id}-${idx}`} className="group hover:bg-white/[0.03] transition-colors">
+                    <td className="px-4 py-3 text-[var(--text-1)] font-medium max-w-[200px] truncate" title={row.set_name}>
+                      {row.set_name}
+                    </td>
+                    <td className="px-4 py-3 text-[var(--text-2)] max-w-[250px] truncate" title={row.botbox_product_name}>
+                      {row.product_type}
+                    </td>
+                    <td className="px-4 py-3 text-right font-mono text-purple-400 font-bold">
+                      {row.expected_value !== null ? `$${row.expected_value.toFixed(2)}` : '\u2014'}
+                    </td>
+                    <td className="px-4 py-3 text-right font-mono text-[var(--text-2)]">
+                      {row.botbox_market_price !== null ? `$${row.botbox_market_price.toFixed(2)}` : '\u2014'}
+                    </td>
+                    <td className={`px-4 py-3 text-right font-mono font-bold ${ratioColor(row.ev_to_price_ratio)}`}>
+                      {row.ev_to_price_ratio !== null ? row.ev_to_price_ratio.toFixed(4) : '\u2014'}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      {row.best_url ? (
+                        <a
+                          href={row.best_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 font-mono font-bold text-green-400 hover:text-green-300 transition-colors"
+                          title={`Best price at ${row.best_marketplace}`}
+                        >
+                          ${row.best_total!.toFixed(2)}
+                          <svg className="w-3 h-3 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                          </svg>
+                        </a>
+                      ) : (
+                        <span className="text-[var(--text-2)] text-xs">{'\u2014'}</span>
+                      )}
+                    </td>
+                  </tr>
+                ))
               ) : (
                 <tr>
                   <td colSpan={6} className="px-4 py-16 text-center text-[var(--text-2)]">
@@ -337,9 +290,9 @@ export const EVCalculations: React.FC = () => {
       </div>
 
       {/* Data source footer */}
-      {evRows.length > 0 && evRows[0].fetched_at && (
+      {evRows.length > 0 && evRows[0].botbox_fetched_at && (
         <div className="text-center text-xs text-[var(--text-2)]">
-          EV data from BotBox · Last updated {new Date(evRows[0].fetched_at).toLocaleDateString()}
+          EV data from BotBox · Last updated {new Date(evRows[0].botbox_fetched_at).toLocaleDateString()}
         </div>
       )}
     </div>

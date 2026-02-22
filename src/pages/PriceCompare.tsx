@@ -371,23 +371,22 @@ export const PriceCompare: React.FC = () => {
         setMtgstocksRefs(new Map())
       }
 
-      // Fetch BotBox EV data for the selected set
+      // Fetch BotBox EV data via canonical product mappings
       if (selectedSetName !== 'Any' && selectedSetName !== '') {
         try {
           const { data: evData } = await supabase
-            .from('botbox_ev_calculations')
-            .select('product_name,expected_value,ev_to_price_ratio')
-            .ilike('set_name', `%${selectedSetName.trim()}%`)
-            .not('expected_value', 'is', null)
+            .from('v_ev_with_best_offers')
+            .select('product_type,expected_value,ev_to_price_ratio')
+            .eq('set_name', selectedSetName.trim())
             .limit(100)
 
           if (evData && evData.length > 0) {
             const evMap = new Map<string, BotboxEv>()
             for (const item of evData as any[]) {
-              const pn = (item.product_name || '').toLowerCase()
-              if (pn && !evMap.has(pn)) {
-                evMap.set(pn, {
-                  product_name: item.product_name,
+              const key = (item.product_type || '').toLowerCase()
+              if (key && !evMap.has(key)) {
+                evMap.set(key, {
+                  product_name: item.product_type,
                   expected_value: item.expected_value ? parseFloat(String(item.expected_value)) : null,
                   ev_to_price_ratio: item.ev_to_price_ratio ? parseFloat(String(item.ev_to_price_ratio)) : null,
                 })
@@ -1026,17 +1025,7 @@ export const PriceCompare: React.FC = () => {
                           {(() => {
                             const pt = (group.product_type || '').toLowerCase()
                             if (!pt) return null
-                            // Find BotBox entry whose product_name contains the product_type
-                            // Prefer entries without "case" or "pack" suffix for box-level matches
-                            let match: BotboxEv | null = null
-                            for (const [pn, ev] of botboxEvs) {
-                              if (!pn.includes(pt)) continue
-                              if (!ev.expected_value) continue
-                              // Prefer non-case, non-individual-pack matches
-                              if (!match || (!pn.endsWith(' case') && !pn.endsWith(' pack'))) {
-                                match = ev
-                              }
-                            }
+                            const match = botboxEvs.get(pt)
                             if (!match || !match.expected_value) return null
                             return (
                               <span className="font-bold text-purple-400" title={`BotBox EV | Ratio: ${match.ev_to_price_ratio?.toFixed(2) ?? 'N/A'}`}>
