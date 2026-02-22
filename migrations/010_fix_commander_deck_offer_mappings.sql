@@ -27,8 +27,9 @@ WHERE deck_name LIKE 'commander deck %'
   AND deck_name NOT IN ('commander deck', 'commander deck set', 'commander deck display');
 
 -- Re-insert with just the deck-specific name
+-- Use DISTINCT ON to avoid duplicate deck_name conflicts within the same INSERT
 INSERT INTO commander_deck_sets (deck_name, set_name)
-SELECT DISTINCT
+SELECT DISTINCT ON (lower(regexp_replace(cp.product_type, '^Commander Deck\s+', '', 'i')))
   lower(regexp_replace(cp.product_type, '^Commander Deck\s+', '', 'i')),
   cp.set_name
 FROM canonical_products cp
@@ -38,7 +39,8 @@ WHERE cp.product_type LIKE 'Commander Deck %'
     'Commander Deck Collector Edition'
   )
   AND length(regexp_replace(cp.product_type, '^Commander Deck\s+', '', 'i')) > 3
-ON CONFLICT (deck_name) DO UPDATE SET set_name = EXCLUDED.set_name;
+ORDER BY lower(regexp_replace(cp.product_type, '^Commander Deck\s+', '', 'i')), cp.set_name
+ON CONFLICT (deck_name) DO NOTHING;
 
 -- ============================================================
 -- STEP 2: Reclassify offers that are individual decks but linked
