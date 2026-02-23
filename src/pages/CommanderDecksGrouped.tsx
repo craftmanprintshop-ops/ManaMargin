@@ -167,12 +167,9 @@ const PricePopup: React.FC<{ deck: CommanderDeckValue; onClose: () => void; mtgs
                 >
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 rounded bg-[#0b0d14] flex items-center justify-center border border-white/10">
-                      <img
-                        src={`https://www.google.com/s2/favicons?domain=${new URL(offer.url).hostname}&sz=32`}
-                        alt=""
-                        className="w-5 h-5 opacity-70 group-hover/offer:opacity-100 transition-opacity"
-                        onError={(e) => (e.currentTarget.style.display = 'none')}
-                      />
+                      <svg className="w-5 h-5 text-green-400 opacity-70 group-hover/offer:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                      </svg>
                     </div>
                     <div>
                       <div className="text-[10px] uppercase font-black tracking-widest text-[var(--text-2)] mb-0.5">

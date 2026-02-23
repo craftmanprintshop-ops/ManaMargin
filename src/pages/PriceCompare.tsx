@@ -735,12 +735,9 @@ export const PriceCompare: React.FC = () => {
                             rel="noopener noreferrer"
                             className="flex items-center gap-1.5 hover:text-[var(--brand)] transition-colors"
                           >
-                            <img
-                              src={`https://www.google.com/s2/favicons?domain=${(() => { try { return new URL(offer.url).hostname } catch { return '' } })()}&sz=16`}
-                              alt=""
-                              className="w-3.5 h-3.5 opacity-70 shrink-0"
-                              onError={(e) => (e.currentTarget.style.display = 'none')}
-                            />
+                            <svg className="w-3.5 h-3.5 text-green-400 opacity-60 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                            </svg>
                             <span className="font-bold text-[var(--brand)]">{offer.marketplace}</span>
                           </a>
                         </td>
@@ -817,12 +814,9 @@ export const PriceCompare: React.FC = () => {
                         rel="noopener noreferrer"
                         className="flex items-center gap-1.5 text-xs"
                       >
-                        <img
-                          src={`https://www.google.com/s2/favicons?domain=${(() => { try { return new URL(offer.url).hostname } catch { return '' } })()}&sz=16`}
-                          alt=""
-                          className="w-3.5 h-3.5 opacity-70 shrink-0"
-                          onError={(e) => (e.currentTarget.style.display = 'none')}
-                        />
+                        <svg className="w-3.5 h-3.5 text-green-400 opacity-60 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
                         <span className="font-bold text-[var(--brand)]">{offer.marketplace}</span>
                         {offer.isTaxed && <span className="text-[8px] font-bold text-amber-500 bg-amber-500/10 px-1 rounded">TAX</span>}
                         {!offer.in_stock && <span className="text-[8px] font-bold text-red-400 bg-red-500/10 px-1 rounded">OOS</span>}
@@ -935,12 +929,9 @@ export const PriceCompare: React.FC = () => {
                             </div>
                             <div className="flex justify-between items-center">
                               <div className="flex items-center gap-2">
-                                <img
-                                  src={`https://www.google.com/s2/favicons?domain=${(() => { try { return new URL(offer.url).hostname } catch { return '' } })()}&sz=16`}
-                                  alt=""
-                                  className="w-4 h-4 opacity-60 shrink-0"
-                                  onError={(e) => (e.currentTarget.style.display = 'none')}
-                                />
+                                <svg className="w-3.5 h-3.5 text-green-400 opacity-60 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                                </svg>
                                 <span className="font-bold text-[var(--brand)]">{offer.marketplace}</span>
                                 {offer.isTaxed && (
                                   <span className="text-[8px] font-bold text-amber-500 bg-amber-500/10 px-1 rounded">TAX</span>

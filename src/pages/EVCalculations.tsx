@@ -344,10 +344,10 @@ export const EVCalculations: React.FC = () => {
                           className="inline-flex items-center gap-1.5 font-mono font-bold text-green-400 hover:text-green-300 transition-colors"
                           title={`Best price at ${row.best_marketplace}`}
                         >
-                          ${row.best_total!.toFixed(2)}
-                          <svg className="w-3 h-3 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                          <svg className="w-3.5 h-3.5 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                           </svg>
+                          ${row.best_total!.toFixed(2)}
                         </a>
                       ) : (
                         <span className="text-[var(--text-2)] text-xs">{'\u2014'}</span>
@@ -406,8 +406,11 @@ export const EVCalculations: React.FC = () => {
                         href={row.best_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="font-mono font-bold text-green-400 hover:text-green-300 transition-colors"
+                        className="inline-flex items-center gap-1 font-mono font-bold text-green-400 hover:text-green-300 transition-colors"
                       >
+                        <svg className="w-3 h-3 opacity-60 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
                         ${row.best_total!.toFixed(2)}
                       </a>
                     ) : (
@@ -470,10 +473,10 @@ export const EVCalculations: React.FC = () => {
                       <div className="text-xs text-[var(--text-2)]">{deck.marketplace}{deck.shipping > 0 ? ` (+$${deck.shipping.toFixed(2)} shipping)` : ''}</div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="font-mono font-bold text-green-400">${deck.total.toFixed(2)}</span>
                       <svg className="w-3.5 h-3.5 text-[var(--text-2)] group-hover:text-green-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                       </svg>
+                      <span className="font-mono font-bold text-green-400">${deck.total.toFixed(2)}</span>
                     </div>
                   </a>
                 ))
