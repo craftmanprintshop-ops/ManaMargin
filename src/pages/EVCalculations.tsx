@@ -53,7 +53,7 @@ export const EVCalculations: React.FC = () => {
   const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [sortConfig, setSortConfig] = useState<{ key: SortKey; dir: SortDir }>({ key: 'ev_to_price_ratio', dir: 'desc' })
-  const [ratioFilter, setRatioFilter] = useState<'all' | 'above1' | 'above0.8' | 'ev_above_best'>('all')
+  const [ratioFilter, setRatioFilter] = useState<'all' | 'above1' | 'above0.8' | 'ev_above_best'>('ev_above_best')
   const [deckPopup, setDeckPopup] = useState<{ setName: string; total: number; decks: DeckOffer[] } | null>(null)
   const [deckPopupLoading, setDeckPopupLoading] = useState(false)
 
