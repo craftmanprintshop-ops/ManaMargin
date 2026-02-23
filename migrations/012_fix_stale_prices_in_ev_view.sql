@@ -8,41 +8,37 @@
 --   so old prices accumulate.
 --
 -- Fix:
---   Use a subquery that gets only the latest offer per (canonical_product_id,
---   marketplace) before selecting the best price. This mirrors what offers_latest
---   does for canonical_sku. Also expires offers older than 7 days so stale
---   prices from marketplaces that haven't been re-scraped are excluded.
+--   Only consider offers from the most recent scrape per marketplace.
+--   Each scraper crawls the entire site, so if a product wasn't found in the
+--   latest scrape, it's no longer available. Older data is kept for history only.
 
 -- ============================================================
--- STEP 1: Create a helper view for latest offers by canonical product
+-- STEP 1: Create a helper view for latest scrape timestamp per marketplace
 -- ============================================================
-CREATE OR REPLACE VIEW offers_latest_by_product AS
-SELECT DISTINCT ON (canonical_product_id, marketplace)
-    id,
-    canonical_product_id,
-    canonical_sku,
-    marketplace,
-    source_key,
-    title,
-    price,
-    shipping,
-    in_stock,
-    url,
-    image_url,
-    fetched_at,
-    set_name,
-    product_type,
-    is_sealed,
-    scrape_ok
+-- This finds the most recent fetched_at per marketplace, so we only use
+-- offers from that scrape run (not historical data).
+CREATE OR REPLACE VIEW marketplace_latest_scrape AS
+SELECT marketplace, MAX(fetched_at) AS latest_fetched_at
 FROM offers
 WHERE scrape_ok = true
-  AND canonical_product_id IS NOT NULL
-  -- Expire offers older than 7 days to avoid stale prices
-  AND fetched_at > NOW() - INTERVAL '7 days'
-ORDER BY canonical_product_id, marketplace, fetched_at DESC;
+GROUP BY marketplace;
 
 -- ============================================================
--- STEP 2: Recreate v_ev_with_best_offers using latest offers only
+-- STEP 2: Create a view for current offers only
+-- ============================================================
+-- Only includes offers from the most recent scrape per marketplace.
+-- If a product wasn't found in the latest scrape, it's considered unavailable.
+CREATE OR REPLACE VIEW offers_current AS
+SELECT o.*
+FROM offers o
+JOIN marketplace_latest_scrape mls
+  ON o.marketplace = mls.marketplace
+  AND o.fetched_at = mls.latest_fetched_at
+WHERE o.scrape_ok = true
+  AND o.canonical_product_id IS NOT NULL;
+
+-- ============================================================
+-- STEP 3: Recreate v_ev_with_best_offers using current offers only
 -- ============================================================
 CREATE OR REPLACE VIEW v_ev_with_best_offers AS
 SELECT
@@ -97,10 +93,10 @@ JOIN botbox_product_mappings bpm ON (
   AND bpm.product_name = b.product_name
 )
 JOIN canonical_products cp ON cp.id = bpm.canonical_product_id
--- Direct best offer: LATEST offer per marketplace, then pick cheapest
+-- Direct best offer: from current scrape data only
 LEFT JOIN LATERAL (
   SELECT o.marketplace, o.price, o.shipping, o.url
-  FROM offers_latest_by_product o
+  FROM offers_current o
   WHERE o.canonical_product_id = cp.id
     AND o.in_stock = true
     AND o.is_sealed = true
@@ -116,7 +112,7 @@ LEFT JOIN LATERAL (
   FROM canonical_products ind_cp
   LEFT JOIN LATERAL (
     SELECT (o.price + COALESCE(o.shipping, 0)) AS best_total
-    FROM offers_latest_by_product o
+    FROM offers_current o
     WHERE o.canonical_product_id = ind_cp.id
       AND o.in_stock = true
       AND o.is_sealed = true
@@ -133,16 +129,20 @@ LEFT JOIN LATERAL (
 WHERE b.expected_value IS NOT NULL
 ORDER BY b.ev_to_price_ratio DESC NULLS LAST;
 
-GRANT SELECT ON offers_latest_by_product TO anon, authenticated;
+GRANT SELECT ON marketplace_latest_scrape TO anon, authenticated;
+GRANT SELECT ON offers_current TO anon, authenticated;
 GRANT SELECT ON v_ev_with_best_offers TO anon, authenticated;
 
+-- Drop the old view from the first version of this migration (if it exists)
+DROP VIEW IF EXISTS offers_latest_by_product;
+
 -- ============================================================
--- STEP 3: Refresh materialized view
+-- STEP 4: Refresh materialized view
 -- ============================================================
 SELECT refresh_offers_latest_enriched_mv();
 
 -- ============================================================
--- STEP 4: Verify Doctor Who pricing
+-- STEP 5: Verify Doctor Who pricing
 -- ============================================================
 SELECT
   set_name,
