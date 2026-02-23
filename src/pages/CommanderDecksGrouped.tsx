@@ -46,6 +46,12 @@ interface MtgstocksPrice {
   url: string | null
 }
 
+interface EVData {
+  expected_value: number
+  ev_to_price_ratio: number | null
+  best_total: number | null
+}
+
 // --- Price Popup Modal ---
 const PricePopup: React.FC<{ deck: CommanderDeckValue; onClose: () => void; mtgstocksPrice?: MtgstocksPrice | null }> = ({ deck, onClose, mtgstocksPrice }) => {
   const [offers, setOffers] = useState<PriceOffer[]>([])
@@ -230,6 +236,7 @@ export const CommanderDecksGrouped: React.FC<CommanderDecksGroupedProps> = ({ on
   const [selectedPriceDeck, setSelectedPriceDeck] = useState<CommanderDeckValue | null>(null)
   const [cheapestOffers, setCheapestOffers] = useState<Map<string, CheapestOffer>>(new Map())
   const [mtgstocksPrices, setMtgstocksPrices] = useState<Map<string, MtgstocksPrice>>(new Map())
+  const [evData, setEvData] = useState<Map<string, EVData>>(new Map())
   const [activeFilter, setActiveFilter] = useState<DeckFilter>('all')
 
   const loadDecks = async () => {
@@ -385,6 +392,36 @@ export const CommanderDecksGrouped: React.FC<CommanderDecksGroupedProps> = ({ on
     loadMtgstocksPrices()
   }, [decks])
 
+  // Load EV data for commander deck sets
+  useEffect(() => {
+    const loadEvData = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('v_ev_with_best_offers')
+          .select('set_name, product_type, expected_value, ev_to_price_ratio, best_total')
+          .not('expected_value', 'is', null)
+          .limit(500)
+
+        if (error || !data) return
+
+        const evMap = new Map<string, EVData>()
+        for (const row of data as any[]) {
+          // Key by set_name|product_type so we can match both set-level and individual decks
+          const key = `${row.set_name}|${row.product_type}`
+          evMap.set(key, {
+            expected_value: row.expected_value,
+            ev_to_price_ratio: row.ev_to_price_ratio,
+            best_total: row.best_total,
+          })
+        }
+        setEvData(evMap)
+      } catch {
+        // silent
+      }
+    }
+    loadEvData()
+  }, [])
+
   const groupedDecks = useMemo(() => {
     const groups: { [key: string]: CommanderDeckValue[] } = {}
     decks.forEach(deck => {
@@ -518,6 +555,7 @@ export const CommanderDecksGrouped: React.FC<CommanderDecksGroupedProps> = ({ on
               <tr>
                 <th className="px-3 sm:px-6 py-4">Set & Deck Name</th>
                 <th className="px-3 sm:px-6 py-4 text-right text-[var(--accent)]">Value</th>
+                <th className="px-4 py-4 text-right text-purple-400">EV</th>
                 <th className="px-4 py-4 text-right text-blue-300 hidden md:table-cell">&gt;$0.25</th>
                 <th className="px-4 py-4 text-right text-blue-100 hidden md:table-cell">&gt;$1.00</th>
                 <th className="px-3 sm:px-4 py-4 text-right text-amber-400 hidden lg:table-cell">Ref Price</th>
@@ -558,6 +596,18 @@ export const CommanderDecksGrouped: React.FC<CommanderDecksGroupedProps> = ({ on
                       </td>
                       <td className="px-3 sm:px-6 py-2 text-right font-black font-mono text-[var(--accent)] text-base sm:text-lg">
                         ${totalValue.toFixed(2)}
+                      </td>
+                      <td className="px-4 py-2 text-right">
+                        {(() => {
+                          const setName = first.set_name || first.code.toUpperCase()
+                          const setEv = evData.get(`${setName}|Commander Deck Set`)
+                          if (!setEv) return null
+                          return (
+                            <span className="font-bold font-mono text-purple-400 text-xs">
+                              ${setEv.expected_value.toFixed(2)}
+                            </span>
+                          )
+                        })()}
                       </td>
                       <td className="px-4 py-2 text-right font-mono text-blue-300/80 text-xs hidden md:table-cell">
                         ${total25c.toFixed(2)}
@@ -622,6 +672,20 @@ export const CommanderDecksGrouped: React.FC<CommanderDecksGroupedProps> = ({ on
                           </td>
                           <td className="px-3 sm:px-6 py-3 sm:py-4 text-right font-black font-mono text-[var(--accent)] text-sm sm:text-base">
                             ${(deck.total_value || 0).toFixed(2)}
+                          </td>
+                          <td className="px-4 py-3 sm:py-4 text-right">
+                            {(() => {
+                              const setName = deck.set_name || deck.code.toUpperCase()
+                              // Try exact deck name match, then Commander Deck generic
+                              const deckEv = evData.get(`${setName}|${deck.deck_name}`)
+                                || evData.get(`${setName}|Commander Deck`)
+                              if (!deckEv) return <span className="text-[var(--text-2)] text-[10px] opacity-40">—</span>
+                              return (
+                                <span className="font-bold font-mono text-purple-400 text-xs">
+                                  ${deckEv.expected_value.toFixed(2)}
+                                </span>
+                              )
+                            })()}
                           </td>
                           <td className="px-4 py-4 text-right font-mono text-blue-300/80 text-xs hidden md:table-cell">
                             ${(deck.value_over_25c || 0).toFixed(2)}

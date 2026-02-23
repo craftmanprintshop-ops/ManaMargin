@@ -70,17 +70,18 @@ export const EVCalculations: React.FC = () => {
         .eq('set_name', setName)
         .not('product_type', 'in', '("Commander Deck","Commander Deck Set","Commander Deck Collector Edition","Commander Deck Case","Collector Booster Box","Booster Box","Bundle","Booster Pack")')
 
-      if (!deckProducts || deckProducts.length === 0) {
+      const products = (deckProducts ?? []) as { id: number; product_type: string }[]
+      if (products.length === 0) {
         setDeckPopup(null)
         return
       }
 
       // For each deck, find the best offer
       const deckOffers: DeckOffer[] = []
-      for (const dp of deckProducts) {
+      for (const dp of products) {
         if (dp.product_type.length <= 5) continue
         const { data: offers } = await supabase
-          .from('offers')
+          .from('offers_current')
           .select('price, shipping, marketplace, url')
           .eq('canonical_product_id', dp.id)
           .eq('in_stock', true)
@@ -88,8 +89,9 @@ export const EVCalculations: React.FC = () => {
           .order('price', { ascending: true })
           .limit(1)
 
-        if (offers && offers.length > 0) {
-          const o = offers[0]
+        const typedOffers = (offers ?? []) as { price: number; shipping: number | null; marketplace: string; url: string }[]
+        if (typedOffers.length > 0) {
+          const o = typedOffers[0]
           deckOffers.push({
             deck_name: dp.product_type,
             price: o.price,

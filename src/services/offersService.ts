@@ -146,10 +146,9 @@ export const offersService = {
   async getPriceComparison(canonicalSku: string): Promise<Offer[]> {
     try {
       const { data, error } = await supabase
-        .from('offers')
+        .from('offers_latest_enriched_mv')
         .select('*')
         .eq('canonical_sku', canonicalSku)
-        .eq('scrape_ok', true) // Only successful scrapes
         .order('price', { ascending: true })
 
       if (error) {

@@ -38,6 +38,7 @@ interface EVDeal {
   best_total: number
   best_marketplace: string | null
   best_url: string | null
+  best_image_url: string | null
   ev_difference: number
 }
 
@@ -66,7 +67,7 @@ export const Dashboard: React.FC = () => {
       try {
         const { data, error: queryError } = await supabase
           .from('v_ev_with_best_offers')
-          .select('set_name, product_type, expected_value, best_total, best_marketplace, best_url')
+          .select('set_name, product_type, expected_value, best_total, best_marketplace, best_url, best_image_url')
           .not('expected_value', 'is', null)
           .not('best_total', 'is', null)
           .order('ev_to_price_ratio', { ascending: false, nullsFirst: false })
@@ -83,6 +84,7 @@ export const Dashboard: React.FC = () => {
             best_total: r.best_total,
             best_marketplace: r.best_marketplace,
             best_url: r.best_url,
+            best_image_url: r.best_image_url,
             ev_difference: r.expected_value - r.best_total,
           }))
           .sort((a, b) => b.ev_difference - a.ev_difference)
@@ -195,8 +197,8 @@ export const Dashboard: React.FC = () => {
 
       {/* Top EV Deals */}
       {evDeals.length > 0 && (
-        <div className="bg-[#0f111a]/80 backdrop-blur-xl rounded-xl border border-purple-500/20 shadow-2xl overflow-hidden">
-          <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between">
+        <div>
+          <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <span className="text-lg font-black text-white uppercase tracking-tight">Top EV Deals</span>
               <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-400 border border-purple-500/30">
@@ -210,44 +212,58 @@ export const Dashboard: React.FC = () => {
               View All EV →
             </Link>
           </div>
-          <div className="divide-y divide-white/5">
-            {evDeals.map((deal, idx) => (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+            {evDeals.map((deal) => (
               <div
                 key={`${deal.set_name}-${deal.product_type}`}
-                className="flex items-center justify-between px-6 py-3 hover:bg-white/[0.03] transition-colors"
+                className="bg-[#0f111a]/80 backdrop-blur-xl rounded-xl border border-white/10 overflow-hidden hover:border-purple-500/30 transition-all group"
               >
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-[var(--text-2)] w-5">{idx + 1}.</span>
-                    <div className="min-w-0">
-                      <div className="text-sm font-medium text-[var(--text-1)] truncate">{deal.set_name}</div>
-                      <div className="text-xs text-[var(--text-2)] truncate">{deal.product_type}</div>
+                {/* Product Image */}
+                <div className="aspect-square relative overflow-hidden bg-gradient-to-br from-purple-900/20 via-[#0b0d14] to-transparent">
+                  {deal.best_image_url ? (
+                    <img
+                      src={deal.best_image_url}
+                      alt={`${deal.set_name} ${deal.product_type}`}
+                      className="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform duration-500"
+                      onError={(e) => (e.currentTarget.style.display = 'none')}
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <span className="text-3xl text-white/10">?</span>
                     </div>
+                  )}
+                  {/* Margin badge */}
+                  <div className="absolute top-2 right-2 px-1.5 py-0.5 rounded bg-green-500/90 text-[10px] font-black text-white">
+                    +${deal.ev_difference.toFixed(0)}
                   </div>
                 </div>
-                <div className="flex items-center gap-4 sm:gap-6 shrink-0 ml-4">
-                  <div className="text-right hidden sm:block">
-                    <div className="text-[10px] text-[var(--text-2)] uppercase">EV</div>
-                    <div className="text-sm font-mono text-purple-400 font-bold">${deal.expected_value.toFixed(2)}</div>
+
+                {/* Card Info */}
+                <div className="p-3 space-y-2">
+                  <div>
+                    <div className="text-xs font-medium text-[var(--text-1)] leading-tight line-clamp-1">{deal.set_name}</div>
+                    <div className="text-[10px] text-[var(--text-2)] leading-tight line-clamp-1">{deal.product_type}</div>
                   </div>
-                  <div className="text-right">
-                    <div className="text-[10px] text-[var(--text-2)] uppercase">Best Price</div>
-                    {deal.best_url ? (
-                      <a
-                        href={deal.best_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm font-mono text-green-400 font-bold hover:text-green-300 transition-colors"
-                      >
-                        ${deal.best_total.toFixed(2)}
-                      </a>
-                    ) : (
-                      <div className="text-sm font-mono text-green-400 font-bold">${deal.best_total.toFixed(2)}</div>
-                    )}
-                  </div>
-                  <div className="text-right">
-                    <div className="text-[10px] text-[var(--text-2)] uppercase">Margin</div>
-                    <div className="text-sm font-mono text-green-400 font-black">+${deal.ev_difference.toFixed(2)}</div>
+                  <div className="flex items-center justify-between gap-2">
+                    <div>
+                      <div className="text-[9px] text-[var(--text-2)] uppercase">EV</div>
+                      <div className="text-xs font-mono text-purple-400 font-bold">${deal.expected_value.toFixed(2)}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-[9px] text-[var(--text-2)] uppercase">Price</div>
+                      {deal.best_url ? (
+                        <a
+                          href={deal.best_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs font-mono text-green-400 font-bold hover:text-green-300 transition-colors"
+                        >
+                          ${deal.best_total.toFixed(2)}
+                        </a>
+                      ) : (
+                        <div className="text-xs font-mono text-green-400 font-bold">${deal.best_total.toFixed(2)}</div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
