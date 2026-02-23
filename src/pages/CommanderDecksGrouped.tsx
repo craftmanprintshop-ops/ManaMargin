@@ -730,12 +730,9 @@ export const CommanderDecksGrouped: React.FC<CommanderDecksGroupedProps> = ({ on
                                 className="inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 rounded-lg bg-green-500/10 border border-green-500/20 hover:bg-green-500/20 hover:border-green-500/40 transition-all group/buy"
                                 title={`Buy from ${cheapest.marketplace}`}
                               >
-                                <img
-                                  src={`https://www.google.com/s2/favicons?domain=${(() => { try { return new URL(cheapest.url).hostname } catch { return '' } })()}&sz=16`}
-                                  alt=""
-                                  className="w-3.5 h-3.5 opacity-60 group-hover/buy:opacity-100 transition-opacity shrink-0 hidden sm:block"
-                                  onError={(e) => (e.currentTarget.style.display = 'none')}
-                                />
+                                <svg className="w-3.5 h-3.5 text-green-400 opacity-60 group-hover/buy:opacity-100 transition-opacity shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                                </svg>
                                 <span className="font-black font-mono text-green-400 text-xs sm:text-sm">
                                   ${cheapest.price.toFixed(2)}
                                 </span>

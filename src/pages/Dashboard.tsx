@@ -35,6 +35,7 @@ interface EVDeal {
   set_name: string
   product_type: string
   expected_value: number
+  botbox_market_price: number | null
   best_total: number
   best_marketplace: string | null
   best_url: string | null
@@ -67,7 +68,7 @@ export const Dashboard: React.FC = () => {
       try {
         const { data, error: queryError } = await supabase
           .from('v_ev_with_best_offers')
-          .select('set_name, product_type, expected_value, best_total, best_marketplace, best_url, best_image_url')
+          .select('set_name, product_type, expected_value, botbox_market_price, best_total, best_marketplace, best_url, best_image_url')
           .not('expected_value', 'is', null)
           .not('best_total', 'is', null)
           .order('ev_to_price_ratio', { ascending: false, nullsFirst: false })
@@ -81,6 +82,7 @@ export const Dashboard: React.FC = () => {
             set_name: r.set_name,
             product_type: r.product_type,
             expected_value: r.expected_value,
+            botbox_market_price: r.botbox_market_price,
             best_total: r.best_total,
             best_marketplace: r.best_marketplace,
             best_url: r.best_url,
@@ -232,9 +234,26 @@ export const Dashboard: React.FC = () => {
                       <span className="text-3xl text-white/10">?</span>
                     </div>
                   )}
-                  {/* Margin badge */}
-                  <div className="absolute top-2 right-2 px-1.5 py-0.5 rounded bg-green-500/90 text-[10px] font-black text-white">
-                    +${deal.ev_difference.toFixed(0)}
+                  {/* Best Price - top right */}
+                  <div className="absolute top-2 right-2">
+                    {deal.best_url ? (
+                      <a
+                        href={deal.best_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-green-500/90 hover:bg-green-500 transition-colors"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                        <span className="text-[10px] font-black text-white">${deal.best_total.toFixed(2)}</span>
+                      </a>
+                    ) : (
+                      <div className="px-1.5 py-0.5 rounded bg-green-500/90 text-[10px] font-black text-white">
+                        ${deal.best_total.toFixed(2)}
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -246,23 +265,14 @@ export const Dashboard: React.FC = () => {
                   </div>
                   <div className="flex items-center justify-between gap-2">
                     <div>
-                      <div className="text-[9px] text-[var(--text-2)] uppercase">EV</div>
-                      <div className="text-xs font-mono text-purple-400 font-bold">${deal.expected_value.toFixed(2)}</div>
+                      <div className="text-[9px] text-[var(--text-2)] uppercase">Market</div>
+                      <div className="text-xs font-mono text-amber-400 font-bold">
+                        {deal.botbox_market_price !== null ? `$${deal.botbox_market_price.toFixed(2)}` : '\u2014'}
+                      </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-[9px] text-[var(--text-2)] uppercase">Price</div>
-                      {deal.best_url ? (
-                        <a
-                          href={deal.best_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs font-mono text-green-400 font-bold hover:text-green-300 transition-colors"
-                        >
-                          ${deal.best_total.toFixed(2)}
-                        </a>
-                      ) : (
-                        <div className="text-xs font-mono text-green-400 font-bold">${deal.best_total.toFixed(2)}</div>
-                      )}
+                      <div className="text-[9px] text-[var(--text-2)] uppercase">EV</div>
+                      <div className="text-xs font-mono text-purple-400 font-bold">${deal.expected_value.toFixed(2)}</div>
                     </div>
                   </div>
                 </div>
@@ -334,15 +344,14 @@ export const Dashboard: React.FC = () => {
                   className="shrink-0 ml-3 flex flex-col items-center gap-1 px-3 py-2 rounded-lg bg-green-500/10 border border-green-500/20 hover:bg-green-500/20 hover:border-green-500/40 transition-all"
                   title={`Buy from ${deal.marketplace}`}
                 >
-                  <img
-                    src={`https://www.google.com/s2/favicons?domain=${(() => { try { return new URL(deal.url).hostname } catch { return '' } })()}&sz=16`}
-                    alt=""
-                    className="w-4 h-4 opacity-70 shrink-0"
-                    onError={(e) => (e.currentTarget.style.display = 'none')}
-                  />
-                  <span className="font-black font-mono text-green-400 text-sm">
-                    ${deal.market_price.toFixed(2)}
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <svg className="w-3.5 h-3.5 text-green-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                    <span className="font-black font-mono text-green-400 text-sm">
+                      ${deal.market_price.toFixed(2)}
+                    </span>
+                  </div>
                   <span className="text-[8px] text-[var(--text-2)] uppercase font-bold">
                     {deal.marketplace}
                   </span>
