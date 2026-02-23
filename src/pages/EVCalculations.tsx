@@ -378,7 +378,7 @@ export const EVCalculations: React.FC = () => {
                 <div className="text-[var(--text-2)] text-xs">{row.product_type}</div>
               </div>
               {/* Stats grid */}
-              <div className="grid grid-cols-2 gap-2 text-xs">
+              <div className="grid grid-cols-3 gap-2 text-xs">
                 <div className="bg-white/[0.03] rounded-lg px-3 py-2">
                   <div className="text-[var(--text-2)] uppercase text-[10px] tracking-wider mb-0.5">Expected Value</div>
                   <div className="font-mono text-purple-400 font-bold">
@@ -389,12 +389,6 @@ export const EVCalculations: React.FC = () => {
                   <div className="text-[var(--text-2)] uppercase text-[10px] tracking-wider mb-0.5">Market Price</div>
                   <div className="font-mono text-[var(--text-2)]">
                     {row.botbox_market_price !== null ? `$${row.botbox_market_price.toFixed(2)}` : '\u2014'}
-                  </div>
-                </div>
-                <div className="bg-white/[0.03] rounded-lg px-3 py-2">
-                  <div className="text-[var(--text-2)] uppercase text-[10px] tracking-wider mb-0.5">EV/Price</div>
-                  <div className={`font-mono font-bold ${ratioColor(row.ev_to_price_ratio)}`}>
-                    {row.ev_to_price_ratio !== null ? row.ev_to_price_ratio.toFixed(4) : '\u2014'}
                   </div>
                 </div>
                 <div className="bg-white/[0.03] rounded-lg px-3 py-2">
