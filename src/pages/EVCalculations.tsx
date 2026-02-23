@@ -277,8 +277,8 @@ export const EVCalculations: React.FC = () => {
         </div>
       </div>
 
-      {/* Table */}
-      <div className="bg-[#0f111a]/80 backdrop-blur-xl rounded-xl border border-white/10 shadow-2xl overflow-hidden">
+      {/* Table — desktop */}
+      <div className="hidden md:block bg-[#0f111a]/80 backdrop-blur-xl rounded-xl border border-white/10 shadow-2xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left border-collapse">
             <thead className="bg-[var(--bg-2)]/80 text-[var(--text-2)] font-bold uppercase text-[10px] tracking-widest sticky top-0 z-10 border-b border-white/5">
@@ -363,6 +363,70 @@ export const EVCalculations: React.FC = () => {
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* Cards — mobile */}
+      <div className="md:hidden space-y-3">
+        {displayRows.length > 0 ? (
+          displayRows.map((row, idx) => (
+            <div key={`m-${row.canonical_product_id}-${idx}`} className="bg-[#0f111a]/80 backdrop-blur-xl rounded-xl border border-white/10 p-4 space-y-3">
+              {/* Set & Product */}
+              <div>
+                <div className="text-[var(--text-1)] font-medium text-sm">{row.set_name}</div>
+                <div className="text-[var(--text-2)] text-xs">{row.product_type}</div>
+              </div>
+              {/* Stats grid */}
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className="bg-white/[0.03] rounded-lg px-3 py-2">
+                  <div className="text-[var(--text-2)] uppercase text-[10px] tracking-wider mb-0.5">Expected Value</div>
+                  <div className="font-mono text-purple-400 font-bold">
+                    {row.expected_value !== null ? `$${row.expected_value.toFixed(2)}` : '\u2014'}
+                  </div>
+                </div>
+                <div className="bg-white/[0.03] rounded-lg px-3 py-2">
+                  <div className="text-[var(--text-2)] uppercase text-[10px] tracking-wider mb-0.5">Market Price</div>
+                  <div className="font-mono text-[var(--text-2)]">
+                    {row.botbox_market_price !== null ? `$${row.botbox_market_price.toFixed(2)}` : '\u2014'}
+                  </div>
+                </div>
+                <div className="bg-white/[0.03] rounded-lg px-3 py-2">
+                  <div className="text-[var(--text-2)] uppercase text-[10px] tracking-wider mb-0.5">EV/Price</div>
+                  <div className={`font-mono font-bold ${ratioColor(row.ev_to_price_ratio)}`}>
+                    {row.ev_to_price_ratio !== null ? row.ev_to_price_ratio.toFixed(4) : '\u2014'}
+                  </div>
+                </div>
+                <div className="bg-white/[0.03] rounded-lg px-3 py-2">
+                  <div className="text-[var(--text-2)] uppercase text-[10px] tracking-wider mb-0.5">Best Price</div>
+                  <div>
+                    {row.best_marketplace === 'Individual Decks' && row.best_total !== null ? (
+                      <button
+                        onClick={() => openDeckPopup(row.set_name, row.best_total!)}
+                        className="font-mono font-bold text-green-400 hover:text-green-300 transition-colors"
+                      >
+                        ${row.best_total.toFixed(2)}
+                      </button>
+                    ) : row.best_url ? (
+                      <a
+                        href={row.best_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-mono font-bold text-green-400 hover:text-green-300 transition-colors"
+                      >
+                        ${row.best_total!.toFixed(2)}
+                      </a>
+                    ) : (
+                      <span className="text-[var(--text-2)]">{'\u2014'}</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="bg-[#0f111a]/80 backdrop-blur-xl rounded-xl border border-white/10 px-4 py-16 text-center text-[var(--text-2)]">
+            No products match your filters.
+          </div>
+        )}
       </div>
 
       {/* Data source footer */}

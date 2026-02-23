@@ -31,6 +31,16 @@ interface DeckDeal {
   savings_pct: number
 }
 
+interface EVDeal {
+  set_name: string
+  product_type: string
+  expected_value: number
+  best_total: number
+  best_marketplace: string | null
+  best_url: string | null
+  ev_difference: number
+}
+
 /**
  * Dashboard page with statistics and overview
  */
@@ -47,6 +57,46 @@ export const Dashboard: React.FC = () => {
 
   const [deals, setDeals] = useState<DeckDeal[]>([])
   const [dealsLoading, setDealsLoading] = useState(true)
+  const [evDeals, setEvDeals] = useState<EVDeal[]>([])
+  const [evDealsLoading, setEvDealsLoading] = useState(true)
+
+  // Fetch top EV deals
+  useEffect(() => {
+    const loadEvDeals = async () => {
+      try {
+        const { data, error: queryError } = await supabase
+          .from('v_ev_with_best_offers')
+          .select('set_name, product_type, expected_value, best_total, best_marketplace, best_url')
+          .not('expected_value', 'is', null)
+          .not('best_total', 'is', null)
+          .order('ev_to_price_ratio', { ascending: false, nullsFirst: false })
+          .limit(200)
+
+        if (queryError || !data) return
+
+        const filtered = (data as any[])
+          .filter(r => r.expected_value > r.best_total)
+          .map(r => ({
+            set_name: r.set_name,
+            product_type: r.product_type,
+            expected_value: r.expected_value,
+            best_total: r.best_total,
+            best_marketplace: r.best_marketplace,
+            best_url: r.best_url,
+            ev_difference: r.expected_value - r.best_total,
+          }))
+          .sort((a, b) => b.ev_difference - a.ev_difference)
+          .slice(0, 10)
+
+        setEvDeals(filtered)
+      } catch {
+        // silent
+      } finally {
+        setEvDealsLoading(false)
+      }
+    }
+    loadEvDeals()
+  }, [])
 
   useEffect(() => {
     const loadDeals = async () => {
@@ -143,48 +193,76 @@ export const Dashboard: React.FC = () => {
         </p>
       </div>
 
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card padding="md">
-          <div className="text-center">
-            <p className="text-sm text-[var(--text-2)] mb-2">Total Products</p>
-            <p className="text-4xl font-bold text-primary-600">
-              {summary?.totalProducts.toLocaleString() || 0}
-            </p>
-            <p className="text-xs text-[var(--text-2)]/70 mt-2">Sealed products tracked</p>
+      {/* Top EV Deals */}
+      {evDeals.length > 0 && (
+        <div className="bg-[#0f111a]/80 backdrop-blur-xl rounded-xl border border-purple-500/20 shadow-2xl overflow-hidden">
+          <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="text-lg font-black text-white uppercase tracking-tight">Top EV Deals</span>
+              <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-400 border border-purple-500/30">
+                EV &gt; Best Price
+              </span>
+            </div>
+            <Link
+              to={ROUTES.EV_CALCULATIONS}
+              className="text-[10px] font-bold text-[var(--brand)] hover:text-white uppercase tracking-widest transition-colors"
+            >
+              View All EV →
+            </Link>
           </div>
-        </Card>
-
-        <Card padding="md">
-          <div className="text-center">
-            <p className="text-sm text-[var(--text-2)] mb-2">Latest Offers</p>
-            <p className="text-4xl font-bold text-blue-600">
-              {summary?.totalOffers.toLocaleString() || 0}
-            </p>
-            <p className="text-xs text-[var(--text-2)]/70 mt-2">Price points (last 7 days)</p>
+          <div className="divide-y divide-white/5">
+            {evDeals.map((deal, idx) => (
+              <div
+                key={`${deal.set_name}-${deal.product_type}`}
+                className="flex items-center justify-between px-6 py-3 hover:bg-white/[0.03] transition-colors"
+              >
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-[var(--text-2)] w-5">{idx + 1}.</span>
+                    <div className="min-w-0">
+                      <div className="text-sm font-medium text-[var(--text-1)] truncate">{deal.set_name}</div>
+                      <div className="text-xs text-[var(--text-2)] truncate">{deal.product_type}</div>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4 sm:gap-6 shrink-0 ml-4">
+                  <div className="text-right hidden sm:block">
+                    <div className="text-[10px] text-[var(--text-2)] uppercase">EV</div>
+                    <div className="text-sm font-mono text-purple-400 font-bold">${deal.expected_value.toFixed(2)}</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-[10px] text-[var(--text-2)] uppercase">Best Price</div>
+                    {deal.best_url ? (
+                      <a
+                        href={deal.best_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm font-mono text-green-400 font-bold hover:text-green-300 transition-colors"
+                      >
+                        ${deal.best_total.toFixed(2)}
+                      </a>
+                    ) : (
+                      <div className="text-sm font-mono text-green-400 font-bold">${deal.best_total.toFixed(2)}</div>
+                    )}
+                  </div>
+                  <div className="text-right">
+                    <div className="text-[10px] text-[var(--text-2)] uppercase">Margin</div>
+                    <div className="text-sm font-mono text-green-400 font-black">+${deal.ev_difference.toFixed(2)}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
-        </Card>
-
-        <Card padding="md">
-          <div className="text-center">
-            <p className="text-sm text-[var(--text-2)] mb-2">Commander Decks</p>
-            <p className="text-4xl font-bold text-purple-600">
-              {summary?.commanderDecks.toLocaleString() || 0}
-            </p>
-            <p className="text-xs text-[var(--text-2)]/70 mt-2">Precon decks valued</p>
+        </div>
+      )}
+      {evDealsLoading && (
+        <div className="bg-[#0f111a]/80 backdrop-blur-xl rounded-xl border border-white/5 p-8">
+          <div className="flex items-center justify-center gap-3">
+            <div className="w-5 h-5 border-2 border-purple-400 border-t-transparent rounded-full animate-spin"></div>
+            <span className="text-xs text-[var(--text-2)] uppercase tracking-widest font-bold">Loading EV deals...</span>
           </div>
-        </Card>
-
-        <Card padding="md">
-          <div className="text-center">
-            <p className="text-sm text-[var(--text-2)] mb-2">Total Cards</p>
-            <p className="text-4xl font-bold text-green-600">
-              {summary?.totalCards.toLocaleString() || 0}
-            </p>
-            <p className="text-xs text-[var(--text-2)]/70 mt-2">Unique cards in database</p>
-          </div>
-        </Card>
-      </div>
+        </div>
+      )}
 
       {/* Commander Deck Deals */}
       {deals.length > 0 && (
