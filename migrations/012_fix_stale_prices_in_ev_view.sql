@@ -10,7 +10,8 @@
 -- Fix:
 --   Use a subquery that gets only the latest offer per (canonical_product_id,
 --   marketplace) before selecting the best price. This mirrors what offers_latest
---   does for canonical_sku.
+--   does for canonical_sku. Also expires offers older than 7 days so stale
+--   prices from marketplaces that haven't been re-scraped are excluded.
 
 -- ============================================================
 -- STEP 1: Create a helper view for latest offers by canonical product
@@ -36,6 +37,8 @@ SELECT DISTINCT ON (canonical_product_id, marketplace)
 FROM offers
 WHERE scrape_ok = true
   AND canonical_product_id IS NOT NULL
+  -- Expire offers older than 7 days to avoid stale prices
+  AND fetched_at > NOW() - INTERVAL '7 days'
 ORDER BY canonical_product_id, marketplace, fetched_at DESC;
 
 -- ============================================================
