@@ -298,8 +298,8 @@ export const CommanderDecksGrouped: React.FC<CommanderDecksGroupedProps> = ({ on
         const { data, error } = await queryWithRetry(
           () => supabase
             .from('offers_latest_enriched_mv')
-            .select('title,marketplace,price,url,in_stock')
-            .eq('product_type', 'Commander Deck')
+            .select('title,marketplace,price,url,in_stock,set_name')
+            .in('product_type', ['Commander Deck', 'Commander Deck Set'])
             .eq('in_stock', true)
             .order('price', { ascending: true })
             .limit(2000),
@@ -309,18 +309,37 @@ export const CommanderDecksGrouped: React.FC<CommanderDecksGroupedProps> = ({ on
 
         if (error) throw error
 
-        // Match offers to deck names by finding title containing deck_name
+        const offers = (data ?? []) as any[]
+
+        // Build a map of cheapest set-level offers by set_name for fallback
+        const setOfferMap = new Map<string, any>()
+        for (const offer of offers) {
+          const setName = (offer.set_name || '').toLowerCase()
+          if (setName && !setOfferMap.has(setName)) {
+            setOfferMap.set(setName, offer)
+          }
+        }
+
+        // Match offers to deck names
         const offerMap = new Map<string, CheapestOffer>()
         for (const deck of decks) {
           const deckKey = `${deck.code}|${deck.deck_name}`
           if (offerMap.has(deckKey)) continue
 
           const nameLower = deck.deck_name.toLowerCase()
-          const offers = (data ?? []) as any[]
-          const match = offers.find((o) => {
+
+          // 1. Try exact deck name match in title
+          let match = offers.find((o) => {
             const titleLower = (o.title || '').toLowerCase()
             return titleLower.includes(nameLower)
           })
+
+          // 2. Fallback: match by set_name on the offer
+          if (!match && deck.set_name) {
+            // Strip "Commander" suffix from set_name for matching (e.g. "Lorwyn Eclipsed Commander" -> "Lorwyn Eclipsed")
+            const baseSetName = deck.set_name.replace(/\s+Commander$/i, '').toLowerCase()
+            match = setOfferMap.get(baseSetName) || setOfferMap.get(deck.set_name.toLowerCase())
+          }
 
           if (match) {
             offerMap.set(deckKey, {
