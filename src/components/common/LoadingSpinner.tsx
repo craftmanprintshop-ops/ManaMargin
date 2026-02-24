@@ -69,7 +69,7 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
 
   if (fullPage) {
     return (
-      <div className="fixed inset-0 bg-[#0b0d14]/90 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="fixed inset-0 bg-[var(--bg-surface-2)]/90 backdrop-blur-sm flex items-center justify-center z-50">
         {spinnerElement}
       </div>
     )

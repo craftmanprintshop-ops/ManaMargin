@@ -235,7 +235,7 @@ export const EVCalculations: React.FC = () => {
   return (
     <div className="w-full animate-fade-in space-y-6">
       {/* Header */}
-      <div className="bg-[#0f111a]/80 backdrop-blur-xl p-6 rounded-xl border border-white/10 shadow-2xl">
+      <div className="bg-[var(--bg-surface)] backdrop-blur-xl p-6 rounded-xl border border-[var(--border-color)] shadow-2xl">
         <h2 className="text-xl sm:text-2xl font-bold text-[var(--text-1)] mb-4">EV Calculations</h2>
         <p className="text-sm text-[var(--text-2)] mb-4">
           Expected value analysis for sealed products. Products with EV/Price ratio above 1.0 are worth more than their market price.
@@ -280,10 +280,10 @@ export const EVCalculations: React.FC = () => {
       </div>
 
       {/* Table — desktop */}
-      <div className="hidden md:block bg-[#0f111a]/80 backdrop-blur-xl rounded-xl border border-white/10 shadow-2xl overflow-hidden">
+      <div className="hidden md:block bg-[var(--bg-surface)] backdrop-blur-xl rounded-xl border border-[var(--border-color)] shadow-2xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left border-collapse">
-            <thead className="bg-[var(--bg-2)]/80 text-[var(--text-2)] font-bold uppercase text-[10px] tracking-widest sticky top-0 z-10 border-b border-white/5">
+            <thead className="bg-[var(--bg-2)]/80 text-[var(--text-2)] font-bold uppercase text-[10px] tracking-widest sticky top-0 z-10 border-b border-[var(--border-color-2)]">
               <tr>
                 {([
                   ['Set', 'set_name'],
@@ -295,7 +295,7 @@ export const EVCalculations: React.FC = () => {
                 ] as [string, SortKey][]).map(([label, key]) => (
                   <th
                     key={key}
-                    className="px-4 py-4 cursor-pointer hover:bg-white/10 transition-colors select-none whitespace-nowrap"
+                    className="px-4 py-4 cursor-pointer hover:bg-[var(--bg-hover-2)] transition-colors select-none whitespace-nowrap"
                     onClick={() => requestSort(key)}
                   >
                     <div className={`flex items-center gap-1 ${['expected_value', 'botbox_market_price', 'ev_to_price_ratio', 'best_total'].includes(key) ? 'justify-end' : ''}`}>
@@ -308,7 +308,7 @@ export const EVCalculations: React.FC = () => {
             <tbody className="divide-y divide-white/5">
               {displayRows.length > 0 ? (
                 displayRows.map((row, idx) => (
-                  <tr key={`${row.canonical_product_id}-${idx}`} className="group hover:bg-white/[0.03] transition-colors">
+                  <tr key={`${row.canonical_product_id}-${idx}`} className="group hover:bg-[var(--bg-hover)] transition-colors">
                     <td className="px-4 py-3 text-[var(--text-1)] font-medium max-w-[200px] truncate" title={row.set_name}>
                       {row.set_name}
                     </td>
@@ -371,7 +371,7 @@ export const EVCalculations: React.FC = () => {
       <div className="md:hidden space-y-3">
         {displayRows.length > 0 ? (
           displayRows.map((row, idx) => (
-            <div key={`m-${row.canonical_product_id}-${idx}`} className="bg-[#0f111a]/80 backdrop-blur-xl rounded-xl border border-white/10 p-4 space-y-3">
+            <div key={`m-${row.canonical_product_id}-${idx}`} className="bg-[var(--bg-surface)] backdrop-blur-xl rounded-xl border border-[var(--border-color)] p-4 space-y-3">
               {/* Set & Product */}
               <div>
                 <div className="text-[var(--text-1)] font-medium text-sm">{row.set_name}</div>
@@ -379,19 +379,19 @@ export const EVCalculations: React.FC = () => {
               </div>
               {/* Stats grid */}
               <div className="grid grid-cols-3 gap-2 text-xs">
-                <div className="bg-white/[0.03] rounded-lg px-3 py-2">
+                <div className="bg-[var(--bg-hover)] rounded-lg px-3 py-2">
                   <div className="text-[var(--text-2)] uppercase text-[10px] tracking-wider mb-0.5">Expected Value</div>
                   <div className="font-mono text-purple-400 font-bold">
                     {row.expected_value !== null ? `$${row.expected_value.toFixed(2)}` : '\u2014'}
                   </div>
                 </div>
-                <div className="bg-white/[0.03] rounded-lg px-3 py-2">
+                <div className="bg-[var(--bg-hover)] rounded-lg px-3 py-2">
                   <div className="text-[var(--text-2)] uppercase text-[10px] tracking-wider mb-0.5">Market Price</div>
                   <div className="font-mono text-[var(--text-2)]">
                     {row.botbox_market_price !== null ? `$${row.botbox_market_price.toFixed(2)}` : '\u2014'}
                   </div>
                 </div>
-                <div className="bg-white/[0.03] rounded-lg px-3 py-2">
+                <div className="bg-[var(--bg-hover)] rounded-lg px-3 py-2">
                   <div className="text-[var(--text-2)] uppercase text-[10px] tracking-wider mb-0.5">Best Price</div>
                   <div>
                     {row.best_marketplace === 'Individual Decks' && row.best_total !== null ? (
@@ -422,7 +422,7 @@ export const EVCalculations: React.FC = () => {
             </div>
           ))
         ) : (
-          <div className="bg-[#0f111a]/80 backdrop-blur-xl rounded-xl border border-white/10 px-4 py-16 text-center text-[var(--text-2)]">
+          <div className="bg-[var(--bg-surface)] backdrop-blur-xl rounded-xl border border-[var(--border-color)] px-4 py-16 text-center text-[var(--text-2)]">
             No products match your filters.
           </div>
         )}
@@ -437,12 +437,12 @@ export const EVCalculations: React.FC = () => {
 
       {/* Individual Deck Prices Popup */}
       {deckPopup && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setDeckPopup(null)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--bg-overlay)] backdrop-blur-sm" onClick={() => setDeckPopup(null)}>
           <div
-            className="bg-[#141722] border border-white/10 rounded-xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden"
+            className="bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border-color)]">
               <div>
                 <h3 className="text-lg font-bold text-[var(--text-1)]">{deckPopup.setName}</h3>
                 <p className="text-xs text-[var(--text-2)]">Commander Deck Set — Individual Prices</p>
@@ -466,7 +466,7 @@ export const EVCalculations: React.FC = () => {
                     href={deck.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-between p-3 rounded-lg bg-white/[0.03] hover:bg-white/[0.07] border border-white/5 transition-colors group"
+                    className="flex items-center justify-between p-3 rounded-lg bg-[var(--bg-hover)] hover:bg-[var(--bg-hover-2)] border border-[var(--border-color-2)] transition-colors group"
                   >
                     <div>
                       <div className="text-sm font-medium text-[var(--text-1)]">{deck.deck_name}</div>
@@ -484,7 +484,7 @@ export const EVCalculations: React.FC = () => {
             </div>
 
             {!deckPopupLoading && deckPopup.decks.length > 0 && (
-              <div className="px-6 py-3 border-t border-white/10 flex items-center justify-between">
+              <div className="px-6 py-3 border-t border-[var(--border-color)] flex items-center justify-between">
                 <span className="text-sm text-[var(--text-2)]">{deckPopup.decks.length} decks</span>
                 <span className="font-mono font-bold text-green-400">
                   Total: ${deckPopup.decks.reduce((sum, d) => sum + d.total, 0).toFixed(2)}

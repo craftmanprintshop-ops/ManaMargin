@@ -171,7 +171,7 @@ export const Inventory: React.FC = () => {
   return (
     <div className="w-full animate-fade-in space-y-6">
       {/* Header */}
-      <div className="bg-[#0f111a]/80 backdrop-blur-xl p-6 rounded-xl border border-white/10 shadow-2xl">
+      <div className="bg-[var(--bg-surface)] backdrop-blur-xl p-6 rounded-xl border border-[var(--border-color)] shadow-2xl">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h2 className="text-xl sm:text-2xl font-bold text-[var(--text-1)]">Inventory</h2>
@@ -192,7 +192,7 @@ export const Inventory: React.FC = () => {
 
         {/* Search Panel */}
         {showSearch && (
-          <div className="mt-4 p-4 bg-black/40 rounded-xl border border-white/10">
+          <div className="mt-4 p-4 bg-[var(--bg-overlay)] rounded-xl border border-[var(--border-color)]">
             <div className="relative">
               <input
                 type="text"
@@ -223,7 +223,7 @@ export const Inventory: React.FC = () => {
                       className={`w-full text-left p-3 rounded-lg transition-colors flex justify-between items-center gap-4 ${
                         alreadyAdded
                           ? 'bg-blue-500/10 border border-blue-500/20 opacity-60 cursor-not-allowed'
-                          : 'bg-white/5 hover:bg-white/10 border border-transparent'
+                          : 'bg-[var(--bg-hover)] hover:bg-[var(--bg-hover-2)] border border-transparent'
                       }`}
                     >
                       <div className="min-w-0">
@@ -256,15 +256,15 @@ export const Inventory: React.FC = () => {
       {/* Summary Cards */}
       {items.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="bg-[#0f111a]/80 backdrop-blur-xl p-4 rounded-xl border border-white/10">
+          <div className="bg-[var(--bg-surface)] backdrop-blur-xl p-4 rounded-xl border border-[var(--border-color)]">
             <div className="text-[10px] uppercase tracking-widest font-bold text-[var(--text-2)] mb-1">Total Cost</div>
             <div className="text-2xl font-black font-mono text-[var(--text-1)]">${totals.totalCost.toFixed(2)}</div>
           </div>
-          <div className="bg-[#0f111a]/80 backdrop-blur-xl p-4 rounded-xl border border-white/10">
+          <div className="bg-[var(--bg-surface)] backdrop-blur-xl p-4 rounded-xl border border-[var(--border-color)]">
             <div className="text-[10px] uppercase tracking-widest font-bold text-[var(--text-2)] mb-1">Total Value</div>
             <div className="text-2xl font-black font-mono text-[var(--accent)]">${totals.totalValue.toFixed(2)}</div>
           </div>
-          <div className="bg-[#0f111a]/80 backdrop-blur-xl p-4 rounded-xl border border-white/10">
+          <div className="bg-[var(--bg-surface)] backdrop-blur-xl p-4 rounded-xl border border-[var(--border-color)]">
             <div className="text-[10px] uppercase tracking-widest font-bold text-[var(--text-2)] mb-1">Total P/L</div>
             <div className={`text-2xl font-black font-mono ${totals.totalPL >= 0 ? 'text-green-400' : 'text-red-400'}`}>
               {totals.totalPL >= 0 ? '+' : ''}{totals.totalPL.toFixed(2)}
@@ -274,7 +274,7 @@ export const Inventory: React.FC = () => {
       )}
 
       {/* Inventory Table */}
-      <div className="bg-[#0f111a]/80 backdrop-blur-xl rounded-xl border border-white/10 shadow-2xl overflow-hidden">
+      <div className="bg-[var(--bg-surface)] backdrop-blur-xl rounded-xl border border-[var(--border-color)] shadow-2xl overflow-hidden">
         {items.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full text-sm text-left border-collapse table-fixed">
@@ -291,7 +291,7 @@ export const Inventory: React.FC = () => {
                 <col className="w-[10%]" />
                 <col className="w-[6%]" />
               </colgroup>
-              <thead className="bg-[var(--bg-2)]/80 text-[var(--text-2)] font-bold uppercase text-[10px] tracking-widest border-b border-white/5">
+              <thead className="bg-[var(--bg-2)]/80 text-[var(--text-2)] font-bold uppercase text-[10px] tracking-widest border-b border-[var(--border-color-2)]">
                 <tr>
                   <th className="px-4 py-4 text-left">Product</th>
                   <th className="px-3 py-4 text-right">Cost</th>
@@ -314,7 +314,7 @@ export const Inventory: React.FC = () => {
                   const pl = actualValue !== null ? actualValue - item.costPaid : null
 
                   return (
-                    <tr key={item.id} className="group hover:bg-white/[0.03] transition-colors">
+                    <tr key={item.id} className="group hover:bg-[var(--bg-hover)] transition-colors">
                       {/* Product */}
                       <td className="px-4 py-3">
                         <div className="font-bold text-[var(--text-1)] text-xs">{item.setName}</div>
@@ -328,7 +328,7 @@ export const Inventory: React.FC = () => {
                           step="0.01"
                           value={item.costPaid}
                           onChange={(e) => updateItem(item.id, { costPaid: parseFloat(e.target.value) || 0 })}
-                          className="w-20 bg-[var(--bg-2)] border border-white/10 rounded px-2 py-1 text-xs text-right font-mono text-[var(--text-1)] outline-none focus:border-[var(--brand)]"
+                          className="w-20 bg-[var(--bg-2)] border border-[var(--border-color)] rounded px-2 py-1 text-xs text-right font-mono text-[var(--text-1)] outline-none focus:border-[var(--brand)]"
                         />
                       </td>
 
@@ -339,7 +339,7 @@ export const Inventory: React.FC = () => {
                           min="1"
                           value={item.count}
                           onChange={(e) => updateItem(item.id, { count: parseInt(e.target.value) || 1 })}
-                          className="w-14 bg-[var(--bg-2)] border border-white/10 rounded px-2 py-1 text-xs text-center font-mono text-[var(--text-1)] outline-none focus:border-[var(--brand)]"
+                          className="w-14 bg-[var(--bg-2)] border border-[var(--border-color)] rounded px-2 py-1 text-xs text-center font-mono text-[var(--text-1)] outline-none focus:border-[var(--brand)]"
                         />
                       </td>
 
@@ -350,7 +350,7 @@ export const Inventory: React.FC = () => {
                           step="0.5"
                           value={item.feePercent}
                           onChange={(e) => updateItem(item.id, { feePercent: parseFloat(e.target.value) || 0 })}
-                          className="w-16 bg-[var(--bg-2)] border border-white/10 rounded px-2 py-1 text-xs text-right font-mono text-[var(--text-2)] outline-none focus:border-[var(--brand)]"
+                          className="w-16 bg-[var(--bg-2)] border border-[var(--border-color)] rounded px-2 py-1 text-xs text-right font-mono text-[var(--text-2)] outline-none focus:border-[var(--brand)]"
                         />
                       </td>
 
@@ -361,7 +361,7 @@ export const Inventory: React.FC = () => {
                           step="0.01"
                           value={item.shippingCost}
                           onChange={(e) => updateItem(item.id, { shippingCost: parseFloat(e.target.value) || 0 })}
-                          className="w-16 bg-[var(--bg-2)] border border-white/10 rounded px-2 py-1 text-xs text-right font-mono text-[var(--text-2)] outline-none focus:border-[var(--brand)]"
+                          className="w-16 bg-[var(--bg-2)] border border-[var(--border-color)] rounded px-2 py-1 text-xs text-right font-mono text-[var(--text-2)] outline-none focus:border-[var(--brand)]"
                         />
                       </td>
 

@@ -39,7 +39,7 @@ export const SetSelector: React.FC<SetSelectorProps> = ({
   availableSets = ['MH3', 'BRO', 'ONE', 'MOM', 'WOE', 'LCI', 'MKM', 'OTJ', 'BLB'],
 }) => {
   return (
-    <div className="bg-[#0f111a]/80 backdrop-blur-xl rounded-xl border border-white/10 shadow-2xl p-4 sm:p-6">
+    <div className="bg-[var(--bg-surface)] backdrop-blur-xl rounded-xl border border-[var(--border-color)] shadow-2xl p-4 sm:p-6">
       <h2 className="text-xl font-semibold text-[var(--text-1)] mb-4">
         Pack Simulator
       </h2>

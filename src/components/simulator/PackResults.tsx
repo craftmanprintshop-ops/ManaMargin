@@ -31,9 +31,9 @@ export const PackResults: React.FC<PackResultsProps> = ({
   const bestCard = sortedCards[0]
 
   return (
-    <div className="bg-[#0f111a]/80 backdrop-blur-xl rounded-xl border border-white/10 shadow-2xl p-4">
+    <div className="bg-[var(--bg-surface)] backdrop-blur-xl rounded-xl border border-[var(--border-color)] shadow-2xl p-4">
       {/* Pack Header */}
-      <div className="flex justify-between items-center mb-4 pb-3 border-b border-white/5">
+      <div className="flex justify-between items-center mb-4 pb-3 border-b border-[var(--border-color-2)]">
         <h3 className="font-semibold text-[var(--text-1)]">
           {packNumber ? `Pack #${packNumber}` : 'Pack Results'}
         </h3>
@@ -73,7 +73,7 @@ export const PackResults: React.FC<PackResultsProps> = ({
           return (
             <div
               key={`${card.uuid}-${index}`}
-              className="flex justify-between items-center py-2 px-3 hover:bg-white/5 rounded transition-colors"
+              className="flex justify-between items-center py-2 px-3 hover:bg-[var(--bg-hover)] rounded transition-colors"
             >
               <div className="flex items-center gap-2 flex-1 min-w-0">
                 <span className="text-sm text-[var(--text-1)] truncate">
@@ -97,7 +97,7 @@ export const PackResults: React.FC<PackResultsProps> = ({
       </div>
 
       {/* Pack Stats */}
-      <div className="mt-4 pt-3 border-t border-white/5 grid grid-cols-3 gap-2 text-center text-xs">
+      <div className="mt-4 pt-3 border-t border-[var(--border-color-2)] grid grid-cols-3 gap-2 text-center text-xs">
         <div>
           <p className="text-[var(--text-2)]">Total Cards</p>
           <p className="font-semibold text-[var(--text-1)]">{pack.cards.length}</p>

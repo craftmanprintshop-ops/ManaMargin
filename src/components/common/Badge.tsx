@@ -37,7 +37,7 @@ export const Badge: React.FC<BadgeProps> = ({
     danger: 'bg-red-500/15 text-red-400 border border-red-500/20',
     warning: 'bg-yellow-500/15 text-yellow-400 border border-yellow-500/20',
     info: 'bg-blue-500/15 text-blue-400 border border-blue-500/20',
-    neutral: 'bg-white/10 text-[var(--text-2)] border border-white/10',
+    neutral: 'bg-[var(--bg-hover-2)] text-[var(--text-2)] border border-[var(--border-color)]',
   }
 
   // Size classes

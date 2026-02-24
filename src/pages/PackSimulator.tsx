@@ -131,7 +131,7 @@ export const PackSimulator: React.FC = () => {
                 <li>If RLS is enabled on "cards" table, you need a policy allowing SELECT for anonymous users</li>
                 <li>Quick fix: Run this SQL in Supabase SQL Editor:</li>
               </ul>
-              <pre className="mt-2 p-3 bg-black/40 text-[var(--text-1)] rounded text-xs overflow-x-auto">
+              <pre className="mt-2 p-3 bg-[var(--bg-overlay)] text-[var(--text-1)] rounded text-xs overflow-x-auto">
 {`-- Allow anonymous users to read cards
 CREATE POLICY "Enable read access for all users" ON "public"."cards"
 FOR SELECT USING (true);`}
@@ -253,7 +253,7 @@ FOR SELECT USING (true);`}
 
       {/* Initial Instructions */}
       {!results && !isSimulating && !error && (
-        <div className="bg-white/5 rounded-lg p-8 text-center">
+        <div className="bg-[var(--bg-hover)] rounded-lg p-8 text-center">
           <h3 className="text-lg font-semibold text-[var(--text-1)] mb-2">
             Ready to simulate!
           </h3>
@@ -266,7 +266,7 @@ FOR SELECT USING (true);`}
 
       {/* Debug Info (development only) */}
       {import.meta.env.DEV && results && (
-        <div className="bg-white/5 rounded-lg p-4 text-xs text-[var(--text-2)]">
+        <div className="bg-[var(--bg-hover)] rounded-lg p-4 text-xs text-[var(--text-2)]">
           <p className="font-semibold mb-1">Debug Info:</p>
           <p>Set: {selectedSet}</p>
           <p>Packs Opened: {results.totalPacks}</p>

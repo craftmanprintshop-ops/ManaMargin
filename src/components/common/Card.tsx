@@ -54,11 +54,11 @@ export const Card: React.FC<CardProps> = ({
 
   return (
     <div
-      className={`bg-[#0f111a]/80 backdrop-blur-xl rounded-xl border border-white/10 shadow-2xl ${hoverClass} ${className}`}
+      className={`bg-[var(--bg-surface)] backdrop-blur-xl rounded-xl border border-[var(--border-color)] shadow-2xl ${hoverClass} ${className}`}
     >
       {/* Header */}
       {(header || title) && (
-        <div className="px-4 sm:px-6 py-4 border-b border-white/5">
+        <div className="px-4 sm:px-6 py-4 border-b border-[var(--border-color-2)]">
           {header || <h3 className="text-lg font-semibold text-[var(--text-1)]">{title}</h3>}
         </div>
       )}
@@ -68,7 +68,7 @@ export const Card: React.FC<CardProps> = ({
 
       {/* Footer */}
       {footer && (
-        <div className="px-4 sm:px-6 py-4 border-t border-white/5 bg-white/[0.02]">
+        <div className="px-4 sm:px-6 py-4 border-t border-[var(--border-color-2)] bg-white/[0.02]">
           {footer}
         </div>
       )}

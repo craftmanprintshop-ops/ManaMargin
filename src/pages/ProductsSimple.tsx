@@ -148,7 +148,7 @@ const OffersPanel: React.FC<{ setName: string; productType: string }> = ({ setNa
   if (isLoading) {
     return (
       <tr>
-        <td colSpan={99} className="px-6 py-6 bg-black/30">
+        <td colSpan={99} className="px-6 py-6 bg-[var(--bg-hover)]">
           <div className="flex items-center justify-center gap-3">
             <div className="w-5 h-5 border-2 border-[var(--brand)] border-t-transparent rounded-full animate-spin"></div>
             <span className="text-xs text-[var(--text-2)] uppercase tracking-widest font-bold">Loading offers...</span>
@@ -161,7 +161,7 @@ const OffersPanel: React.FC<{ setName: string; productType: string }> = ({ setNa
   if (offers.length === 0) {
     return (
       <tr>
-        <td colSpan={99} className="px-6 py-6 bg-black/30 text-center text-[var(--text-2)] text-xs">
+        <td colSpan={99} className="px-6 py-6 bg-[var(--bg-hover)] text-center text-[var(--text-2)] text-xs">
           No offers found.
         </td>
       </tr>
@@ -171,7 +171,7 @@ const OffersPanel: React.FC<{ setName: string; productType: string }> = ({ setNa
   return (
     <tr>
       <td colSpan={99} className="p-0">
-        <div className="bg-black/30 border-y border-white/5">
+        <div className="bg-[var(--bg-hover)] border-y border-[var(--border-color-2)]">
           <div className="px-6 py-3 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2">
             {offers.map((offer) => (
               <a
@@ -179,7 +179,7 @@ const OffersPanel: React.FC<{ setName: string; productType: string }> = ({ setNa
                 href={offer.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={`flex items-center justify-between p-3 bg-white/[0.03] border border-white/5 rounded-lg hover:border-[var(--brand)]/40 hover:bg-white/[0.06] transition-all group/offer ${!offer.in_stock ? 'opacity-40' : ''}`}
+                className={`flex items-center justify-between p-3 bg-[var(--bg-hover)] border border-[var(--border-color-2)] rounded-lg hover:border-[var(--brand)]/40 hover:bg-[var(--bg-hover)] transition-all group/offer ${!offer.in_stock ? 'opacity-40' : ''}`}
               >
                 <div className="flex items-center gap-3 min-w-0">
                   {offer.image_url ? (
@@ -303,10 +303,10 @@ export const ProductsSimple: React.FC = () => {
         />
       </div>
 
-      <div className="bg-[#0f111a]/80 backdrop-blur-xl rounded-xl border border-white/10 shadow-2xl overflow-hidden">
+      <div className="bg-[var(--bg-surface)] backdrop-blur-xl rounded-xl border border-[var(--border-color)] shadow-2xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left border-collapse">
-            <thead className="bg-[#0b0d14] text-[var(--text-2)] font-bold uppercase text-[10px] tracking-widest sticky top-0 z-10 border-b border-white/5">
+            <thead className="bg-[var(--bg-surface-2)] text-[var(--text-2)] font-bold uppercase text-[10px] tracking-widest sticky top-0 z-10 border-b border-[var(--border-color-2)]">
               <tr>
                 <th className="px-3 sm:px-6 py-4">Set / Product</th>
                 <th className="px-2 sm:px-4 py-4 text-right hidden sm:table-cell">Offers</th>
@@ -320,14 +320,14 @@ export const ProductsSimple: React.FC = () => {
               {filteredGroups?.map((group) => (
                 <React.Fragment key={group.set_name}>
                   {/* Set Header Row */}
-                  <tr className="bg-blue-500/10 border-y border-white/5">
+                  <tr className="bg-blue-500/10 border-y border-[var(--border-color-2)]">
                     <td className="px-3 sm:px-6 py-3">
                       <div className="flex flex-wrap items-center gap-1 sm:gap-3">
                         <span className="text-xs sm:text-sm font-bold text-white uppercase tracking-tight">
                           {group.set_name}
                         </span>
                         {group.set_type && (
-                          <span className="font-mono text-[var(--text-2)] bg-white/5 px-2 py-0.5 rounded text-[10px] capitalize hidden sm:inline">
+                          <span className="font-mono text-[var(--text-2)] bg-[var(--bg-hover)] px-2 py-0.5 rounded text-[10px] capitalize hidden sm:inline">
                             {group.set_type}
                           </span>
                         )}

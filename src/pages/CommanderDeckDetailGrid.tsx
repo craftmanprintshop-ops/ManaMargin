@@ -117,13 +117,13 @@ export const CommanderDeckDetailGrid: React.FC = () => {
 
   return (
     <div className="w-full animate-fade-in space-y-4">
-      <div className="bg-[#0f111a]/80 backdrop-blur-xl p-6 rounded-xl border border-white/10 shadow-2xl">
+      <div className="bg-[var(--bg-surface)] backdrop-blur-xl p-6 rounded-xl border border-[var(--border-color)] shadow-2xl">
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
           <div className="flex items-center gap-4">
             <button
               onClick={() => navigate('/commander-decks')}
-              className="p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors text-[var(--text-2)] hover:text-[var(--text-1)]"
+              className="p-2 rounded-lg bg-[var(--bg-hover)] hover:bg-[var(--bg-hover-2)] transition-colors text-[var(--text-2)] hover:text-[var(--text-1)]"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -132,7 +132,7 @@ export const CommanderDeckDetailGrid: React.FC = () => {
             <div>
               <h2 className="text-xl font-bold text-[var(--text-1)]">{fileName}</h2>
               <div className="flex items-center gap-2 mt-0.5">
-                <span className="text-[10px] bg-white/5 px-1.5 py-0.5 rounded font-mono text-[var(--text-2)]">
+                <span className="text-[10px] bg-[var(--bg-hover)] px-1.5 py-0.5 rounded font-mono text-[var(--text-2)]">
                   {code}
                 </span>
                 <span className="text-[10px] font-bold text-[var(--text-2)]">
@@ -143,7 +143,7 @@ export const CommanderDeckDetailGrid: React.FC = () => {
           </div>
 
           {/* Filter Tabs */}
-          <div className="flex bg-black/40 p-1 rounded-xl border border-white/5">
+          <div className="flex bg-[var(--bg-overlay)] p-1 rounded-xl border border-[var(--border-color-2)]">
             {[
               { id: 'all', label: 'All' },
               { id: '25c', label: '>$0.25' },
@@ -169,7 +169,7 @@ export const CommanderDeckDetailGrid: React.FC = () => {
           {filteredCards.map((card) => (
             <div
               key={card.uuid}
-              className="flex flex-col bg-black/40 rounded-xl border border-white/5 overflow-hidden group hover:border-[var(--brand)]/30 hover:bg-blue-500/[0.02] transition-all shadow-lg"
+              className="flex flex-col bg-[var(--bg-overlay)] rounded-xl border border-[var(--border-color-2)] overflow-hidden group hover:border-[var(--brand)]/30 hover:bg-blue-500/[0.02] transition-all shadow-lg"
             >
               {/* Card Image */}
               <div className="aspect-[3/4] relative overflow-hidden bg-black/20">
@@ -217,7 +217,7 @@ export const CommanderDeckDetailGrid: React.FC = () => {
                     className={`text-[9px] font-black px-1.5 py-0.5 rounded uppercase tracking-tighter ${
                       card.is_foil
                         ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
-                        : 'bg-white/5 text-[var(--text-2)] border border-white/5'
+                        : 'bg-[var(--bg-hover)] text-[var(--text-2)] border border-[var(--border-color-2)]'
                     }`}
                   >
                     {card.is_foil ? 'Foil' : 'Normal'}

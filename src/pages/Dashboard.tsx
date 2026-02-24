@@ -218,7 +218,7 @@ export const Dashboard: React.FC = () => {
             {evDeals.map((deal) => (
               <div
                 key={`${deal.set_name}-${deal.product_type}`}
-                className="bg-[#0f111a]/80 backdrop-blur-xl rounded-xl border border-white/10 overflow-hidden hover:border-purple-500/30 transition-all group"
+                className="bg-[var(--bg-surface)] backdrop-blur-xl rounded-xl border border-[var(--border-color)] overflow-hidden hover:border-purple-500/30 transition-all group"
               >
                 {/* Product Image */}
                 <div className="aspect-square relative overflow-hidden bg-gradient-to-br from-purple-900/20 via-[#0b0d14] to-transparent">
@@ -282,7 +282,7 @@ export const Dashboard: React.FC = () => {
         </div>
       )}
       {evDealsLoading && (
-        <div className="bg-[#0f111a]/80 backdrop-blur-xl rounded-xl border border-white/5 p-8">
+        <div className="bg-[var(--bg-surface)] backdrop-blur-xl rounded-xl border border-[var(--border-color-2)] p-8">
           <div className="flex items-center justify-center gap-3">
             <div className="w-5 h-5 border-2 border-purple-400 border-t-transparent rounded-full animate-spin"></div>
             <span className="text-xs text-[var(--text-2)] uppercase tracking-widest font-bold">Loading EV deals...</span>
@@ -292,8 +292,8 @@ export const Dashboard: React.FC = () => {
 
       {/* Commander Deck Deals */}
       {deals.length > 0 && (
-        <div className="bg-[#0f111a]/80 backdrop-blur-xl rounded-xl border border-green-500/20 shadow-2xl overflow-hidden">
-          <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between">
+        <div className="bg-[var(--bg-surface)] backdrop-blur-xl rounded-xl border border-green-500/20 shadow-2xl overflow-hidden">
+          <div className="px-6 py-4 border-b border-[var(--border-color-2)] flex items-center justify-between">
             <div className="flex items-center gap-3">
               <span className="text-lg font-black text-white uppercase tracking-tight">Commander Deck Deals</span>
               <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-green-500/20 text-green-400 border border-green-500/30">
@@ -311,7 +311,7 @@ export const Dashboard: React.FC = () => {
             {deals.slice(0, 6).map((deal) => (
               <div
                 key={`${deal.code}|${deal.deck_name}`}
-                className="flex items-center justify-between p-4 bg-white/[0.03] border border-white/5 rounded-xl hover:border-green-500/30 hover:bg-green-500/[0.03] transition-all group"
+                className="flex items-center justify-between p-4 bg-[var(--bg-hover)] border border-[var(--border-color-2)] rounded-xl hover:border-green-500/30 hover:bg-green-500/[0.03] transition-all group"
               >
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 mb-1">
@@ -360,7 +360,7 @@ export const Dashboard: React.FC = () => {
             ))}
           </div>
           {deals.length > 6 && (
-            <div className="px-6 py-3 border-t border-white/5 text-center">
+            <div className="px-6 py-3 border-t border-[var(--border-color-2)] text-center">
               <Link
                 to={ROUTES.COMMANDER_DECKS}
                 className="text-xs font-bold text-green-400 hover:text-green-300 transition-colors"
@@ -372,7 +372,7 @@ export const Dashboard: React.FC = () => {
         </div>
       )}
       {dealsLoading && (
-        <div className="bg-[#0f111a]/80 backdrop-blur-xl rounded-xl border border-white/5 p-8">
+        <div className="bg-[var(--bg-surface)] backdrop-blur-xl rounded-xl border border-[var(--border-color-2)] p-8">
           <div className="flex items-center justify-center gap-3">
             <div className="w-5 h-5 border-2 border-green-400 border-t-transparent rounded-full animate-spin"></div>
             <span className="text-xs text-[var(--text-2)] uppercase tracking-widest font-bold">Scanning for deals...</span>
@@ -387,7 +387,7 @@ export const Dashboard: React.FC = () => {
             {summary.featuredSets.map((set, index) => (
               <div
                 key={set.set_name}
-                className="flex justify-between items-center p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors"
+                className="flex justify-between items-center p-3 bg-[var(--bg-hover)] rounded-lg hover:bg-[var(--bg-hover-2)] transition-colors"
               >
                 <div className="flex items-center gap-3">
                   <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary-100 text-primary-600 font-bold text-sm">

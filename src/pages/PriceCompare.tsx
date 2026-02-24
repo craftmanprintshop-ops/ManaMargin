@@ -479,12 +479,12 @@ export const PriceCompare: React.FC = () => {
   return (
     <div className="w-full animate-fade-in space-y-6">
       {/* Filter Bar */}
-      <div className="bg-[#0f111a]/80 backdrop-blur-xl p-6 rounded-xl border border-white/10 shadow-2xl">
+      <div className="bg-[var(--bg-surface)] backdrop-blur-xl p-6 rounded-xl border border-[var(--border-color)] shadow-2xl">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
           <h2 className="text-xl sm:text-2xl font-bold text-[var(--text-1)]">Marketplace Price Comparison</h2>
           <button
             onClick={() => setShowSettings(!showSettings)}
-            className="px-3 py-1.5 text-xs font-bold rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors text-[var(--text-2)]"
+            className="px-3 py-1.5 text-xs font-bold rounded-lg bg-[var(--bg-hover)] border border-[var(--border-color)] hover:bg-[var(--bg-hover-2)] transition-colors text-[var(--text-2)]"
           >
             Settings
           </button>
@@ -492,7 +492,7 @@ export const PriceCompare: React.FC = () => {
 
         {/* Marketplace Settings Panel */}
         {showSettings && (
-          <div className="mb-6 p-4 bg-black/40 rounded-xl border border-white/10">
+          <div className="mb-6 p-4 bg-[var(--bg-overlay)] rounded-xl border border-[var(--border-color)]">
             <h3 className="text-sm font-bold text-[var(--text-1)] mb-3 uppercase tracking-wider">Marketplace Settings</h3>
             <div className="space-y-2">
               {marketSettings.map((setting, idx) => (
@@ -617,7 +617,7 @@ export const PriceCompare: React.FC = () => {
       <div className="flex flex-wrap items-center justify-between gap-4 px-2">
         <div className="flex items-center gap-4">
           <span className="text-xs font-bold text-[var(--text-2)] uppercase">View:</span>
-          <div className="flex bg-black/40 p-1 rounded-lg border border-white/5">
+          <div className="flex bg-[var(--bg-overlay)] p-1 rounded-lg border border-[var(--border-color-2)]">
             <button
               onClick={() => setViewMode('card')}
               className={`px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded transition-all ${viewMode === 'card' ? 'bg-[var(--brand)] text-white shadow-lg' : 'text-[var(--text-2)] hover:text-[var(--text-1)]'}`}
@@ -638,7 +638,7 @@ export const PriceCompare: React.FC = () => {
           <select
             value={stockFilter}
             onChange={(e) => setStockFilter(e.target.value as 'In Stock' | 'All')}
-            className="bg-black/40 border border-white/10 rounded-lg p-1.5 text-xs text-[var(--text-1)] outline-none focus:border-[var(--brand)]"
+            className="bg-[var(--bg-overlay)] border border-[var(--border-color)] rounded-lg p-1.5 text-xs text-[var(--text-1)] outline-none focus:border-[var(--brand)]"
           >
             <option value="In Stock">In Stock Only</option>
             <option value="All">All (Include Out of Stock)</option>
@@ -657,9 +657,9 @@ export const PriceCompare: React.FC = () => {
       )}
 
       {/* Results */}
-      <div className="bg-[#0f111a]/80 backdrop-blur-xl rounded-xl border border-white/10 shadow-2xl overflow-hidden min-h-[400px] relative">
+      <div className="bg-[var(--bg-surface)] backdrop-blur-xl rounded-xl border border-[var(--border-color)] shadow-2xl overflow-hidden min-h-[400px] relative">
         {isSearching && (
-          <div className="absolute inset-0 z-20 bg-[#0f111a]/60 backdrop-blur-[2px] flex flex-col items-center justify-center">
+          <div className="absolute inset-0 z-20 bg-[var(--bg-surface)]/60 backdrop-blur-[2px] flex flex-col items-center justify-center">
             <div className="w-12 h-12 border-4 border-[var(--brand)]/20 border-t-[var(--brand)] rounded-full animate-spin mb-4"></div>
             <p className="text-[var(--text-1)] font-bold animate-pulse">Searching Marketplaces...</p>
           </div>
@@ -671,26 +671,26 @@ export const PriceCompare: React.FC = () => {
             {/* Desktop table (hidden on small screens) */}
             <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-xs text-left border-collapse">
-                <thead className="bg-[var(--bg-2)]/80 text-[var(--text-2)] font-bold uppercase text-[10px] tracking-wider sticky top-0 z-10 border-b border-white/5">
+                <thead className="bg-[var(--bg-2)]/80 text-[var(--text-2)] font-bold uppercase text-[10px] tracking-wider sticky top-0 z-10 border-b border-[var(--border-color-2)]">
                   <tr>
                     <th className="pl-3 pr-1 py-3 w-8"></th>
-                    <th className="px-3 py-3 cursor-pointer hover:bg-white/10 transition-colors select-none" onClick={() => requestSort('set_name')}>
+                    <th className="px-3 py-3 cursor-pointer hover:bg-[var(--bg-hover-2)] transition-colors select-none" onClick={() => requestSort('set_name')}>
                       <div className="flex items-center gap-1">Product{renderSortArrow('set_name')}</div>
                     </th>
-                    <th className="px-3 py-3 cursor-pointer hover:bg-white/10 transition-colors select-none" onClick={() => requestSort('marketplace')}>
+                    <th className="px-3 py-3 cursor-pointer hover:bg-[var(--bg-hover-2)] transition-colors select-none" onClick={() => requestSort('marketplace')}>
                       <div className="flex items-center gap-1">Marketplace{renderSortArrow('marketplace')}</div>
                     </th>
-                    <th className="px-3 py-3 cursor-pointer hover:bg-white/10 transition-colors select-none text-right" onClick={() => requestSort('price')}>
+                    <th className="px-3 py-3 cursor-pointer hover:bg-[var(--bg-hover-2)] transition-colors select-none text-right" onClick={() => requestSort('price')}>
                       <div className="flex items-center gap-1 justify-end">Price{renderSortArrow('price')}</div>
                     </th>
-                    <th className="px-3 py-3 cursor-pointer hover:bg-white/10 transition-colors select-none text-right" onClick={() => requestSort('shipping')}>
+                    <th className="px-3 py-3 cursor-pointer hover:bg-[var(--bg-hover-2)] transition-colors select-none text-right" onClick={() => requestSort('shipping')}>
                       <div className="flex items-center gap-1 justify-end">Ship{renderSortArrow('shipping')}</div>
                     </th>
-                    <th className="px-3 py-3 cursor-pointer hover:bg-white/10 transition-colors select-none text-right" onClick={() => requestSort('total')}>
+                    <th className="px-3 py-3 cursor-pointer hover:bg-[var(--bg-hover-2)] transition-colors select-none text-right" onClick={() => requestSort('total')}>
                       <div className="flex items-center gap-1 justify-end">Total{renderSortArrow('total')}</div>
                     </th>
                     <th className="px-3 py-3 text-center">Status</th>
-                    <th className="px-3 py-3 cursor-pointer hover:bg-white/10 transition-colors select-none text-center" onClick={() => requestSort('fetched_at')}>
+                    <th className="px-3 py-3 cursor-pointer hover:bg-[var(--bg-hover-2)] transition-colors select-none text-center" onClick={() => requestSort('fetched_at')}>
                       <div className="flex items-center gap-1 justify-center">Updated{renderSortArrow('fetched_at')}</div>
                     </th>
                   </tr>
@@ -698,7 +698,7 @@ export const PriceCompare: React.FC = () => {
                 <tbody className="divide-y divide-white/5">
                   {sortedOffers.length > 0 ? (
                     sortedOffers.map((offer) => (
-                      <tr key={offer.id} className={`group hover:bg-white/[0.03] transition-colors ${!offer.in_stock ? 'opacity-40' : ''}`}>
+                      <tr key={offer.id} className={`group hover:bg-[var(--bg-hover)] transition-colors ${!offer.in_stock ? 'opacity-40' : ''}`}>
                         <td className="pl-3 pr-1 py-2.5 text-center">
                           {offer.set_name && offer.product_type && (
                             <button
@@ -845,7 +845,7 @@ export const PriceCompare: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {groupedOffers.length > 0 ? (
                 groupedOffers.map((group, gIdx) => (
-                  <div key={gIdx} className="bg-[#0f111a]/80 backdrop-blur-sm rounded-2xl border border-blue-500/10 shadow-[0_8px_32px_rgba(0,0,0,0.4),inset_0_0_20px_rgba(59,130,246,0.05)] hover:border-blue-500/30 hover:shadow-[0_8px_32px_rgba(59,130,246,0.1)] transition-all duration-300 group overflow-hidden flex flex-col">
+                  <div key={gIdx} className="bg-[var(--bg-surface)] backdrop-blur-sm rounded-2xl border border-blue-500/10 shadow-[0_8px_32px_rgba(0,0,0,0.4),inset_0_0_20px_rgba(59,130,246,0.05)] hover:border-blue-500/30 hover:shadow-[0_8px_32px_rgba(59,130,246,0.1)] transition-all duration-300 group overflow-hidden flex flex-col">
                     {/* Product Image Area */}
                     <div className="aspect-[16/9] relative overflow-hidden bg-gradient-to-br from-blue-900/30 via-[#0b0d14] to-transparent">
                       {(() => {
@@ -865,7 +865,7 @@ export const PriceCompare: React.FC = () => {
                               {Array.from(new Set(group.offers.map(o => {
                                 try { return new URL(o.url).hostname } catch { return '' }
                               }).filter(Boolean))).slice(0, 4).map((hostname, i) => (
-                                <div key={i} className="w-10 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center">
+                                <div key={i} className="w-10 h-10 rounded-lg bg-[var(--bg-hover)] border border-[var(--border-color)] flex items-center justify-center">
                                   <img
                                     src={`https://www.google.com/s2/favicons?domain=${hostname}&sz=32`}
                                     alt=""
@@ -894,7 +894,7 @@ export const PriceCompare: React.FC = () => {
                             feePercent: 13,
                             shippingCost: 5,
                           })}
-                          className="absolute top-3 right-3 z-10 p-1.5 bg-black/40 backdrop-blur-sm rounded-full hover:scale-110 transition-transform"
+                          className="absolute top-3 right-3 z-10 p-1.5 bg-[var(--bg-overlay)] backdrop-blur-sm rounded-full hover:scale-110 transition-transform"
                           title={isInInventory(group.set_name, group.product_type) ? 'Remove from inventory' : 'Add to inventory'}
                         >
                           <svg className="w-5 h-5" fill={isInInventory(group.set_name, group.product_type) ? 'var(--brand)' : 'none'} stroke={isInInventory(group.set_name, group.product_type) ? 'var(--brand)' : 'white'} viewBox="0 0 24 24">
@@ -907,7 +907,7 @@ export const PriceCompare: React.FC = () => {
                           <h3 className="text-sm font-bold text-white line-clamp-2 drop-shadow-lg" title={group.set_name}>
                             {group.set_name}
                           </h3>
-                          <span className="text-[10px] font-bold text-white/70 uppercase shrink-0 bg-black/40 backdrop-blur-sm px-1.5 py-0.5 rounded">
+                          <span className="text-[10px] font-bold text-white/70 uppercase shrink-0 bg-[var(--bg-overlay)] backdrop-blur-sm px-1.5 py-0.5 rounded">
                             {group.product_type}
                           </span>
                         </div>
@@ -922,7 +922,7 @@ export const PriceCompare: React.FC = () => {
                             href={offer.url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className={`block p-2 rounded hover:bg-white/5 transition-colors text-xs ${!offer.in_stock ? 'opacity-40' : ''}`}
+                            className={`block p-2 rounded hover:bg-[var(--bg-hover)] transition-colors text-xs ${!offer.in_stock ? 'opacity-40' : ''}`}
                           >
                             <div className="text-[9px] text-[var(--text-2)] truncate mb-0.5" title={offer.title}>
                               {offer.title}
@@ -947,9 +947,9 @@ export const PriceCompare: React.FC = () => {
                           </a>
 
                           {/* Hover tooltip */}
-                          <div className="invisible group-hover/row:visible absolute bottom-full left-0 right-0 mb-2 p-3 bg-[#0a0c14] border border-white/10 rounded-lg shadow-2xl z-50 pointer-events-none min-w-[200px]">
+                          <div className="invisible group-hover/row:visible absolute bottom-full left-0 right-0 mb-2 p-3 bg-[var(--bg-surface-2)] border border-[var(--border-color)] rounded-lg shadow-2xl z-50 pointer-events-none min-w-[200px]">
                             <div className="space-y-1.5 text-[10px] uppercase font-bold tracking-tight">
-                              <div className="mb-2 pb-1.5 border-b border-white/5 text-[var(--text-1)] normal-case line-clamp-2 text-xs">
+                              <div className="mb-2 pb-1.5 border-b border-[var(--border-color-2)] text-[var(--text-1)] normal-case line-clamp-2 text-xs">
                                 {offer.title}
                               </div>
                               <div className="flex justify-between text-[var(--text-2)]">
@@ -966,7 +966,7 @@ export const PriceCompare: React.FC = () => {
                                   {offer.isTaxed ? 'TAXED' : 'NO TAX'}
                                 </span>
                               </div>
-                              <div className="pt-1.5 mt-1.5 border-t border-white/10 flex justify-between text-[var(--accent)] text-xs font-black">
+                              <div className="pt-1.5 mt-1.5 border-t border-[var(--border-color)] flex justify-between text-[var(--accent)] text-xs font-black">
                                 <span>Total Landed</span>
                                 <span>${offer.total.toFixed(2)}</span>
                               </div>
@@ -1008,7 +1008,7 @@ export const PriceCompare: React.FC = () => {
                     })()}
 
                     {/* Card Footer */}
-                    <div className="px-4 py-2 border-t border-white/5 bg-black/20">
+                    <div className="px-4 py-2 border-t border-[var(--border-color-2)] bg-black/20">
                       <div className="flex justify-between items-center text-[10px] text-[var(--text-2)]">
                         <span>{group.offers.length} offer{group.offers.length !== 1 ? 's' : ''}</span>
                         <div className="flex items-center gap-3">

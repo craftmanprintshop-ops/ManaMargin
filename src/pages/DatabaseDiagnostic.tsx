@@ -302,7 +302,7 @@ export const DatabaseDiagnostic: React.FC = () => {
             {availableTables.map(table => (
               <div
                 key={table}
-                className="text-sm font-mono text-[var(--text-2)] bg-black/40 px-2 py-1 rounded"
+                className="text-sm font-mono text-[var(--text-2)] bg-[var(--bg-overlay)] px-2 py-1 rounded"
               >
                 {table}
               </div>
@@ -352,7 +352,7 @@ export const DatabaseDiagnostic: React.FC = () => {
                   <summary className="cursor-pointer text-sm text-[var(--text-2)] hover:text-[var(--text-1)]">
                     Show sample data
                   </summary>
-                  <pre className="mt-2 p-3 bg-black/40 rounded text-xs overflow-x-auto">
+                  <pre className="mt-2 p-3 bg-[var(--bg-overlay)] rounded text-xs overflow-x-auto">
                     {JSON.stringify(result.sample, null, 2)}
                   </pre>
                 </details>
@@ -366,7 +366,7 @@ export const DatabaseDiagnostic: React.FC = () => {
                   <p className="text-xs text-[var(--text-2)] mb-2">
                     This table/view needs an RLS policy to allow anonymous access. Run this SQL in Supabase SQL Editor:
                   </p>
-                  <pre className="text-xs bg-black/40 p-2 rounded overflow-x-auto">
+                  <pre className="text-xs bg-[var(--bg-overlay)] p-2 rounded overflow-x-auto">
 {`-- Allow anonymous read access to ${result.name}
 ALTER TABLE "${result.name}" ENABLE ROW LEVEL SECURITY;
 
@@ -408,7 +408,7 @@ FOR SELECT USING (true);`}
               <p className="text-xs text-[var(--text-2)] mb-2">
                 Run this SQL to enable anonymous read access for all tables and views:
               </p>
-              <pre className="text-xs bg-black/40 p-3 rounded overflow-x-auto">
+              <pre className="text-xs bg-[var(--bg-overlay)] p-3 rounded overflow-x-auto">
 {`-- Enable RLS and create policies for all tables
 DO $$
 DECLARE

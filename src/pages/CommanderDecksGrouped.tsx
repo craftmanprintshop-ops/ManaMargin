@@ -102,13 +102,13 @@ const PricePopup: React.FC<{ deck: CommanderDeckValue; onClose: () => void; mtgs
   }, [deck])
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[var(--bg-overlay)] backdrop-blur-sm" onClick={onClose}>
       <div
-        className="bg-[#0f111a] border border-white/10 rounded-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col shadow-2xl animate-fade-in"
+        className="bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col shadow-2xl animate-fade-in"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="p-4 border-b border-white/10 flex justify-between items-center bg-white/5">
+        <div className="p-4 border-b border-[var(--border-color)] flex justify-between items-center bg-[var(--bg-hover)]">
           <div>
             <h3 className="font-bold text-white text-lg">{deck.deck_name}</h3>
             <div className="flex items-center gap-3">
@@ -127,7 +127,7 @@ const PricePopup: React.FC<{ deck: CommanderDeckValue; onClose: () => void; mtgs
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-white/10 rounded-full text-[var(--text-2)] transition-colors"
+            className="p-2 hover:bg-[var(--bg-hover-2)] rounded-full text-[var(--text-2)] transition-colors"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -163,10 +163,10 @@ const PricePopup: React.FC<{ deck: CommanderDeckValue; onClose: () => void; mtgs
                   href={offer.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className={`flex items-center justify-between p-4 bg-white/5 border border-white/5 rounded-xl hover:border-[var(--brand)] hover:bg-white/10 transition-all group/offer ${!offer.in_stock ? 'opacity-40' : ''}`}
+                  className={`flex items-center justify-between p-4 bg-[var(--bg-hover)] border border-[var(--border-color-2)] rounded-xl hover:border-[var(--brand)] hover:bg-[var(--bg-hover-2)] transition-all group/offer ${!offer.in_stock ? 'opacity-40' : ''}`}
                 >
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded bg-[#0b0d14] flex items-center justify-center border border-white/10">
+                    <div className="w-10 h-10 rounded bg-[var(--bg-surface-2)] flex items-center justify-center border border-[var(--border-color)]">
                       <svg className="w-5 h-5 text-green-400 opacity-70 group-hover/offer:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                       </svg>
@@ -207,7 +207,7 @@ const PricePopup: React.FC<{ deck: CommanderDeckValue; onClose: () => void; mtgs
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-white/10 text-center">
+        <div className="p-4 border-t border-[var(--border-color)] text-center">
           <p className="text-[10px] text-[var(--text-2)] uppercase tracking-widest font-black opacity-40">
             Real-time Marketplace Comparison
           </p>
@@ -511,7 +511,7 @@ export const CommanderDecksGrouped: React.FC<CommanderDecksGroupedProps> = ({ on
 
       {/* Filter Bar */}
       <div className="flex flex-wrap items-center gap-2">
-        <div className="flex bg-black/40 p-1 rounded-xl border border-white/5">
+        <div className="flex bg-[var(--bg-overlay)] p-1 rounded-xl border border-[var(--border-color-2)]">
           {[
             { id: 'all' as DeckFilter, label: 'All Decks' },
             { id: 'deals' as DeckFilter, label: `Deals`, count: dealCount },
@@ -545,10 +545,10 @@ export const CommanderDecksGrouped: React.FC<CommanderDecksGroupedProps> = ({ on
         )}
       </div>
 
-      <div className="bg-[#0f111a]/80 backdrop-blur-xl rounded-xl border border-white/10 shadow-2xl overflow-hidden">
+      <div className="bg-[var(--bg-surface)] backdrop-blur-xl rounded-xl border border-[var(--border-color)] shadow-2xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left border-collapse">
-            <thead className="bg-[#0b0d14] text-[var(--text-2)] font-bold uppercase text-[10px] tracking-widest sticky top-0 z-10 border-b border-white/5">
+            <thead className="bg-[var(--bg-surface-2)] text-[var(--text-2)] font-bold uppercase text-[10px] tracking-widest sticky top-0 z-10 border-b border-[var(--border-color-2)]">
               <tr>
                 <th className="px-3 sm:px-6 py-4">Set & Deck Name</th>
                 <th className="px-3 sm:px-6 py-4 text-right text-[var(--accent)]">Value</th>
@@ -569,7 +569,7 @@ export const CommanderDecksGrouped: React.FC<CommanderDecksGroupedProps> = ({ on
                 return (
                   <React.Fragment key={groupKey}>
                     {/* Set Header Row */}
-                    <tr className="bg-blue-500/10 border-y border-white/5">
+                    <tr className="bg-blue-500/10 border-y border-[var(--border-color-2)]">
                       <td className="px-3 sm:px-6 py-2">
                         <div className="flex items-center gap-2 sm:gap-3 flex-wrap sm:flex-nowrap">
                           <img
@@ -582,7 +582,7 @@ export const CommanderDecksGrouped: React.FC<CommanderDecksGroupedProps> = ({ on
                             {first.set_name || first.code.toUpperCase()}
                           </span>
                           {first.set_name && (
-                            <span className="font-mono text-[var(--text-2)] bg-white/5 px-2 py-0.5 rounded text-[10px] hidden sm:inline uppercase">
+                            <span className="font-mono text-[var(--text-2)] bg-[var(--bg-hover)] px-2 py-0.5 rounded text-[10px] hidden sm:inline uppercase">
                               {first.code}
                             </span>
                           )}
@@ -637,7 +637,7 @@ export const CommanderDecksGrouped: React.FC<CommanderDecksGroupedProps> = ({ on
                                   e.stopPropagation()
                                   setSelectedPriceDeck(deck)
                                 }}
-                                className="p-1.5 hover:bg-white/10 rounded-lg text-[var(--text-2)] hover:text-[var(--brand)] transition-all shrink-0"
+                                className="p-1.5 hover:bg-[var(--bg-hover-2)] rounded-lg text-[var(--text-2)] hover:text-[var(--brand)] transition-all shrink-0"
                                 title="Compare All Prices"
                               >
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -658,7 +658,7 @@ export const CommanderDecksGrouped: React.FC<CommanderDecksGroupedProps> = ({ on
                                     shippingCost: 5,
                                   })
                                 }}
-                                className="p-1.5 hover:bg-white/10 rounded-lg transition-all shrink-0 hover:scale-110"
+                                className="p-1.5 hover:bg-[var(--bg-hover-2)] rounded-lg transition-all shrink-0 hover:scale-110"
                                 title={isInInventory(deck.set_name || deck.code.toUpperCase(), 'Commander Deck') ? 'Remove from inventory' : 'Add to inventory'}
                               >
                                 <svg className="w-4 h-4" fill={isInInventory(deck.set_name || deck.code.toUpperCase(), 'Commander Deck') ? 'var(--brand)' : 'none'} stroke={isInInventory(deck.set_name || deck.code.toUpperCase(), 'Commander Deck') ? 'var(--brand)' : 'currentColor'} viewBox="0 0 24 24">
