@@ -2,33 +2,53 @@
  * Header Component
  *
  * Main navigation header for the application.
- * Contains logo, navigation links, and mobile hamburger menu.
+ * Contains logo, navigation links, settings gear, and mobile hamburger menu.
  */
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { ROUTES } from '../../utils/constants'
+import { useTheme } from '../../contexts/ThemeContext'
 
 /**
  * Application header with navigation
  */
 export const Header: React.FC = () => {
   const location = useLocation()
+  const { theme, toggleTheme } = useTheme()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false)
+  const settingsRef = useRef<HTMLDivElement>(null)
 
   // Close mobile menu when route changes
   useEffect(() => {
     setIsMobileMenuOpen(false)
   }, [location.pathname])
 
-  // Close mobile menu on Escape key
+  // Close menus on Escape key
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setIsMobileMenuOpen(false)
+      if (e.key === 'Escape') {
+        setIsMobileMenuOpen(false)
+        setIsSettingsOpen(false)
+      }
     }
     document.addEventListener('keydown', handleEscape)
     return () => document.removeEventListener('keydown', handleEscape)
   }, [])
+
+  // Close settings dropdown on click outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (settingsRef.current && !settingsRef.current.contains(e.target as Node)) {
+        setIsSettingsOpen(false)
+      }
+    }
+    if (isSettingsOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [isSettingsOpen])
 
   // Prevent body scroll when mobile menu is open
   useEffect(() => {
@@ -60,7 +80,7 @@ export const Header: React.FC = () => {
 
   return (
     <>
-      <header className="bg-[#0f111a]/95 backdrop-blur-xl border-b border-white/10 sticky top-0 z-50">
+      <header className="bg-[var(--bg-surface)]/95 backdrop-blur-xl border-b border-[var(--border-color)] sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
@@ -72,7 +92,7 @@ export const Header: React.FC = () => {
                 <div className="w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-br from-primary-600 to-primary-800 rounded-lg flex items-center justify-center">
                   <span className="text-white font-bold text-lg sm:text-xl">M</span>
                 </div>
-                <span className="ml-2 sm:ml-3 text-xl sm:text-2xl font-bold text-white">
+                <span className="ml-2 sm:ml-3 text-xl sm:text-2xl font-bold text-[var(--text-1)]">
                   Mana<span className="text-primary-600">Margin</span>
                 </span>
               </div>
@@ -89,7 +109,7 @@ export const Header: React.FC = () => {
                     ${
                       isActive(link.path)
                         ? 'bg-[var(--brand)]/20 text-[var(--brand)]'
-                        : 'text-[var(--text-2)] hover:bg-white/5 hover:text-white'
+                        : 'text-[var(--text-2)] hover:bg-[var(--border-color)] hover:text-[var(--text-1)]'
                     }
                   `}
                 >
@@ -98,25 +118,82 @@ export const Header: React.FC = () => {
               ))}
             </nav>
 
-            {/* Mobile Menu Button */}
-            <button
-              className="lg:hidden p-2 rounded-lg text-[var(--text-2)] hover:bg-white/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-[var(--brand)] transition-colors"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
-              aria-expanded={isMobileMenuOpen}
-            >
-              {isMobileMenuOpen ? (
-                /* X icon */
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              ) : (
-                /* Hamburger icon */
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              )}
-            </button>
+            {/* Right side: Settings + Mobile Menu */}
+            <div className="flex items-center gap-1">
+              {/* Settings Gear */}
+              <div className="relative" ref={settingsRef}>
+                <button
+                  onClick={() => setIsSettingsOpen(!isSettingsOpen)}
+                  className="p-2 rounded-lg text-[var(--text-2)] hover:bg-[var(--border-color)] hover:text-[var(--text-1)] transition-colors"
+                  aria-label="Settings"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </button>
+
+                {/* Settings Dropdown */}
+                {isSettingsOpen && (
+                  <div className="absolute right-0 top-full mt-2 w-56 bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-xl shadow-2xl overflow-hidden animate-fade-in z-50">
+                    <div className="px-4 py-3 border-b border-[var(--border-color-2)]">
+                      <span className="text-[10px] font-black text-[var(--text-2)] uppercase tracking-widest">Settings</span>
+                    </div>
+
+                    {/* Theme Toggle */}
+                    <div className="p-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          {theme === 'dark' ? (
+                            <svg className="w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                            </svg>
+                          ) : (
+                            <svg className="w-4 h-4 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                            </svg>
+                          )}
+                          <span className="text-sm font-medium text-[var(--text-1)]">
+                            {theme === 'dark' ? 'Dark Mode' : 'Light Mode'}
+                          </span>
+                        </div>
+                        <button
+                          onClick={toggleTheme}
+                          className={`relative w-11 h-6 rounded-full transition-colors duration-300 ${
+                            theme === 'light' ? 'bg-[var(--brand)]' : 'bg-[var(--text-2)]/40'
+                          }`}
+                          aria-label="Toggle theme"
+                        >
+                          <span
+                            className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform duration-300 ${
+                              theme === 'light' ? 'translate-x-5' : 'translate-x-0'
+                            }`}
+                          />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Mobile Menu Button */}
+              <button
+                className="lg:hidden p-2 rounded-lg text-[var(--text-2)] hover:bg-[var(--border-color)] hover:text-[var(--text-1)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)] transition-colors"
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
+                aria-expanded={isMobileMenuOpen}
+              >
+                {isMobileMenuOpen ? (
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                ) : (
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       </header>
@@ -134,18 +211,18 @@ export const Header: React.FC = () => {
       <div
         className={`
           fixed top-0 right-0 z-50 h-full w-72 sm:w-80
-          bg-[#0b0d14] border-l border-white/10 shadow-2xl
+          bg-[var(--bg-surface)] border-l border-[var(--border-color)] shadow-2xl
           transform transition-transform duration-300 ease-in-out
           lg:hidden
           ${isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}
         `}
       >
         {/* Mobile Menu Header */}
-        <div className="flex items-center justify-between px-5 h-16 border-b border-white/10">
-          <span className="text-sm font-bold text-white uppercase tracking-widest">Menu</span>
+        <div className="flex items-center justify-between px-5 h-16 border-b border-[var(--border-color)]">
+          <span className="text-sm font-bold text-[var(--text-1)] uppercase tracking-widest">Menu</span>
           <button
             onClick={() => setIsMobileMenuOpen(false)}
-            className="p-2 rounded-lg text-[var(--text-2)] hover:bg-white/10 hover:text-white transition-colors"
+            className="p-2 rounded-lg text-[var(--text-2)] hover:bg-[var(--border-color)] hover:text-[var(--text-1)] transition-colors"
             aria-label="Close menu"
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -165,7 +242,7 @@ export const Header: React.FC = () => {
                 ${
                   isActive(link.path)
                     ? 'bg-[var(--brand)]/15 text-[var(--brand)] border border-[var(--brand)]/20'
-                    : 'text-[var(--text-2)] hover:bg-white/5 hover:text-white border border-transparent'
+                    : 'text-[var(--text-2)] hover:bg-[var(--border-color)] hover:text-[var(--text-1)] border border-transparent'
                 }
               `}
             >

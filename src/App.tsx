@@ -7,6 +7,7 @@
 
 import React from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
+import { ThemeProvider } from './contexts/ThemeContext'
 import { Header } from './components/layout/Header'
 import { Footer } from './components/layout/Footer'
 import { ErrorBoundary } from './components/common/ErrorBoundary'
@@ -42,8 +43,9 @@ const CommanderDecksWrapper: React.FC = () => {
 
 function App() {
   return (
+    <ThemeProvider>
     <BrowserRouter>
-      <div className="min-h-screen flex flex-col bg-gray-900">
+      <div className="min-h-screen flex flex-col" style={{ backgroundColor: 'var(--bg-1)' }}>
         {/* Header */}
         <Header />
 
@@ -91,6 +93,7 @@ function App() {
         <Footer />
       </div>
     </BrowserRouter>
+    </ThemeProvider>
   )
 }
 
