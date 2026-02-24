@@ -143,7 +143,7 @@ export const CommanderDeckDetailGrid: React.FC = () => {
           </div>
 
           {/* Filter Tabs */}
-          <div className="flex bg-[var(--bg-overlay)] p-1 rounded-xl border border-[var(--border-color-2)]">
+          <div className="flex bg-[var(--bg-inset)] p-1 rounded-xl border border-[var(--border-color-2)]">
             {[
               { id: 'all', label: 'All' },
               { id: '25c', label: '>$0.25' },
@@ -169,10 +169,10 @@ export const CommanderDeckDetailGrid: React.FC = () => {
           {filteredCards.map((card) => (
             <div
               key={card.uuid}
-              className="flex flex-col bg-[var(--bg-overlay)] rounded-xl border border-[var(--border-color-2)] overflow-hidden group hover:border-[var(--brand)]/30 hover:bg-blue-500/[0.02] transition-all shadow-lg"
+              className="flex flex-col bg-[var(--bg-surface)] rounded-xl border border-[var(--border-color-2)] overflow-hidden group hover:border-[var(--brand)]/30 hover:bg-[var(--bg-hover)] transition-all shadow-lg"
             >
               {/* Card Image */}
-              <div className="aspect-[3/4] relative overflow-hidden bg-black/20">
+              <div className="aspect-[3/4] relative overflow-hidden bg-[var(--bg-image)]">
                 {card.image_url ? (
                   <img
                     src={card.image_url}

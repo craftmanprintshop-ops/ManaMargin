@@ -19,6 +19,9 @@
   --bg-surface: #0f111a;
   --bg-surface-2: #0b0d14;
   --bg-overlay: rgba(0, 0, 0, 0.8);
+  --bg-inset: rgba(255, 255, 255, 0.05);
+  --bg-image: #0b0d14;
+  --bg-card-footer: rgba(0, 0, 0, 0.2);
   --border-color: rgba(255, 255, 255, 0.1);
   --border-color-2: rgba(255, 255, 255, 0.05);
   --bg-hover: rgba(255, 255, 255, 0.05);
@@ -39,6 +42,9 @@
   --bg-surface: #ffffff;
   --bg-surface-2: #f8fafc;
   --bg-overlay: rgba(0, 0, 0, 0.4);
+  --bg-inset: #f1f5f9;
+  --bg-image: #ffffff;
+  --bg-card-footer: rgba(0, 0, 0, 0.03);
   --border-color: #e2e8f0;
   --border-color-2: #f1f5f9;
   --bg-hover: rgba(0, 0, 0, 0.03);

@@ -511,7 +511,7 @@ export const CommanderDecksGrouped: React.FC<CommanderDecksGroupedProps> = ({ on
 
       {/* Filter Bar */}
       <div className="flex flex-wrap items-center gap-2">
-        <div className="flex bg-[var(--bg-overlay)] p-1 rounded-xl border border-[var(--border-color-2)]">
+        <div className="flex bg-[var(--bg-inset)] p-1 rounded-xl border border-[var(--border-color-2)]">
           {[
             { id: 'all' as DeckFilter, label: 'All Decks' },
             { id: 'deals' as DeckFilter, label: `Deals`, count: dealCount },

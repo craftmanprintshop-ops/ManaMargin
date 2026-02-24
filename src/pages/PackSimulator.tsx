@@ -131,7 +131,7 @@ export const PackSimulator: React.FC = () => {
                 <li>If RLS is enabled on "cards" table, you need a policy allowing SELECT for anonymous users</li>
                 <li>Quick fix: Run this SQL in Supabase SQL Editor:</li>
               </ul>
-              <pre className="mt-2 p-3 bg-[var(--bg-overlay)] text-[var(--text-1)] rounded text-xs overflow-x-auto">
+              <pre className="mt-2 p-3 bg-[var(--bg-inset)] text-[var(--text-1)] rounded text-xs overflow-x-auto">
 {`-- Allow anonymous users to read cards
 CREATE POLICY "Enable read access for all users" ON "public"."cards"
 FOR SELECT USING (true);`}

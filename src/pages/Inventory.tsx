@@ -192,7 +192,7 @@ export const Inventory: React.FC = () => {
 
         {/* Search Panel */}
         {showSearch && (
-          <div className="mt-4 p-4 bg-[var(--bg-overlay)] rounded-xl border border-[var(--border-color)]">
+          <div className="mt-4 p-4 bg-[var(--bg-inset)] rounded-xl border border-[var(--border-color)]">
             <div className="relative">
               <input
                 type="text"

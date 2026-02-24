@@ -508,11 +508,11 @@ export const PriceCompare: React.FC = () => {
 
         {/* Marketplace Settings Panel */}
         {showSettings && (
-          <div className="mb-6 p-4 bg-[var(--bg-overlay)] rounded-xl border border-[var(--border-color)]">
+          <div className="mb-6 p-4 bg-[var(--bg-inset)] rounded-xl border border-[var(--border-color)]">
             <h3 className="text-sm font-bold text-[var(--text-1)] mb-3 uppercase tracking-wider">Marketplace Settings</h3>
             <div className="space-y-2">
               {marketSettings.map((setting, idx) => (
-                <div key={setting.name} className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 items-center p-2 sm:p-0 bg-white/[0.02] sm:bg-transparent rounded-lg sm:rounded-none">
+                <div key={setting.name} className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 items-center p-2 sm:p-0 bg-[var(--bg-hover)] sm:bg-transparent rounded-lg sm:rounded-none">
                   <span className="text-xs font-bold text-[var(--brand)] capitalize col-span-2 sm:col-span-1">{setting.name}</span>
                   <div className="flex items-center gap-2">
                     <label className="text-[10px] text-[var(--text-2)] uppercase shrink-0">Ship $</label>
@@ -622,7 +622,7 @@ export const PriceCompare: React.FC = () => {
           <button
             onClick={handleSearch}
             disabled={isSearching}
-            className="w-full h-[38px] bg-[var(--brand)] hover:bg-blue-500 disabled:bg-slate-700 disabled:cursor-not-allowed text-white font-bold rounded-lg transition-all flex items-center justify-center shadow-lg text-sm"
+            className="w-full h-[38px] bg-[var(--brand)] hover:bg-blue-500 disabled:bg-[var(--bg-inset)] disabled:text-[var(--text-2)] disabled:cursor-not-allowed text-white font-bold rounded-lg transition-all flex items-center justify-center shadow-lg text-sm"
           >
             {isSearching ? 'Searching...' : 'Search Prices'}
           </button>
@@ -633,7 +633,7 @@ export const PriceCompare: React.FC = () => {
       <div className="flex flex-wrap items-center justify-between gap-4 px-2">
         <div className="flex items-center gap-4">
           <span className="text-xs font-bold text-[var(--text-2)] uppercase">View:</span>
-          <div className="flex bg-[var(--bg-overlay)] p-1 rounded-lg border border-[var(--border-color-2)]">
+          <div className="flex bg-[var(--bg-inset)] p-1 rounded-lg border border-[var(--border-color-2)]">
             <button
               onClick={() => setViewMode('card')}
               className={`px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded transition-all ${viewMode === 'card' ? 'bg-[var(--brand)] text-white shadow-lg' : 'text-[var(--text-2)] hover:text-[var(--text-1)]'}`}
@@ -654,7 +654,7 @@ export const PriceCompare: React.FC = () => {
           <select
             value={stockFilter}
             onChange={(e) => setStockFilter(e.target.value as 'In Stock' | 'All')}
-            className="bg-[var(--bg-overlay)] border border-[var(--border-color)] rounded-lg p-1.5 text-xs text-[var(--text-1)] outline-none focus:border-[var(--brand)]"
+            className="bg-[var(--bg-inset)] border border-[var(--border-color)] rounded-lg p-1.5 text-xs text-[var(--text-1)] outline-none focus:border-[var(--brand)]"
           >
             <option value="In Stock">In Stock Only</option>
             <option value="All">All (Include Out of Stock)</option>
@@ -861,9 +861,9 @@ export const PriceCompare: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {groupedOffers.length > 0 ? (
                 groupedOffers.map((group, gIdx) => (
-                  <div key={gIdx} className="bg-[var(--bg-surface)] backdrop-blur-sm rounded-2xl border border-blue-500/10 shadow-[0_8px_32px_rgba(0,0,0,0.4),inset_0_0_20px_rgba(59,130,246,0.05)] hover:border-blue-500/30 hover:shadow-[0_8px_32px_rgba(59,130,246,0.1)] transition-all duration-300 group overflow-hidden flex flex-col">
+                  <div key={gIdx} className="bg-[var(--bg-surface)] backdrop-blur-sm rounded-2xl border border-[var(--border-color)] shadow-lg hover:border-blue-500/30 hover:shadow-xl transition-all duration-300 group overflow-hidden flex flex-col">
                     {/* Product Image Area */}
-                    <div className="aspect-[16/9] relative overflow-hidden bg-gradient-to-br from-blue-900/30 via-[#0b0d14] to-transparent">
+                    <div className="aspect-[16/9] relative overflow-hidden bg-[var(--bg-image)]">
                       {(() => {
                         const firstWithImage = group.offers.find(o => o.image_url)
                         if (firstWithImage && firstWithImage.image_url) {
@@ -897,7 +897,7 @@ export const PriceCompare: React.FC = () => {
                           </div>
                         )
                       })()}
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#0f111a] via-transparent to-transparent pointer-events-none" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg-surface)] via-transparent to-transparent pointer-events-none" />
                       {/* Star icon for inventory */}
                       {group.set_name && group.product_type && group.set_name !== 'Unknown' && group.product_type !== 'Unknown' && (
                         <button
@@ -1024,7 +1024,7 @@ export const PriceCompare: React.FC = () => {
                     })()}
 
                     {/* Card Footer */}
-                    <div className="px-4 py-2 border-t border-[var(--border-color-2)] bg-black/20">
+                    <div className="px-4 py-2 border-t border-[var(--border-color-2)] bg-[var(--bg-card-footer)]">
                       <div className="flex justify-between items-center text-[10px] text-[var(--text-2)]">
                         <span>{group.offers.length} offer{group.offers.length !== 1 ? 's' : ''}</span>
                         <div className="flex items-center gap-3">

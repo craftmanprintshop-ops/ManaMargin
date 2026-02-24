@@ -221,7 +221,7 @@ export const Dashboard: React.FC = () => {
                 className="bg-[var(--bg-surface)] backdrop-blur-xl rounded-xl border border-[var(--border-color)] overflow-hidden hover:border-purple-500/30 transition-all group"
               >
                 {/* Product Image */}
-                <div className="aspect-square relative overflow-hidden bg-gradient-to-br from-purple-900/20 via-[#0b0d14] to-transparent">
+                <div className="aspect-square relative overflow-hidden bg-[var(--bg-image)]">
                   {deal.best_image_url ? (
                     <img
                       src={deal.best_image_url}
@@ -231,7 +231,7 @@ export const Dashboard: React.FC = () => {
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
-                      <span className="text-3xl text-white/10">?</span>
+                      <span className="text-3xl text-[var(--text-2)]/30">?</span>
                     </div>
                   )}
                   {/* Best Price - top right */}
