@@ -324,7 +324,7 @@ export const DatabaseDiagnostic: React.FC = () => {
                     <span
                       className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
                         result.status === 'success'
-                          ? 'bg-green-500/20 text-green-400'
+                          ? 'bg-[var(--color-buy-bg)] text-[var(--color-buy)]'
                           : 'bg-red-500/20 text-red-400'
                       }`}
                     >
@@ -388,7 +388,7 @@ FOR SELECT USING (true);`}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <p className="text-sm text-[var(--text-2)]">Successful</p>
-              <p className="text-2xl font-bold text-green-400">
+              <p className="text-2xl font-bold text-[var(--color-buy)]">
                 {results.filter(r => r.status === 'success').length}
               </p>
             </div>
@@ -401,8 +401,8 @@ FOR SELECT USING (true);`}
           </div>
 
           {results.filter(r => r.status === 'error').length > 0 && (
-            <div className="mt-4 p-4 bg-blue-500/10 border border-blue-500/20 rounded">
-              <p className="text-sm font-semibold text-blue-400 mb-2">
+            <div className="mt-4 p-4 bg-[var(--bg-set-row)] border border-[var(--brand)]/20 rounded">
+              <p className="text-sm font-semibold text-[var(--brand)] mb-2">
                 Quick Fix for All Tables
               </p>
               <p className="text-xs text-[var(--text-2)] mb-2">

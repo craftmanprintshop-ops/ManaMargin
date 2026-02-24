@@ -33,10 +33,10 @@ export const Badge: React.FC<BadgeProps> = ({
 }) => {
   // Variant colors
   const variantClasses = {
-    success: 'bg-green-500/15 text-green-400 border border-green-500/20',
+    success: 'bg-[var(--color-buy-bg)] text-[var(--color-buy)] border border-[var(--color-buy-border)]',
     danger: 'bg-red-500/15 text-red-400 border border-red-500/20',
     warning: 'bg-yellow-500/15 text-yellow-400 border border-yellow-500/20',
-    info: 'bg-blue-500/15 text-blue-400 border border-blue-500/20',
+    info: 'bg-[var(--brand)]/15 text-[var(--brand)] border border-[var(--brand)]/20',
     neutral: 'bg-[var(--bg-hover-2)] text-[var(--text-2)] border border-[var(--border-color)]',
   }
 

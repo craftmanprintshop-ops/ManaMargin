@@ -47,8 +47,8 @@ export const PackResults: React.FC<PackResultsProps> = ({
 
       {/* Best Card Highlight */}
       {bestCard && bestCard.price > 0 && (
-        <div className="mb-4 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
-          <p className="text-xs font-medium text-amber-400 mb-1">Best Pull:</p>
+        <div className="mb-4 p-3 bg-[var(--color-ref)]/10 border border-[var(--color-ref)]/20 rounded-lg">
+          <p className="text-xs font-medium text-[var(--color-ref)] mb-1">Best Pull:</p>
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2 min-w-0">
               <span className="font-semibold text-[var(--text-1)] truncate">{bestCard.name}</span>
@@ -58,7 +58,7 @@ export const PackResults: React.FC<PackResultsProps> = ({
                 </Badge>
               )}
             </div>
-            <span className="font-bold text-amber-400 shrink-0 ml-2">
+            <span className="font-bold text-[var(--color-ref)] shrink-0 ml-2">
               {formatCurrency(bestCard.price)}
             </span>
           </div>

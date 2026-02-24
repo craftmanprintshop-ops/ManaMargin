@@ -172,8 +172,8 @@ FOR SELECT USING (true);`}
 
       {/* Available Sets Info */}
       {availableSets && (
-        <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
-          <p className="text-sm text-blue-300">
+        <div className="bg-[var(--bg-set-row)] border border-[var(--brand)]/20 rounded-lg p-4">
+          <p className="text-sm text-[var(--color-value)]">
             <strong>{availableSets.length} sets available:</strong>{' '}
             {availableSets.slice(0, 10).join(', ')}
             {availableSets.length > 10 && `, and ${availableSets.length - 10} more...`}

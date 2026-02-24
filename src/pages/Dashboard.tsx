@@ -202,8 +202,8 @@ export const Dashboard: React.FC = () => {
         <div>
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <span className="text-lg font-black text-white uppercase tracking-tight">Top EV Deals</span>
-              <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-400 border border-purple-500/30">
+              <span className="text-lg font-black text-[var(--text-1)] uppercase tracking-tight">Top EV Deals</span>
+              <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-[var(--color-ev)]/20 text-[var(--color-ev)] border border-[var(--color-ev)]/30">
                 EV &gt; Best Price
               </span>
             </div>
@@ -218,7 +218,7 @@ export const Dashboard: React.FC = () => {
             {evDeals.map((deal) => (
               <div
                 key={`${deal.set_name}-${deal.product_type}`}
-                className="bg-[var(--bg-surface)] backdrop-blur-xl rounded-xl border border-[var(--border-color)] overflow-hidden hover:border-purple-500/30 transition-all group"
+                className="bg-[var(--bg-surface)] backdrop-blur-xl rounded-xl border border-[var(--border-color)] overflow-hidden hover:border-[var(--color-ev)]/30 transition-all group"
               >
                 {/* Product Image */}
                 <div className="aspect-square relative overflow-hidden bg-[var(--bg-image)]">
@@ -241,7 +241,7 @@ export const Dashboard: React.FC = () => {
                         href={deal.best_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-green-500/90 hover:bg-green-500 transition-colors"
+                        className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-[var(--color-buy)] hover:opacity-90 transition-colors"
                         onClick={(e) => e.stopPropagation()}
                       >
                         <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -250,7 +250,7 @@ export const Dashboard: React.FC = () => {
                         <span className="text-[10px] font-black text-white">${deal.best_total.toFixed(2)}</span>
                       </a>
                     ) : (
-                      <div className="px-1.5 py-0.5 rounded bg-green-500/90 text-[10px] font-black text-white">
+                      <div className="px-1.5 py-0.5 rounded bg-[var(--color-buy)] text-[10px] font-black text-white">
                         ${deal.best_total.toFixed(2)}
                       </div>
                     )}
@@ -266,13 +266,13 @@ export const Dashboard: React.FC = () => {
                   <div className="flex items-center justify-between gap-2">
                     <div>
                       <div className="text-[9px] text-[var(--text-2)] uppercase">Market</div>
-                      <div className="text-xs font-mono text-amber-400 font-bold">
+                      <div className="text-xs font-mono text-[var(--color-ref)] font-bold">
                         {deal.botbox_market_price !== null ? `$${deal.botbox_market_price.toFixed(2)}` : '\u2014'}
                       </div>
                     </div>
                     <div className="text-right">
                       <div className="text-[9px] text-[var(--text-2)] uppercase">EV</div>
-                      <div className="text-xs font-mono text-purple-400 font-bold">${deal.expected_value.toFixed(2)}</div>
+                      <div className="text-xs font-mono text-[var(--color-ev)] font-bold">${deal.expected_value.toFixed(2)}</div>
                     </div>
                   </div>
                 </div>
@@ -292,11 +292,11 @@ export const Dashboard: React.FC = () => {
 
       {/* Commander Deck Deals */}
       {deals.length > 0 && (
-        <div className="bg-[var(--bg-surface)] backdrop-blur-xl rounded-xl border border-green-500/20 shadow-2xl overflow-hidden">
+        <div className="bg-[var(--bg-surface)] backdrop-blur-xl rounded-xl border border-[var(--color-buy-border)] shadow-2xl overflow-hidden">
           <div className="px-6 py-4 border-b border-[var(--border-color-2)] flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <span className="text-lg font-black text-white uppercase tracking-tight">Commander Deck Deals</span>
-              <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-green-500/20 text-green-400 border border-green-500/30">
+              <span className="text-lg font-black text-[var(--text-1)] uppercase tracking-tight">Commander Deck Deals</span>
+              <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-[var(--color-buy-bg)] text-[var(--color-buy)] border border-[var(--color-buy-border)]">
                 {deals.length} {deals.length === 1 ? 'deal' : 'deals'}
               </span>
             </div>
@@ -311,7 +311,7 @@ export const Dashboard: React.FC = () => {
             {deals.slice(0, 6).map((deal) => (
               <div
                 key={`${deal.code}|${deal.deck_name}`}
-                className="flex items-center justify-between p-4 bg-[var(--bg-hover)] border border-[var(--border-color-2)] rounded-xl hover:border-green-500/30 hover:bg-green-500/[0.03] transition-all group"
+                className="flex items-center justify-between p-4 bg-[var(--bg-hover)] border border-[var(--border-color-2)] rounded-xl hover:border-[var(--color-buy-border)] hover:bg-[var(--bg-hover)] transition-all group"
               >
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 mb-1">
@@ -321,7 +321,7 @@ export const Dashboard: React.FC = () => {
                       className="w-4 h-4 invert opacity-50 shrink-0"
                       onError={(e) => (e.currentTarget.style.display = 'none')}
                     />
-                    <span className="text-sm font-bold text-white truncate group-hover:text-green-300 transition-colors">
+                    <span className="text-sm font-bold text-[var(--text-1)] truncate group-hover:text-[var(--color-buy)] transition-colors">
                       {deal.deck_name}
                     </span>
                   </div>
@@ -330,9 +330,9 @@ export const Dashboard: React.FC = () => {
                   </div>
                   <div className="flex items-center gap-3 text-[10px]">
                     <span className="text-[var(--text-2)]">
-                      Cards: <span className="font-mono text-blue-300">${deal.value_over_25c.toFixed(2)}</span>
+                      Cards: <span className="font-mono text-[var(--color-value)]">${deal.value_over_25c.toFixed(2)}</span>
                     </span>
-                    <span className="text-green-400 font-black">
+                    <span className="text-[var(--color-buy)] font-black">
                       Save ${deal.savings.toFixed(2)} ({deal.savings_pct.toFixed(0)}%)
                     </span>
                   </div>
@@ -341,14 +341,14 @@ export const Dashboard: React.FC = () => {
                   href={deal.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="shrink-0 ml-3 flex flex-col items-center gap-1 px-3 py-2 rounded-lg bg-green-500/10 border border-green-500/20 hover:bg-green-500/20 hover:border-green-500/40 transition-all"
+                  className="shrink-0 ml-3 flex flex-col items-center gap-1 px-3 py-2 rounded-lg bg-[var(--color-buy-bg)] border border-[var(--color-buy-border)] hover:bg-[var(--color-buy-bg)] hover:border-[var(--color-buy-hover-border)] transition-all"
                   title={`Buy from ${deal.marketplace}`}
                 >
                   <div className="flex items-center gap-1.5">
-                    <svg className="w-3.5 h-3.5 text-green-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-3.5 h-3.5 text-[var(--color-buy)] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                     </svg>
-                    <span className="font-black font-mono text-green-400 text-sm">
+                    <span className="font-black font-mono text-[var(--color-buy)] text-sm">
                       ${deal.market_price.toFixed(2)}
                     </span>
                   </div>
@@ -363,7 +363,7 @@ export const Dashboard: React.FC = () => {
             <div className="px-6 py-3 border-t border-[var(--border-color-2)] text-center">
               <Link
                 to={ROUTES.COMMANDER_DECKS}
-                className="text-xs font-bold text-green-400 hover:text-green-300 transition-colors"
+                className="text-xs font-bold text-[var(--color-buy)] hover:text-[var(--color-buy)] transition-colors"
               >
                 +{deals.length - 6} more deals — View all on Commander Decks page →
               </Link>

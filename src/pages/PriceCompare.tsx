@@ -560,7 +560,7 @@ export const PriceCompare: React.FC = () => {
             </div>
             <button
               onClick={saveSettings}
-              className="mt-3 px-4 py-1.5 bg-[var(--brand)] text-white text-xs font-bold rounded-lg hover:bg-blue-500 transition-colors"
+              className="mt-3 px-4 py-1.5 bg-[var(--brand)] text-white text-xs font-bold rounded-lg hover:bg-[var(--primary-700)] transition-colors"
             >
               Save Settings
             </button>
@@ -622,7 +622,7 @@ export const PriceCompare: React.FC = () => {
           <button
             onClick={handleSearch}
             disabled={isSearching}
-            className="w-full h-[38px] bg-[var(--brand)] hover:bg-blue-500 disabled:bg-[var(--bg-inset)] disabled:text-[var(--text-2)] disabled:cursor-not-allowed text-white font-bold rounded-lg transition-all flex items-center justify-center shadow-lg text-sm"
+            className="w-full h-[38px] bg-[var(--brand)] hover:bg-[var(--primary-700)] disabled:bg-[var(--bg-inset)] disabled:text-[var(--text-2)] disabled:cursor-not-allowed text-white font-bold rounded-lg transition-all flex items-center justify-center shadow-lg text-sm"
           >
             {isSearching ? 'Searching...' : 'Search Prices'}
           </button>
@@ -666,7 +666,7 @@ export const PriceCompare: React.FC = () => {
       {searchError && (
         <div className="bg-red-500/10 border border-red-500/30 text-red-200 p-6 rounded-xl text-center">
           <p className="font-bold">{searchError}</p>
-          <button onClick={handleSearch} className="mt-4 px-8 py-2 bg-[var(--brand)] rounded-lg hover:bg-blue-600 text-white text-sm font-bold">
+          <button onClick={handleSearch} className="mt-4 px-8 py-2 bg-[var(--brand)] rounded-lg hover:bg-[var(--primary-700)] text-white text-sm font-bold">
             Retry Search
           </button>
         </div>
@@ -751,7 +751,7 @@ export const PriceCompare: React.FC = () => {
                             rel="noopener noreferrer"
                             className="flex items-center gap-1.5 hover:text-[var(--brand)] transition-colors"
                           >
-                            <svg className="w-3.5 h-3.5 text-green-400 opacity-60 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-3.5 h-3.5 text-[var(--color-buy)] opacity-60 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                             </svg>
                             <span className="font-bold text-[var(--brand)]">{offer.marketplace}</span>
@@ -761,7 +761,7 @@ export const PriceCompare: React.FC = () => {
                         <td className="px-3 py-2.5 text-right font-mono text-[var(--text-2)]">
                           {offer.shipping === null || offer.shipping === undefined ? '\u2014' : `$${offer.shipping.toFixed(2)}`}
                         </td>
-                        <td className="px-3 py-2.5 text-right font-bold font-mono text-[var(--accent)]">
+                        <td className="px-3 py-2.5 text-right font-bold font-mono text-[var(--color-value)]">
                           ${offer.total.toFixed(2)}
                         </td>
                         <td className="px-3 py-2.5 text-center">
@@ -772,7 +772,7 @@ export const PriceCompare: React.FC = () => {
                               <span className="w-2 h-2 rounded-full bg-red-400 inline-block" title="Out of Stock"></span>
                             )}
                             {offer.isTaxed && (
-                              <span className="text-[8px] font-bold text-amber-500" title="Taxed">T</span>
+                              <span className="text-[8px] font-bold text-[var(--color-ref)]" title="Taxed">T</span>
                             )}
                           </div>
                         </td>
@@ -830,15 +830,15 @@ export const PriceCompare: React.FC = () => {
                         rel="noopener noreferrer"
                         className="flex items-center gap-1.5 text-xs"
                       >
-                        <svg className="w-3.5 h-3.5 text-green-400 opacity-60 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-3.5 h-3.5 text-[var(--color-buy)] opacity-60 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                         </svg>
                         <span className="font-bold text-[var(--brand)]">{offer.marketplace}</span>
-                        {offer.isTaxed && <span className="text-[8px] font-bold text-amber-500 bg-amber-500/10 px-1 rounded">TAX</span>}
+                        {offer.isTaxed && <span className="text-[8px] font-bold text-[var(--color-ref)] bg-[var(--color-ref)]/10 px-1 rounded">TAX</span>}
                         {!offer.in_stock && <span className="text-[8px] font-bold text-red-400 bg-red-500/10 px-1 rounded">OOS</span>}
                       </a>
                       <div className="text-right">
-                        <div className="font-bold font-mono text-[var(--accent)] text-sm">${offer.total.toFixed(2)}</div>
+                        <div className="font-bold font-mono text-[var(--color-value)] text-sm">${offer.total.toFixed(2)}</div>
                         {(offer.shipping ?? 0) > 0 && (
                           <div className="text-[10px] text-[var(--text-2)] font-mono">${offer.price.toFixed(2)} + ${(offer.shipping ?? 0).toFixed(2)}</div>
                         )}
@@ -861,7 +861,7 @@ export const PriceCompare: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {groupedOffers.length > 0 ? (
                 groupedOffers.map((group, gIdx) => (
-                  <div key={gIdx} className="bg-[var(--bg-surface)] backdrop-blur-sm rounded-2xl border border-[var(--border-color)] shadow-lg hover:border-blue-500/30 hover:shadow-xl transition-all duration-300 group overflow-hidden flex flex-col">
+                  <div key={gIdx} className="bg-[var(--bg-surface)] backdrop-blur-sm rounded-2xl border border-[var(--border-color)] shadow-lg hover:border-[var(--brand)]/30 hover:shadow-xl transition-all duration-300 group overflow-hidden flex flex-col">
                     {/* Product Image Area */}
                     <div className="aspect-[16/9] relative overflow-hidden bg-[var(--bg-image)]">
                       {(() => {
@@ -945,18 +945,18 @@ export const PriceCompare: React.FC = () => {
                             </div>
                             <div className="flex justify-between items-center">
                               <div className="flex items-center gap-2">
-                                <svg className="w-3.5 h-3.5 text-green-400 opacity-60 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-3.5 h-3.5 text-[var(--color-buy)] opacity-60 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                                 </svg>
                                 <span className="font-bold text-[var(--brand)]">{offer.marketplace}</span>
                                 {offer.isTaxed && (
-                                  <span className="text-[8px] font-bold text-amber-500 bg-amber-500/10 px-1 rounded">TAX</span>
+                                  <span className="text-[8px] font-bold text-[var(--color-ref)] bg-[var(--color-ref)]/10 px-1 rounded">TAX</span>
                                 )}
                                 {!offer.in_stock && (
                                   <span className="text-[8px] font-bold text-red-400 bg-red-500/10 px-1 rounded">OOS</span>
                                 )}
                               </div>
-                              <span className="font-black font-mono text-[var(--accent)] text-sm">
+                              <span className="font-black font-mono text-[var(--color-value)] text-sm">
                                 ${offer.total.toFixed(2)}
                               </span>
                             </div>
@@ -978,11 +978,11 @@ export const PriceCompare: React.FC = () => {
                               </div>
                               <div className="flex justify-between text-[var(--text-2)]">
                                 <span>Tax Status</span>
-                                <span className={offer.isTaxed ? 'text-amber-500' : 'text-slate-500'}>
+                                <span className={offer.isTaxed ? 'text-[var(--color-ref)]' : 'text-[var(--text-2)]'}>
                                   {offer.isTaxed ? 'TAXED' : 'NO TAX'}
                                 </span>
                               </div>
-                              <div className="pt-1.5 mt-1.5 border-t border-[var(--border-color)] flex justify-between text-[var(--accent)] text-xs font-black">
+                              <div className="pt-1.5 mt-1.5 border-t border-[var(--border-color)] flex justify-between text-[var(--color-value)] text-xs font-black">
                                 <span>Total Landed</span>
                                 <span>${offer.total.toFixed(2)}</span>
                               </div>
@@ -1002,9 +1002,9 @@ export const PriceCompare: React.FC = () => {
                         <div className="px-3 py-1.5 border-t border-amber-500/10 bg-amber-500/[0.03]">
                           <div className="flex justify-between items-center">
                             <div className="flex items-center gap-2">
-                              <span className="text-[9px] font-bold text-amber-400/70 uppercase tracking-wider">Ref Price</span>
+                              <span className="text-[9px] font-bold text-[var(--color-ref)]/70 uppercase tracking-wider">Ref Price</span>
                               {ref.fetched_at && (
-                                <span className="text-[8px] text-amber-400/40 font-mono">
+                                <span className="text-[8px] text-[var(--color-ref)]/40 font-mono">
                                   {new Date(ref.fetched_at).toLocaleDateString()}
                                 </span>
                               )}
@@ -1013,7 +1013,7 @@ export const PriceCompare: React.FC = () => {
                               href={ref.url || '#'}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="font-bold font-mono text-amber-400 text-xs hover:text-amber-300 transition-colors"
+                              className="font-bold font-mono text-[var(--color-ref)] text-xs hover:text-[var(--color-ref)] transition-colors"
                               title={`Avg: $${ref.avg_price?.toFixed(2) ?? 'N/A'} / Market: $${ref.market_price?.toFixed(2) ?? 'N/A'}${ref.fetched_at ? ` (${new Date(ref.fetched_at).toLocaleDateString()})` : ''}`}
                             >
                               ${refPrice!.toFixed(2)}
@@ -1034,13 +1034,13 @@ export const PriceCompare: React.FC = () => {
                             const match = botboxEvs.get(pt)
                             if (!match || !match.expected_value) return null
                             return (
-                              <span className="font-bold text-purple-400" title={`EV | Ratio: ${match.ev_to_price_ratio?.toFixed(2) ?? 'N/A'}`}>
+                              <span className="font-bold text-[var(--color-ev)]" title={`EV | Ratio: ${match.ev_to_price_ratio?.toFixed(2) ?? 'N/A'}`}>
                                 EV: ${match.expected_value.toFixed(2)}
                               </span>
                             )
                           })()}
                           {group.offers.length > 0 && (
-                            <span className="font-bold text-green-400">
+                            <span className="font-bold text-[var(--color-buy)]">
                               Best: ${Math.min(...group.offers.map(o => o.total)).toFixed(2)}
                             </span>
                           )}

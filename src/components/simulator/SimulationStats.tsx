@@ -51,7 +51,7 @@ export const SimulationStats: React.FC<SimulationStatsProps> = ({ results }) => 
       <Card padding="md">
         <div className="text-center">
           <p className="text-xs sm:text-sm text-[var(--text-2)] mb-1">Best Pack</p>
-          <p className="text-2xl sm:text-3xl font-bold text-green-400">
+          <p className="text-2xl sm:text-3xl font-bold text-[var(--color-buy)]">
             {formatCurrency(results.highestValue)}
           </p>
           <p className="text-[10px] sm:text-xs text-[var(--text-2)]/70 mt-1">

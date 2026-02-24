@@ -107,7 +107,7 @@ export const CommanderDeckDetailGrid: React.FC = () => {
         </div>
         <button
           onClick={loadCards}
-          className="px-5 py-2 bg-[var(--brand)] hover:bg-blue-500 text-white text-sm font-bold rounded-lg transition-colors"
+          className="px-5 py-2 bg-[var(--brand)] hover:bg-[var(--primary-700)] text-white text-sm font-bold rounded-lg transition-colors"
         >
           Try Again
         </button>
@@ -154,7 +154,7 @@ export const CommanderDeckDetailGrid: React.FC = () => {
                 onClick={() => setActiveTab(tab.id as FilterTab)}
                 className={`px-4 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all ${
                   activeTab === tab.id
-                    ? 'bg-[var(--brand)] text-white shadow-lg shadow-blue-500/20'
+                    ? 'bg-[var(--brand)] text-white shadow-lg shadow-[var(--brand)]/20'
                     : 'text-[var(--text-2)] hover:text-[var(--text-1)]'
                 }`}
               >
@@ -216,13 +216,13 @@ export const CommanderDeckDetailGrid: React.FC = () => {
                   <span
                     className={`text-[9px] font-black px-1.5 py-0.5 rounded uppercase tracking-tighter ${
                       card.is_foil
-                        ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
+                        ? 'bg-[var(--color-ev)]/20 text-[var(--color-ev)] border border-[var(--color-ev)]/30'
                         : 'bg-[var(--bg-hover)] text-[var(--text-2)] border border-[var(--border-color-2)]'
                     }`}
                   >
                     {card.is_foil ? 'Foil' : 'Normal'}
                   </span>
-                  <span className="font-black font-mono text-[var(--accent)] text-xs">
+                  <span className="font-black font-mono text-[var(--color-value)] text-xs">
                     ${card.price ? card.price.toFixed(2) : '0.00'}
                   </span>
                 </div>

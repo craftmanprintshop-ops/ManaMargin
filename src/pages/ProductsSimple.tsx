@@ -190,7 +190,7 @@ const OffersPanel: React.FC<{ setName: string; productType: string }> = ({ setNa
                       onError={(e) => (e.currentTarget.style.display = 'none')}
                     />
                   ) : (
-                    <svg className="w-5 h-5 text-green-400 opacity-60 group-hover/offer:opacity-100 transition-opacity shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 text-[var(--color-buy)] opacity-60 group-hover/offer:opacity-100 transition-opacity shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                     </svg>
                   )}
@@ -206,7 +206,7 @@ const OffersPanel: React.FC<{ setName: string; productType: string }> = ({ setNa
                         <span className="text-[8px] font-bold text-red-400 bg-red-500/10 px-1 rounded uppercase">Out of Stock</span>
                       )}
                       {offer.foil && offer.foil !== 'Non-Foil' && (
-                        <span className="text-[8px] font-bold text-purple-400 bg-purple-500/10 px-1 rounded uppercase">{offer.foil}</span>
+                        <span className="text-[8px] font-bold text-[var(--color-ev)] bg-[var(--color-ev)]/10 px-1 rounded uppercase">{offer.foil}</span>
                       )}
                       <span className="text-[9px] text-[var(--text-2)] font-mono">
                         {new Date(offer.fetched_at).toLocaleDateString()}
@@ -215,7 +215,7 @@ const OffersPanel: React.FC<{ setName: string; productType: string }> = ({ setNa
                   </div>
                 </div>
                 <div className="text-right shrink-0 pl-3">
-                  <div className="text-[var(--accent)] font-black font-mono text-sm">
+                  <div className="text-[var(--color-value)] font-black font-mono text-sm">
                     ${offer.price.toFixed(2)}
                   </div>
                   {offer.shipping !== null && offer.shipping > 0 && (
@@ -312,7 +312,7 @@ export const ProductsSimple: React.FC = () => {
                 <th className="px-2 sm:px-4 py-4 text-right hidden sm:table-cell">Offers</th>
                 <th className="px-2 sm:px-4 py-4 text-right hidden md:table-cell">Avg Price</th>
                 <th className="px-2 sm:px-4 py-4 text-right">Min</th>
-                <th className="px-2 sm:px-4 py-4 text-right text-[var(--accent)]">Max</th>
+                <th className="px-2 sm:px-4 py-4 text-right text-[var(--color-value)]">Max</th>
                 <th className="px-2 sm:px-4 py-4 text-right hidden lg:table-cell">Updated</th>
               </tr>
             </thead>
@@ -320,7 +320,7 @@ export const ProductsSimple: React.FC = () => {
               {filteredGroups?.map((group) => (
                 <React.Fragment key={group.set_name}>
                   {/* Set Header Row */}
-                  <tr className="bg-blue-500/10 border-y border-[var(--border-color-2)]">
+                  <tr className="bg-[var(--bg-set-row)] border-y border-[var(--border-color-2)]">
                     <td className="px-3 sm:px-6 py-3">
                       <div className="flex flex-wrap items-center gap-1 sm:gap-3">
                         <span className="text-xs sm:text-sm font-bold text-white uppercase tracking-tight">
@@ -345,7 +345,7 @@ export const ProductsSimple: React.FC = () => {
                     <td className="px-2 sm:px-4 py-3 text-right font-mono text-white/70 text-xs">
                       {group.total_min !== null ? `$${group.total_min.toFixed(2)}` : '—'}
                     </td>
-                    <td className="px-2 sm:px-4 py-3 text-right font-mono font-bold text-[var(--accent)] text-sm">
+                    <td className="px-2 sm:px-4 py-3 text-right font-mono font-bold text-[var(--color-value)] text-sm">
                       {group.total_max !== null ? `$${group.total_max.toFixed(2)}` : '—'}
                     </td>
                     <td className="px-2 sm:px-4 py-3 hidden lg:table-cell"></td>
@@ -359,7 +359,7 @@ export const ProductsSimple: React.FC = () => {
                     return (
                       <React.Fragment key={rowKey}>
                         <tr
-                          className={`cursor-pointer transition-colors ${isExpanded ? 'bg-blue-500/10' : 'hover:bg-blue-500/5'}`}
+                          className={`cursor-pointer transition-colors ${isExpanded ? 'bg-[var(--bg-set-row)]' : 'hover:bg-[var(--bg-row-hover)]'}`}
                           onClick={() => toggleExpand(rowKey)}
                         >
                           <td className="px-3 sm:px-6 py-3 pl-6 sm:pl-12">
@@ -386,7 +386,7 @@ export const ProductsSimple: React.FC = () => {
                           <td className="px-2 sm:px-4 py-3 text-right font-mono text-[var(--text-2)] text-xs">
                             {product.min_price !== null ? `$${product.min_price.toFixed(2)}` : '—'}
                           </td>
-                          <td className="px-2 sm:px-4 py-3 text-right font-mono font-bold text-[var(--accent)] text-xs">
+                          <td className="px-2 sm:px-4 py-3 text-right font-mono font-bold text-[var(--color-value)] text-xs">
                             {product.max_price !== null ? `$${product.max_price.toFixed(2)}` : '—'}
                           </td>
                           <td className="px-2 sm:px-4 py-3 text-right text-[var(--text-2)] text-[10px] font-mono hidden lg:table-cell">

@@ -181,7 +181,7 @@ export const Inventory: React.FC = () => {
           </div>
           <button
             onClick={() => setShowSearch(!showSearch)}
-            className="px-4 py-2 bg-[var(--brand)] hover:bg-blue-500 text-white text-sm font-bold rounded-lg transition-colors flex items-center gap-2"
+            className="px-4 py-2 bg-[var(--brand)] hover:bg-[var(--primary-700)] text-white text-sm font-bold rounded-lg transition-colors flex items-center gap-2"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -222,7 +222,7 @@ export const Inventory: React.FC = () => {
                       disabled={alreadyAdded}
                       className={`w-full text-left p-3 rounded-lg transition-colors flex justify-between items-center gap-4 ${
                         alreadyAdded
-                          ? 'bg-blue-500/10 border border-blue-500/20 opacity-60 cursor-not-allowed'
+                          ? 'bg-[var(--bg-set-row)] border border-[var(--brand)]/20 opacity-60 cursor-not-allowed'
                           : 'bg-[var(--bg-hover)] hover:bg-[var(--bg-hover-2)] border border-transparent'
                       }`}
                     >
@@ -235,7 +235,7 @@ export const Inventory: React.FC = () => {
                           <span className="text-[10px] text-blue-400 font-bold uppercase">In Inventory</span>
                         ) : (
                           <>
-                            <div className="text-sm font-mono text-[var(--accent)]">${r.price.toFixed(2)}</div>
+                            <div className="text-sm font-mono text-[var(--color-value)]">${r.price.toFixed(2)}</div>
                             <div className="text-[10px] text-[var(--text-2)]">{r.marketplace}</div>
                           </>
                         )}
@@ -262,11 +262,11 @@ export const Inventory: React.FC = () => {
           </div>
           <div className="bg-[var(--bg-surface)] backdrop-blur-xl p-4 rounded-xl border border-[var(--border-color)]">
             <div className="text-[10px] uppercase tracking-widest font-bold text-[var(--text-2)] mb-1">Total Value</div>
-            <div className="text-2xl font-black font-mono text-[var(--accent)]">${totals.totalValue.toFixed(2)}</div>
+            <div className="text-2xl font-black font-mono text-[var(--color-value)]">${totals.totalValue.toFixed(2)}</div>
           </div>
           <div className="bg-[var(--bg-surface)] backdrop-blur-xl p-4 rounded-xl border border-[var(--border-color)]">
             <div className="text-[10px] uppercase tracking-widest font-bold text-[var(--text-2)] mb-1">Total P/L</div>
-            <div className={`text-2xl font-black font-mono ${totals.totalPL >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+            <div className={`text-2xl font-black font-mono ${totals.totalPL >= 0 ? 'text-[var(--color-buy)]' : 'text-[var(--color-negative)]'}`}>
               {totals.totalPL >= 0 ? '+' : ''}{totals.totalPL.toFixed(2)}
             </div>
           </div>
@@ -366,7 +366,7 @@ export const Inventory: React.FC = () => {
                       </td>
 
                       {/* Avg Value */}
-                      <td className="px-3 py-3 text-right font-mono text-xs text-amber-400">
+                      <td className="px-3 py-3 text-right font-mono text-xs text-[var(--color-ref)]">
                         {avgPrice !== null ? `$${avgPrice.toFixed(2)}` : '\u2014'}
                       </td>
 
@@ -376,12 +376,12 @@ export const Inventory: React.FC = () => {
                       </td>
 
                       {/* Actual Value */}
-                      <td className="px-3 py-3 text-right font-mono text-xs font-bold text-[var(--accent)]">
+                      <td className="px-3 py-3 text-right font-mono text-xs font-bold text-[var(--color-value)]">
                         {actualValue !== null ? `$${actualValue.toFixed(2)}` : '\u2014'}
                       </td>
 
                       {/* P/L (per unit) */}
-                      <td className={`px-3 py-3 text-right font-mono text-xs font-bold ${pl !== null && pl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                      <td className={`px-3 py-3 text-right font-mono text-xs font-bold ${pl !== null && pl >= 0 ? 'text-[var(--color-buy)]' : 'text-[var(--color-negative)]'}`}>
                         {pl !== null ? `${pl >= 0 ? '+' : ''}$${pl.toFixed(2)}` : '\u2014'}
                       </td>
 
@@ -389,7 +389,7 @@ export const Inventory: React.FC = () => {
                       {(() => {
                         const totalPL = pl !== null ? pl * item.count : null
                         return (
-                          <td className={`px-3 py-3 text-right font-mono text-xs font-bold ${totalPL !== null && totalPL >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                          <td className={`px-3 py-3 text-right font-mono text-xs font-bold ${totalPL !== null && totalPL >= 0 ? 'text-[var(--color-buy)]' : 'text-[var(--color-negative)]'}`}>
                             {totalPL !== null ? `${totalPL >= 0 ? '+' : ''}$${totalPL.toFixed(2)}` : '\u2014'}
                           </td>
                         )
@@ -399,7 +399,7 @@ export const Inventory: React.FC = () => {
                       <td className="px-3 py-3 text-center">
                         <button
                           onClick={() => removeItem(item.id)}
-                          className="p-1.5 hover:bg-red-500/20 rounded-lg text-[var(--text-2)] hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
+                          className="p-1.5 hover:bg-red-500/20 rounded-lg text-[var(--text-2)] hover:text-[var(--color-negative)] transition-colors opacity-0 group-hover:opacity-100"
                           title="Remove from inventory"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -424,7 +424,7 @@ export const Inventory: React.FC = () => {
             </p>
             <button
               onClick={() => setShowSearch(true)}
-              className="px-6 py-2 bg-[var(--brand)] hover:bg-blue-500 text-white text-sm font-bold rounded-lg transition-colors"
+              className="px-6 py-2 bg-[var(--brand)] hover:bg-[var(--primary-700)] text-white text-sm font-bold rounded-lg transition-colors"
             >
               Search Products
             </button>

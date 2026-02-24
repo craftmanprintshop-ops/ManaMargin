@@ -204,10 +204,10 @@ export const EVCalculations: React.FC = () => {
   // Ratio color helper
   const ratioColor = (ratio: number | null) => {
     if (ratio === null) return 'text-[var(--text-2)]'
-    if (ratio >= 1.2) return 'text-green-400'
-    if (ratio >= 1.0) return 'text-emerald-400'
-    if (ratio >= 0.8) return 'text-yellow-400'
-    return 'text-red-400'
+    if (ratio >= 1.2) return 'text-[var(--color-positive)]'
+    if (ratio >= 1.0) return 'text-[var(--color-buy)]'
+    if (ratio >= 0.8) return 'text-[var(--color-ref)]'
+    return 'text-[var(--color-negative)]'
   }
 
   if (isLoading) {
@@ -335,7 +335,7 @@ export const EVCalculations: React.FC = () => {
                     <td className="px-4 py-3 text-[var(--text-2)] max-w-[250px] truncate" title={row.botbox_product_name}>
                       {row.product_type}
                     </td>
-                    <td className="px-4 py-3 text-right font-mono text-purple-400 font-bold">
+                    <td className="px-4 py-3 text-right font-mono text-[var(--color-ev)] font-bold">
                       {row.expected_value !== null ? `$${row.expected_value.toFixed(2)}` : '\u2014'}
                     </td>
                     <td className="px-4 py-3 text-right font-mono text-[var(--text-2)]">
@@ -348,7 +348,7 @@ export const EVCalculations: React.FC = () => {
                       {row.best_marketplace === 'Individual Decks' && row.best_total !== null ? (
                         <button
                           onClick={() => openDeckPopup(row.set_name, row.best_total!)}
-                          className="inline-flex items-center gap-1.5 font-mono font-bold text-green-400 hover:text-green-300 transition-colors cursor-pointer"
+                          className="inline-flex items-center gap-1.5 font-mono font-bold text-[var(--color-buy)] hover:text-[var(--color-buy)] transition-colors cursor-pointer"
                           title={`$${row.best_total.toFixed(2)} total — click to see individual deck prices`}
                         >
                           ${row.best_total.toFixed(2)}
@@ -361,7 +361,7 @@ export const EVCalculations: React.FC = () => {
                           href={row.best_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 font-mono font-bold text-green-400 hover:text-green-300 transition-colors"
+                          className="inline-flex items-center gap-1.5 font-mono font-bold text-[var(--color-buy)] hover:text-[var(--color-buy)] transition-colors"
                           title={`Best price at ${row.best_marketplace}`}
                         >
                           <svg className="w-3.5 h-3.5 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -401,7 +401,7 @@ export const EVCalculations: React.FC = () => {
               <div className="grid grid-cols-3 gap-2 text-xs">
                 <div className="bg-[var(--bg-hover)] rounded-lg px-3 py-2">
                   <div className="text-[var(--text-2)] uppercase text-[10px] tracking-wider mb-0.5">Expected Value</div>
-                  <div className="font-mono text-purple-400 font-bold">
+                  <div className="font-mono text-[var(--color-ev)] font-bold">
                     {row.expected_value !== null ? `$${row.expected_value.toFixed(2)}` : '\u2014'}
                   </div>
                 </div>
@@ -417,7 +417,7 @@ export const EVCalculations: React.FC = () => {
                     {row.best_marketplace === 'Individual Decks' && row.best_total !== null ? (
                       <button
                         onClick={() => openDeckPopup(row.set_name, row.best_total!)}
-                        className="font-mono font-bold text-green-400 hover:text-green-300 transition-colors"
+                        className="font-mono font-bold text-[var(--color-buy)] hover:text-[var(--color-buy)] transition-colors"
                       >
                         ${row.best_total.toFixed(2)}
                       </button>
@@ -426,7 +426,7 @@ export const EVCalculations: React.FC = () => {
                         href={row.best_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 font-mono font-bold text-green-400 hover:text-green-300 transition-colors"
+                        className="inline-flex items-center gap-1 font-mono font-bold text-[var(--color-buy)] hover:text-[var(--color-buy)] transition-colors"
                       >
                         <svg className="w-3 h-3 opacity-60 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -493,10 +493,10 @@ export const EVCalculations: React.FC = () => {
                       <div className="text-xs text-[var(--text-2)]">{deck.marketplace}{deck.shipping > 0 ? ` (+$${deck.shipping.toFixed(2)} shipping)` : ''}</div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <svg className="w-3.5 h-3.5 text-[var(--text-2)] group-hover:text-green-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-3.5 h-3.5 text-[var(--text-2)] group-hover:text-[var(--color-buy)] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                       </svg>
-                      <span className="font-mono font-bold text-green-400">${deck.total.toFixed(2)}</span>
+                      <span className="font-mono font-bold text-[var(--color-buy)]">${deck.total.toFixed(2)}</span>
                     </div>
                   </a>
                 ))
@@ -506,7 +506,7 @@ export const EVCalculations: React.FC = () => {
             {!deckPopupLoading && deckPopup.decks.length > 0 && (
               <div className="px-6 py-3 border-t border-[var(--border-color)] flex items-center justify-between">
                 <span className="text-sm text-[var(--text-2)]">{deckPopup.decks.length} decks</span>
-                <span className="font-mono font-bold text-green-400">
+                <span className="font-mono font-bold text-[var(--color-buy)]">
                   Total: ${deckPopup.decks.reduce((sum, d) => sum + d.total, 0).toFixed(2)}
                 </span>
               </div>
