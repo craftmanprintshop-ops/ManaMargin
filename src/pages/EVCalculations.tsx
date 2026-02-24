@@ -56,6 +56,7 @@ export const EVCalculations: React.FC = () => {
   const [ratioFilter, setRatioFilter] = useState<'all' | 'above1' | 'above0.8' | 'ev_above_best'>('ev_above_best')
   const [deckPopup, setDeckPopup] = useState<{ setName: string; total: number; decks: DeckOffer[] } | null>(null)
   const [deckPopupLoading, setDeckPopupLoading] = useState(false)
+  const [showFilters, setShowFilters] = useState(false)
 
   // Fetch individual deck offers for a Commander Deck Set popup
   const openDeckPopup = useCallback(async (setName: string, total: number) => {
@@ -236,12 +237,28 @@ export const EVCalculations: React.FC = () => {
     <div className="w-full animate-fade-in space-y-6">
       {/* Header */}
       <div className="bg-[var(--bg-surface)] backdrop-blur-xl p-6 rounded-xl border border-[var(--border-color)] shadow-2xl">
-        <h2 className="text-xl sm:text-2xl font-bold text-[var(--text-1)] mb-4">EV Calculations</h2>
-        <p className="text-sm text-[var(--text-2)] mb-4">
-          Expected value analysis for sealed products. Products with EV/Price ratio above 1.0 are worth more than their market price.
-        </p>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-xl sm:text-2xl font-bold text-[var(--text-1)]">EV Calculations</h2>
+            <p className="text-sm text-[var(--text-2)] mt-1 hidden sm:block">
+              Expected value analysis for sealed products. Products with EV/Price ratio above 1.0 are worth more than their market price.
+            </p>
+          </div>
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className="md:hidden flex items-center gap-2 px-3 py-2 text-xs font-bold rounded-lg bg-[var(--bg-hover)] border border-[var(--border-color)] hover:bg-[var(--bg-hover-2)] transition-colors text-[var(--text-2)]"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+            </svg>
+            Filters
+            {(searchTerm || ratioFilter !== 'ev_above_best') && (
+              <span className="w-2 h-2 rounded-full bg-[var(--brand)]" />
+            )}
+          </button>
+        </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className={`${showFilters ? 'grid' : 'hidden'} md:grid grid-cols-1 sm:grid-cols-3 gap-4`}>
           {/* Search */}
           <div>
             <label className="block text-xs font-bold text-[var(--text-2)] uppercase mb-2">Search</label>
@@ -259,7 +276,10 @@ export const EVCalculations: React.FC = () => {
             <label className="block text-xs font-bold text-[var(--text-2)] uppercase mb-2">EV/Price Ratio</label>
             <select
               value={ratioFilter}
-              onChange={(e) => setRatioFilter(e.target.value as any)}
+              onChange={(e) => {
+                setRatioFilter(e.target.value as any)
+                setShowFilters(false)
+              }}
               className="w-full bg-[var(--bg-2)] border border-white/20 rounded-lg p-2 text-sm text-[var(--text-1)] outline-none focus:border-[var(--brand)]"
             >
               <option value="all">All</option>

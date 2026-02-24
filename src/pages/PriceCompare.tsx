@@ -88,6 +88,7 @@ export const PriceCompare: React.FC = () => {
   // Marketplace settings
   const [marketSettings, setMarketSettings] = useState<MarketplaceSetting[]>(DEFAULT_SETTINGS)
   const [showSettings, setShowSettings] = useState(false)
+  const [showFilters, setShowFilters] = useState(false)
 
   // Selections
   const [selectedSetKey, setSelectedSetKey] = useState<string>('Any|All Sets')
@@ -281,6 +282,7 @@ export const PriceCompare: React.FC = () => {
   const handleSearch = useCallback(async () => {
     setIsSearching(true)
     setSearchError(null)
+    setShowFilters(false)
 
     try {
       let q = supabase
@@ -482,12 +484,26 @@ export const PriceCompare: React.FC = () => {
       <div className="bg-[var(--bg-surface)] backdrop-blur-xl p-6 rounded-xl border border-[var(--border-color)] shadow-2xl">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
           <h2 className="text-xl sm:text-2xl font-bold text-[var(--text-1)]">Marketplace Price Comparison</h2>
-          <button
-            onClick={() => setShowSettings(!showSettings)}
-            className="px-3 py-1.5 text-xs font-bold rounded-lg bg-[var(--bg-hover)] border border-[var(--border-color)] hover:bg-[var(--bg-hover-2)] transition-colors text-[var(--text-2)]"
-          >
-            Settings
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="md:hidden flex items-center gap-2 px-3 py-2 text-xs font-bold rounded-lg bg-[var(--bg-hover)] border border-[var(--border-color)] hover:bg-[var(--bg-hover-2)] transition-colors text-[var(--text-2)]"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+              </svg>
+              Filters
+              {(selectedSetKey !== 'Any|All Sets' || selectedProductType !== 'Any' || selectedFoil !== 'Any') && (
+                <span className="w-2 h-2 rounded-full bg-[var(--brand)]" />
+              )}
+            </button>
+            <button
+              onClick={() => setShowSettings(!showSettings)}
+              className="px-3 py-1.5 text-xs font-bold rounded-lg bg-[var(--bg-hover)] border border-[var(--border-color)] hover:bg-[var(--bg-hover-2)] transition-colors text-[var(--text-2)]"
+            >
+              Settings
+            </button>
+          </div>
         </div>
 
         {/* Marketplace Settings Panel */}
@@ -552,7 +568,7 @@ export const PriceCompare: React.FC = () => {
         )}
 
         {/* Filter Dropdowns */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+        <div className={`${showFilters ? 'grid' : 'hidden'} md:grid grid-cols-1 md:grid-cols-4 gap-4 items-end`}>
           <div>
             <label className="block text-xs font-bold text-[var(--text-2)] uppercase mb-2 flex items-center gap-2">
               Select Set {isLoadingSets && <span className="w-2 h-2 border border-white/20 border-t-white rounded-full animate-spin inline-block"></span>}
