@@ -54,7 +54,7 @@ export const Card: React.FC<CardProps> = ({
 
   return (
     <div
-      className={`bg-[var(--bg-surface)] backdrop-blur-xl rounded-xl border border-[var(--border-color)] shadow-2xl ${hoverClass} ${className}`}
+      className={`bg-[var(--bg-surface)] backdrop-blur-xl rounded-xl border border-[var(--border-color)] shadow-md ${hoverClass} ${className}`}
     >
       {/* Header */}
       {(header || title) && (

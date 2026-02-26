@@ -44,35 +44,35 @@
   color-scheme: dark;
 }
 
-/* Light theme — warm off-white + blue/amber accents */
+/* Light theme — flat, clean, border-driven */
 [data-theme="light"] {
   --brand: #2563eb;
   --accent: #1d4ed8;
-  --text-1: #1A1D23;
+  --text-1: #374151;
   --text-2: #6B7280;
-  --text-muted: #C1C7D0;
-  --bg-1: #F5F6F8;
-  --bg-2: #EAECF0;
+  --text-muted: #9CA3AF;
+  --bg-1: #FAFAFA;
+  --bg-2: #F5F6F8;
   --bg-surface: #FFFFFF;
-  --bg-surface-2: #EEF2F7;
+  --bg-surface-2: #F8F9FA;
   --bg-overlay: rgba(0, 0, 0, 0.4);
-  --bg-inset: #EAECF0;
+  --bg-inset: #F5F6F8;
   --bg-image: #FFFFFF;
-  --bg-card-footer: rgba(0, 0, 0, 0.03);
-  --bg-set-row: #EEF2F7;
-  --bg-row-hover: #F0F4FF;
-  --border-color: #E2E5EA;
-  --border-color-2: #EEF2F7;
-  --bg-hover: rgba(0, 0, 0, 0.03);
-  --bg-hover-2: rgba(0, 0, 0, 0.06);
-  --color-value: #1D6FA4;
-  --color-ev: #D97706;
-  --color-ref: #2563eb;
+  --bg-card-footer: rgba(0, 0, 0, 0.02);
+  --bg-set-row: #F8F9FA;
+  --bg-row-hover: #F5F7FF;
+  --border-color: #E5E7EB;
+  --border-color-2: #EEEFF2;
+  --bg-hover: #F5F6F8;
+  --bg-hover-2: #EAECF0;
+  --color-value: #374151;
+  --color-ev: #92400E;
+  --color-ref: #4B5563;
   --color-buy: #2563eb;
-  --color-buy-bg: rgba(37, 99, 235, 0.1);
-  --color-buy-border: rgba(37, 99, 235, 0.2);
-  --color-buy-hover-bg: rgba(37, 99, 235, 0.2);
-  --color-buy-hover-border: rgba(37, 99, 235, 0.4);
+  --color-buy-bg: rgba(37, 99, 235, 0.06);
+  --color-buy-border: rgba(37, 99, 235, 0.18);
+  --color-buy-hover-bg: rgba(37, 99, 235, 0.12);
+  --color-buy-hover-border: rgba(37, 99, 235, 0.3);
   --color-positive: #16A34A;
   --color-negative: #DC2626;
   --primary-600: var(--brand);
@@ -111,6 +111,26 @@
 /* Invert set icons — undo invert filter in light mode */
 [data-theme="light"] img.invert {
   filter: none;
+}
+
+/* Remove all shadows in light mode — use borders instead */
+[data-theme="light"] .shadow-2xl,
+[data-theme="light"] .shadow-lg,
+[data-theme="light"] .shadow-md,
+[data-theme="light"] .shadow-sm {
+  box-shadow: none;
+}
+
+/* Remove backdrop blur in light mode */
+[data-theme="light"] .backdrop-blur-xl,
+[data-theme="light"] .backdrop-blur-sm {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* Fix invisible dividers (white/5 on white bg) */
+[data-theme="light"] .divide-white\/5 > :not([hidden]) ~ :not([hidden]) {
+  border-color: var(--border-color-2);
 }
 
 /* ========================================
