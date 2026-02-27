@@ -275,7 +275,7 @@ export const DatabaseDiagnostic: React.FC = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-[var(--text-1)] mb-2">
+        <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-1)] mb-2">
           Database Diagnostic
         </h1>
         <p className="text-[var(--text-2)]">

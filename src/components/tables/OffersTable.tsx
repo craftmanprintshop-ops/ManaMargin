@@ -84,83 +84,92 @@ export const OffersTable: React.FC<OffersTableProps> = ({ data, loading }) => {
   const SortIndicator = ({ field }: { field: SortField }) => {
     if (sortField !== field) return null
     return (
-      <span className="ml-1">
+      <span className="ml-1" aria-hidden="true">
         {sortOrder === 'asc' ? '↑' : '↓'}
+        <span className="sr-only">{sortOrder === 'asc' ? 'sorted ascending' : 'sorted descending'}</span>
       </span>
     )
   }
 
   if (loading) {
     return (
-      <div className="bg-white rounded-lg shadow-md p-8 text-center">
+      <div className="bg-[var(--bg-surface)] rounded-lg shadow-md p-8 text-center border border-[var(--border-color)]">
         <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
-        <p className="mt-4 text-gray-600">Loading products...</p>
+        <p className="mt-4 text-[var(--text-2)]">Loading products...</p>
       </div>
     )
   }
 
   if (sortedData.length === 0) {
     return (
-      <div className="bg-white rounded-lg shadow-md p-8 text-center">
-        <p className="text-gray-600">No products found matching your filters.</p>
-        <p className="text-sm text-gray-500 mt-2">Try adjusting your filters or search terms.</p>
+      <div className="bg-[var(--bg-surface)] rounded-lg shadow-md p-8 text-center border border-[var(--border-color)]">
+        <p className="text-[var(--text-2)]">No products found matching your filters.</p>
+        <p className="text-sm text-[var(--text-muted)] mt-2">Try adjusting your filters or search terms.</p>
       </div>
     )
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden">
+    <div className="bg-[var(--bg-surface)] rounded-lg shadow-md overflow-hidden border border-[var(--border-color)]">
       <div className="overflow-x-auto">
         <table className="w-full">
-          <thead className="bg-gray-100 border-b-2 border-gray-300">
+          <thead className="bg-[var(--bg-inset)] border-b-2 border-[var(--border-color)]">
             <tr>
               <th
                 onClick={() => handleSort('title')}
-                className="px-4 py-3 text-left font-semibold text-gray-700 cursor-pointer hover:bg-gray-200 transition-colors"
+                className="px-4 py-3 text-left font-semibold text-[var(--text-1)] cursor-pointer hover:bg-[var(--bg-hover)] transition-colors"
+                aria-sort={sortField === 'title' ? (sortOrder === 'asc' ? 'ascending' : 'descending') : 'none'}
+                role="columnheader"
               >
                 Product <SortIndicator field="title" />
               </th>
-              <th className="px-4 py-3 text-left font-semibold text-gray-700">
+              <th className="px-4 py-3 text-left font-semibold text-[var(--text-1)]">
                 Set
               </th>
-              <th className="px-4 py-3 text-left font-semibold text-gray-700">
+              <th className="px-4 py-3 text-left font-semibold text-[var(--text-1)]">
                 Type
               </th>
               <th
                 onClick={() => handleSort('price')}
-                className="px-4 py-3 text-left font-semibold text-gray-700 cursor-pointer hover:bg-gray-200 transition-colors"
+                className="px-4 py-3 text-left font-semibold text-[var(--text-1)] cursor-pointer hover:bg-[var(--bg-hover)] transition-colors"
+                aria-sort={sortField === 'price' ? (sortOrder === 'asc' ? 'ascending' : 'descending') : 'none'}
+                role="columnheader"
               >
                 Price <SortIndicator field="price" />
               </th>
-              <th className="px-4 py-3 text-left font-semibold text-gray-700">
+              <th className="px-4 py-3 text-left font-semibold text-[var(--text-1)]">
                 Shipping
               </th>
               <th
                 onClick={() => handleSort('marketplace')}
-                className="px-4 py-3 text-left font-semibold text-gray-700 cursor-pointer hover:bg-gray-200 transition-colors"
+                className="px-4 py-3 text-left font-semibold text-[var(--text-1)] cursor-pointer hover:bg-[var(--bg-hover)] transition-colors"
+                aria-sort={sortField === 'marketplace' ? (sortOrder === 'asc' ? 'ascending' : 'descending') : 'none'}
+                role="columnheader"
               >
                 Marketplace <SortIndicator field="marketplace" />
               </th>
-              <th className="px-4 py-3 text-left font-semibold text-gray-700">
+              <th className="px-4 py-3 text-left font-semibold text-[var(--text-1)]">
                 Stock
               </th>
               <th
                 onClick={() => handleSort('fetched_at')}
-                className="px-4 py-3 text-left font-semibold text-gray-700 cursor-pointer hover:bg-gray-200 transition-colors"
+                className="px-4 py-3 text-left font-semibold text-[var(--text-1)] cursor-pointer hover:bg-[var(--bg-hover)] transition-colors"
+                aria-sort={sortField === 'fetched_at' ? (sortOrder === 'asc' ? 'ascending' : 'descending') : 'none'}
+                role="columnheader"
               >
                 Updated <SortIndicator field="fetched_at" />
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200">
+          <tbody className="divide-y divide-[var(--border-color)]">
             {sortedData.map((offer) => (
               <tr
                 key={`${offer.canonical_sku}-${offer.marketplace}-${offer.id}`}
-                className="hover:bg-gray-50 transition-colors"
+                className="hover:bg-[var(--bg-hover)] transition-colors"
               >
                 {/* Product Name */}
                 <td className="px-4 py-3">
-                  <div className="font-medium text-gray-900">
+                  <div className="font-medium text-[var(--text-1)]">
                     {offer.display_name || offer.title || 'Unknown Product'}
                   </div>
                   {offer.image_url && (
@@ -176,29 +185,29 @@ export const OffersTable: React.FC<OffersTableProps> = ({ data, loading }) => {
                 </td>
 
                 {/* Set Name */}
-                <td className="px-4 py-3 text-sm text-gray-600">
+                <td className="px-4 py-3 text-sm text-[var(--text-2)]">
                   {offer.set_name || '-'}
                 </td>
 
                 {/* Product Type */}
-                <td className="px-4 py-3 text-sm text-gray-600">
+                <td className="px-4 py-3 text-sm text-[var(--text-2)]">
                   {offer.product_type || '-'}
                 </td>
 
                 {/* Price */}
                 <td className="px-4 py-3">
-                  <span className="font-semibold text-gray-900">
+                  <span className="font-semibold text-[var(--text-1)]">
                     {formatCurrency(offer.price)}
                   </span>
                 </td>
 
                 {/* Shipping */}
-                <td className="px-4 py-3 text-sm text-gray-600">
+                <td className="px-4 py-3 text-sm text-[var(--text-2)]">
                   {formatCurrency(offer.shipping)}
                 </td>
 
                 {/* Marketplace */}
-                <td className="px-4 py-3 text-sm text-gray-600">
+                <td className="px-4 py-3 text-sm text-[var(--text-2)]">
                   {offer.url ? (
                     <a
                       href={offer.url}
@@ -224,7 +233,7 @@ export const OffersTable: React.FC<OffersTableProps> = ({ data, loading }) => {
                 </td>
 
                 {/* Last Updated */}
-                <td className="px-4 py-3 text-sm text-gray-500">
+                <td className="px-4 py-3 text-sm text-[var(--text-muted)]">
                   {formatDate(offer.fetched_at, 'relative')}
                 </td>
               </tr>
@@ -234,7 +243,7 @@ export const OffersTable: React.FC<OffersTableProps> = ({ data, loading }) => {
       </div>
 
       {/* Results count */}
-      <div className="px-4 py-3 bg-gray-50 border-t border-gray-200 text-sm text-gray-600">
+      <div className="px-4 py-3 bg-[var(--bg-inset)] border-t border-[var(--border-color)] text-sm text-[var(--text-2)]">
         Showing {sortedData.length} product{sortedData.length !== 1 ? 's' : ''}
       </div>
     </div>

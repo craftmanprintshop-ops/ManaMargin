@@ -80,7 +80,7 @@ export const Header: React.FC = () => {
 
   return (
     <>
-      <header className="bg-[var(--bg-surface)]/95 backdrop-blur-xl border-b border-[var(--border-color)] sticky top-0 z-50">
+      <header className="bg-[var(--bg-surface)]/95 backdrop-blur-xl border-b border-[var(--border-color)] sticky top-0 z-50 safe-area-pt safe-area-pl safe-area-pr">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
@@ -124,7 +124,7 @@ export const Header: React.FC = () => {
               <div className="relative" ref={settingsRef}>
                 <button
                   onClick={() => setIsSettingsOpen(!isSettingsOpen)}
-                  className="p-2 rounded-lg text-[var(--text-2)] hover:bg-[var(--border-color)] hover:text-[var(--text-1)] transition-colors"
+                  className="min-h-11 min-w-11 p-2.5 rounded-lg text-[var(--text-2)] hover:bg-[var(--border-color)] hover:text-[var(--text-1)] transition-colors flex items-center justify-center"
                   aria-label="Settings"
                 >
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -178,7 +178,7 @@ export const Header: React.FC = () => {
 
               {/* Mobile Menu Button */}
               <button
-                className="lg:hidden p-2 rounded-lg text-[var(--text-2)] hover:bg-[var(--border-color)] hover:text-[var(--text-1)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)] transition-colors"
+                className="lg:hidden min-h-11 min-w-11 p-2.5 rounded-lg text-[var(--text-2)] hover:bg-[var(--border-color)] hover:text-[var(--text-1)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)] transition-colors flex items-center justify-center"
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                 aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
                 aria-expanded={isMobileMenuOpen}
@@ -214,6 +214,7 @@ export const Header: React.FC = () => {
           bg-[var(--bg-surface)] border-l border-[var(--border-color)] shadow-2xl
           transform transition-transform duration-300 ease-in-out
           lg:hidden
+          safe-area-pt safe-area-pr safe-area-pb
           ${isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}
         `}
       >
@@ -222,7 +223,7 @@ export const Header: React.FC = () => {
           <span className="text-sm font-bold text-[var(--text-1)] uppercase tracking-widest">Menu</span>
           <button
             onClick={() => setIsMobileMenuOpen(false)}
-            className="p-2 rounded-lg text-[var(--text-2)] hover:bg-[var(--border-color)] hover:text-[var(--text-1)] transition-colors"
+            className="min-h-11 min-w-11 p-2.5 rounded-lg text-[var(--text-2)] hover:bg-[var(--border-color)] hover:text-[var(--text-1)] transition-colors flex items-center justify-center"
             aria-label="Close menu"
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

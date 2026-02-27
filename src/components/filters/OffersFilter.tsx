@@ -38,11 +38,11 @@ export const OffersFilter: React.FC<OffersFilterProps> = ({
   loading = false,
 }) => {
   return (
-    <div className="bg-white rounded-lg shadow-md p-4 mb-6">
+    <div className="bg-[var(--bg-surface)] rounded-lg shadow-md p-4 mb-6 border border-[var(--border-color)]">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
         {/* Search Input */}
         <div className="lg:col-span-2">
-          <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="search" className="block text-sm font-medium text-[var(--text-1)] mb-1">
             Search Products
           </label>
           <input
@@ -52,13 +52,13 @@ export const OffersFilter: React.FC<OffersFilterProps> = ({
             value={filters.searchTerm}
             onChange={(e) => onFilterChange('searchTerm', e.target.value)}
             disabled={loading}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:bg-gray-100"
+            className="w-full px-3 py-2 border border-[var(--border-color)] rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:bg-[var(--bg-inset)] bg-[var(--bg-surface)] text-[var(--text-1)]"
           />
         </div>
 
         {/* Set Filter */}
         <div>
-          <label htmlFor="set" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="set" className="block text-sm font-medium text-[var(--text-1)] mb-1">
             Set
           </label>
           <select
@@ -66,7 +66,7 @@ export const OffersFilter: React.FC<OffersFilterProps> = ({
             value={filters.selectedSet || ''}
             onChange={(e) => onFilterChange('selectedSet', e.target.value || undefined)}
             disabled={loading}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:bg-gray-100"
+            className="w-full px-3 py-2 border border-[var(--border-color)] rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:bg-[var(--bg-inset)] bg-[var(--bg-surface)] text-[var(--text-1)]"
           >
             <option value="">All Sets</option>
             {options.sets.map((set) => (
@@ -79,7 +79,7 @@ export const OffersFilter: React.FC<OffersFilterProps> = ({
 
         {/* Product Type Filter */}
         <div>
-          <label htmlFor="productType" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="productType" className="block text-sm font-medium text-[var(--text-1)] mb-1">
             Product Type
           </label>
           <select
@@ -87,7 +87,7 @@ export const OffersFilter: React.FC<OffersFilterProps> = ({
             value={filters.productType || ''}
             onChange={(e) => onFilterChange('productType', e.target.value || undefined)}
             disabled={loading}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:bg-gray-100"
+            className="w-full px-3 py-2 border border-[var(--border-color)] rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:bg-[var(--bg-inset)] bg-[var(--bg-surface)] text-[var(--text-1)]"
           >
             <option value="">All Types</option>
             {options.productTypes.map((pt) => (
@@ -100,7 +100,7 @@ export const OffersFilter: React.FC<OffersFilterProps> = ({
 
         {/* Foil Variant Filter */}
         <div>
-          <label htmlFor="foil" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="foil" className="block text-sm font-medium text-[var(--text-1)] mb-1">
             Foil
           </label>
           <select
@@ -108,7 +108,7 @@ export const OffersFilter: React.FC<OffersFilterProps> = ({
             value={filters.foilVariant || ''}
             onChange={(e) => onFilterChange('foilVariant', e.target.value || undefined)}
             disabled={loading}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:bg-gray-100"
+            className="w-full px-3 py-2 border border-[var(--border-color)] rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:bg-[var(--bg-inset)] bg-[var(--bg-surface)] text-[var(--text-1)]"
           >
             <option value="">All Variants</option>
             {options.foilVariants.map((foil) => (
@@ -140,9 +140,9 @@ export const OffersFilter: React.FC<OffersFilterProps> = ({
           checked={filters.inStockOnly || false}
           onChange={(e) => onFilterChange('inStockOnly', e.target.checked)}
           disabled={loading}
-          className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+          className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-[var(--border-color)] rounded"
         />
-        <label htmlFor="inStockOnly" className="ml-2 text-sm text-gray-700">
+        <label htmlFor="inStockOnly" className="ml-2 text-sm text-[var(--text-1)]">
           Show in-stock items only
         </label>
       </div>

@@ -85,10 +85,10 @@ export class ErrorBoundary extends Component<Props, State> {
           <Card className="max-w-2xl w-full">
             <div className="text-center">
               <div className="text-6xl mb-4">⚠️</div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-2">
+              <h1 className="text-2xl font-bold text-[var(--text-1)] mb-2">
                 Something went wrong
               </h1>
-              <p className="text-gray-600 mb-6">
+              <p className="text-[var(--text-2)] mb-6">
                 We encountered an unexpected error. Please try refreshing the page.
               </p>
 

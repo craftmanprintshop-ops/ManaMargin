@@ -58,7 +58,7 @@ export const Products: React.FC = () => {
   if (optionsError) {
     return (
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-900 mb-6">Products</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-1)] mb-6">Products</h1>
         <ErrorMessage
           title="Failed to load filter options"
           message={optionsError.message || 'Could not connect to database'}
@@ -72,7 +72,7 @@ export const Products: React.FC = () => {
   if (offersError) {
     return (
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-900 mb-6">Products</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-1)] mb-6">Products</h1>
         {filterOptions && (
           <OffersFilter
             filters={filters as any}
@@ -95,8 +95,8 @@ export const Products: React.FC = () => {
     <div className="space-y-6">
       {/* Page Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Price Comparison</h1>
-        <p className="mt-2 text-gray-600">
+        <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-1)]">Price Comparison</h1>
+        <p className="mt-2 text-[var(--text-2)]">
           Compare sealed product prices across multiple retailers
         </p>
       </div>
@@ -125,7 +125,7 @@ export const Products: React.FC = () => {
 
       {/* Database Info (development only) */}
       {import.meta.env.DEV && offers && (
-        <div className="bg-gray-100 rounded-lg p-4 text-xs text-gray-600">
+        <div className="bg-gray-100 rounded-lg p-4 text-xs text-[var(--text-2)]">
           <p className="font-semibold mb-1">Debug Info:</p>
           <p>Total offers loaded: {offers.length}</p>
           <p>Active filters: {Object.values(filters).filter(v => v !== '' && v !== undefined && v !== false).length}</p>

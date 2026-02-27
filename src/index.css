@@ -134,6 +134,14 @@
 }
 
 /* ========================================
+   Safe Area Utilities (notched devices)
+   ======================================== */
+.safe-area-pt { padding-top: env(safe-area-inset-top); }
+.safe-area-pb { padding-bottom: env(safe-area-inset-bottom); }
+.safe-area-pl { padding-left: env(safe-area-inset-left); }
+.safe-area-pr { padding-right: env(safe-area-inset-right); }
+
+/* ========================================
    Animations
    ======================================== */
 @keyframes fade-in {
@@ -165,7 +173,10 @@
   }
 
   .btn-secondary {
-    @apply bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium py-2 px-4 rounded-lg transition-colors duration-200;
+    @apply font-medium py-2 px-4 rounded-lg transition-colors duration-200;
+    background-color: var(--bg-hover-2);
+    color: var(--text-1);
+    border: 1px solid var(--border-color);
   }
 
   .input-field {

@@ -267,7 +267,7 @@ export const ProductsSimple: React.FC = () => {
   if (loading) {
     return (
       <div className="space-y-6">
-        <h1 className="text-3xl font-bold text-[var(--text-1)]">Product & Set Summary</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-1)]">Product & Set Summary</h1>
         <LoadingSpinner size="lg" text="Loading product data..." />
       </div>
     )
@@ -276,7 +276,7 @@ export const ProductsSimple: React.FC = () => {
   if (error) {
     return (
       <div className="space-y-6">
-        <h1 className="text-3xl font-bold text-[var(--text-1)]">Product & Set Summary</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-1)]">Product & Set Summary</h1>
         <ErrorMessage
           title="Failed to load products"
           message={error.message}
@@ -288,7 +288,7 @@ export const ProductsSimple: React.FC = () => {
 
   return (
     <div className="w-full animate-fade-in">
-      <h2 className="text-3xl font-bold text-center text-[var(--text-1)] mb-6">
+      <h2 className="text-2xl sm:text-3xl font-bold text-center text-[var(--text-1)] mb-6">
         Product & Set Summary
       </h2>
 

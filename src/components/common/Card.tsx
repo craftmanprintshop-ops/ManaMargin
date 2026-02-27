@@ -59,7 +59,7 @@ export const Card: React.FC<CardProps> = ({
       {/* Header */}
       {(header || title) && (
         <div className="px-4 sm:px-6 py-4 border-b border-[var(--border-color-2)]">
-          {header || <h3 className="text-lg font-semibold text-[var(--text-1)]">{title}</h3>}
+          {header || <h3 className="text-base sm:text-lg font-semibold text-[var(--text-1)]">{title}</h3>}
         </div>
       )}
 

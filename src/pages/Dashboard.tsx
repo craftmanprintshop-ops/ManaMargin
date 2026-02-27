@@ -8,7 +8,7 @@
  * - Low stock alerts
  */
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { useSupabaseQuery } from '../hooks/useSupabaseQuery'
 import { dashboardService } from '../services/dashboardService'
@@ -18,6 +18,23 @@ import { LoadingSpinner } from '../components/common/LoadingSpinner'
 import { ErrorMessage } from '../components/common/ErrorMessage'
 import { Badge } from '../components/common/Badge'
 import { ROUTES } from '../utils/constants'
+import { CheckEbayButton } from '../components/common/CheckEbayButton'
+
+interface ScrapeResult {
+  ok: boolean
+  query?: string
+  rows_found?: number
+  rows_upserted?: number
+  history_events?: number
+  error?: string
+  message?: string
+}
+
+interface ScrapeErrorShape {
+  status?: number
+  error?: string
+  message?: string
+}
 
 interface DeckDeal {
   code: string
@@ -41,6 +58,226 @@ interface EVDeal {
   best_url: string | null
   best_image_url: string | null
   ev_difference: number
+}
+
+const PERIOD_OPTIONS = [
+  { label: '7 days', value: '7days' },
+  { label: '14 days', value: '14days' },
+  { label: '30 days', value: '30days' },
+  { label: '90 days', value: '90days' },
+]
+
+const getFunctionsBaseUrl = (): string | null => {
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined
+  if (!supabaseUrl) return null
+  try {
+    const url = new URL(supabaseUrl)
+    return `https://${url.hostname.replace('.supabase.co', '.functions.supabase.co')}`
+  } catch {
+    return null
+  }
+}
+
+const parseFunctionBody = async (response: Response): Promise<ScrapeErrorShape | null> => {
+  try {
+    const json = await response.clone().json()
+    if (json && typeof json === 'object') {
+      return {
+        status: response.status,
+        error: (json as any).error,
+        message: (json as any).message,
+      }
+    }
+  } catch {
+    // no-op: body may be non-json
+  }
+  return { status: response.status, error: response.statusText || 'Function request failed' }
+}
+
+const invokeWatchcountScrape = async (
+  query: string,
+  days: string,
+  expandHistory: boolean,
+): Promise<{ data: ScrapeResult | null; error: ScrapeErrorShape | null }> => {
+  const { data, error: invokeError } = await supabase.functions.invoke('watchcount-scrape', {
+    body: { q: query, days, expand_history: expandHistory ? 'true' : 'false' },
+  })
+
+  if (!invokeError) return { data: (data as ScrapeResult) || null, error: null }
+
+  const invokeContext = (invokeError as any)?.context as Response | undefined
+  if (invokeContext?.ok === false) {
+    const parsed = await parseFunctionBody(invokeContext)
+    return { data: null, error: parsed || { error: invokeError.message || 'Edge Function error' } }
+  }
+
+  const functionsBaseUrl = getFunctionsBaseUrl()
+  const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined
+  if (!functionsBaseUrl || !anonKey) {
+    return { data: null, error: { error: invokeError.message || 'Edge Function error' } }
+  }
+
+  const url = new URL(`${functionsBaseUrl}/watchcount-scrape`)
+  url.searchParams.set('q', query)
+  url.searchParams.set('days', days)
+  url.searchParams.set('expand_history', expandHistory ? 'true' : 'false')
+
+  const directResp = await fetch(url.toString(), {
+    method: 'GET',
+    headers: {
+      apikey: anonKey,
+      Authorization: `Bearer ${anonKey}`,
+    },
+  })
+
+  if (!directResp.ok) {
+    return { data: null, error: await parseFunctionBody(directResp) }
+  }
+
+  const directData = (await directResp.json()) as ScrapeResult
+  return { data: directData, error: null }
+}
+
+const formatScrapeError = (err: ScrapeErrorShape | null): string => {
+  if (!err) return 'Edge Function error'
+  const combined = `${err.error || ''} ${err.message || ''}`.toLowerCase()
+  if (combined.includes('scraper_base_url') && combined.includes('not configured')) {
+    return 'Scraper host is not configured in Supabase. Add Edge Function secret SCRAPER_BASE_URL and redeploy watchcount-scrape.'
+  }
+  if (combined.includes('requested path is invalid') || combined.includes('function not found')) {
+    return 'watchcount-scrape is not deployed in this Supabase project (or .env points to a different project). Deploy watchcount-scrape, then retry.'
+  }
+  if (err.error === 'captcha_detected') {
+    return 'WatchCount captcha detected on the scraper host. Save fresh watchcount cookies and retry.'
+  }
+  if (err.status === 409) {
+    return 'WatchCount scrape already in progress. Wait about a minute and retry.'
+  }
+  if (err.message) return err.message
+  if (err.error) return err.error
+  if (err.status) return `Edge Function Error (HTTP ${err.status})`
+  return 'Edge Function error'
+}
+
+const WatchCountScraper: React.FC = () => {
+  const [query, setQuery] = useState('')
+  const [days, setDays] = useState('30days')
+  const [expandHistory, setExpandHistory] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [result, setResult] = useState<ScrapeResult | null>(null)
+
+  const handleScrape = useCallback(async () => {
+    if (!query.trim()) return
+    setLoading(true)
+    setResult(null)
+    try {
+      const { data, error } = await invokeWatchcountScrape(query.trim(), days, expandHistory)
+      if (error) {
+        setResult({ ok: false, error: formatScrapeError(error), message: error.message })
+      } else {
+        setResult((data as ScrapeResult) || { ok: false, error: 'No response payload from scrape function' })
+      }
+    } catch (err: any) {
+      setResult({ ok: false, error: err.message || 'Unknown error' })
+    } finally {
+      setLoading(false)
+    }
+  }, [query, days, expandHistory])
+
+  return (
+    <Card title="WatchCount eBay Scraper">
+      <div className="space-y-4">
+        <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_auto_auto] gap-3 items-end">
+          {/* Search query */}
+          <div>
+            <label className="block text-xs font-bold text-[var(--text-2)] uppercase tracking-wider mb-1">
+              Search Query
+            </label>
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="e.g. mtg foundations play booster box"
+              className="w-full px-3 py-2 rounded-lg bg-[var(--bg-inset)] border border-[var(--border-color)] text-[var(--text-1)] text-sm placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--brand)] transition-colors"
+              onKeyDown={(e) => e.key === 'Enter' && !loading && handleScrape()}
+            />
+          </div>
+
+          {/* Time period */}
+          <div>
+            <label className="block text-xs font-bold text-[var(--text-2)] uppercase tracking-wider mb-1">
+              Period
+            </label>
+            <select
+              value={days}
+              onChange={(e) => setDays(e.target.value)}
+              className="px-3 py-2 rounded-lg bg-[var(--bg-inset)] border border-[var(--border-color)] text-[var(--text-1)] text-sm focus:outline-none focus:border-[var(--brand)] transition-colors"
+            >
+              {PERIOD_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Expand history checkbox */}
+          <div className="flex items-center gap-2 pb-0.5">
+            <input
+              type="checkbox"
+              id="expand-history"
+              checked={expandHistory}
+              onChange={(e) => setExpandHistory(e.target.checked)}
+              className="rounded border-[var(--border-color)] accent-[var(--brand)]"
+            />
+            <label htmlFor="expand-history" className="text-xs text-[var(--text-2)] whitespace-nowrap">
+              eBay History
+            </label>
+          </div>
+
+          {/* Scrape button */}
+          <button
+            onClick={handleScrape}
+            disabled={loading || !query.trim()}
+            className="px-4 py-2 rounded-lg bg-[var(--brand)] text-white text-sm font-bold hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity whitespace-nowrap"
+          >
+            {loading ? 'Scraping...' : 'Scrape'}
+          </button>
+        </div>
+
+        {/* Loading indicator */}
+        {loading && (
+          <div className="flex items-center gap-2 text-xs text-[var(--text-2)]">
+            <div className="w-4 h-4 border-2 border-[var(--brand)] border-t-transparent rounded-full animate-spin" />
+            Scraping WatchCount... this may take a minute.
+          </div>
+        )}
+
+        {/* Results */}
+        {result && (
+          <div className={`p-3 rounded-lg border text-sm ${
+            result.ok
+              ? 'bg-[var(--color-buy-bg)] border-[var(--color-buy-border)] text-[var(--color-buy)]'
+              : 'bg-red-500/10 border-red-500/30 text-red-400'
+          }`}>
+            {result.ok ? (
+              <div className="space-y-1">
+                <div className="font-bold">Scrape complete</div>
+                <div className="text-xs opacity-80">
+                  Query: "{result.query}" &middot; Found: {result.rows_found} &middot; Upserted: {result.rows_upserted}
+                  {result.history_events !== undefined && ` · History events: ${result.history_events}`}
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-1">
+                <div className="font-bold">Scrape failed</div>
+                <div className="text-xs opacity-80">{result.error}</div>
+                {result.message && <div className="text-xs opacity-60">{result.message}</div>}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </Card>
+  )
 }
 
 /**
@@ -167,7 +404,7 @@ export const Dashboard: React.FC = () => {
   if (loading) {
     return (
       <div className="space-y-6">
-        <h1 className="text-3xl font-bold text-[var(--text-1)]">Dashboard</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-1)]">Dashboard</h1>
         <LoadingSpinner size="lg" text="Loading dashboard..." />
       </div>
     )
@@ -177,7 +414,7 @@ export const Dashboard: React.FC = () => {
   if (error) {
     return (
       <div className="space-y-6">
-        <h1 className="text-3xl font-bold text-[var(--text-1)]">Dashboard</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-1)]">Dashboard</h1>
         <ErrorMessage
           title="Failed to load dashboard"
           message={error.message || 'Could not fetch dashboard data'}
@@ -191,7 +428,7 @@ export const Dashboard: React.FC = () => {
     <div className="space-y-6">
       {/* Page Header */}
       <div>
-        <h1 className="text-3xl font-bold text-[var(--text-1)]">Dashboard</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-1)]">Dashboard</h1>
         <p className="mt-2 text-[var(--text-2)]">
           Welcome to ManaMargin - Your MTG price comparison and pack simulator platform
         </p>
@@ -259,9 +496,15 @@ export const Dashboard: React.FC = () => {
 
                 {/* Card Info */}
                 <div className="p-3 space-y-2">
-                  <div>
-                    <div className="text-xs font-medium text-[var(--text-1)] leading-tight line-clamp-1">{deal.set_name}</div>
-                    <div className="text-[10px] text-[var(--text-2)] leading-tight line-clamp-1">{deal.product_type}</div>
+                  <div className="flex items-center justify-between gap-1">
+                    <div className="min-w-0">
+                      <div className="text-xs font-medium text-[var(--text-1)] leading-tight line-clamp-1">{deal.set_name}</div>
+                      <div className="text-[10px] text-[var(--text-2)] leading-tight line-clamp-1">{deal.product_type}</div>
+                    </div>
+                    <CheckEbayButton
+                      query={`mtg ${deal.set_name} ${deal.product_type}`}
+                      productLabel={`${deal.set_name} ${deal.product_type}`}
+                    />
                   </div>
                   <div className="flex items-center justify-between gap-2">
                     <div>
@@ -317,13 +560,17 @@ export const Dashboard: React.FC = () => {
                   <div className="flex items-center gap-2 mb-1">
                     <img
                       src={`https://svgs.scryfall.io/sets/${deal.code.toLowerCase()}.svg`}
-                      alt=""
+                      alt={`${deal.set_name || deal.code} set icon`}
                       className="w-4 h-4 invert opacity-50 shrink-0"
                       onError={(e) => (e.currentTarget.style.display = 'none')}
                     />
                     <span className="text-sm font-bold text-[var(--text-1)] truncate group-hover:text-[var(--color-buy)] transition-colors">
                       {deal.deck_name}
                     </span>
+                    <CheckEbayButton
+                      query={`mtg ${deal.set_name || ''} ${deal.deck_name}`}
+                      productLabel={`${deal.set_name || deal.code.toUpperCase()} ${deal.deck_name}`}
+                    />
                   </div>
                   <div className="text-[10px] text-[var(--text-2)] mb-2">
                     {deal.set_name || deal.code.toUpperCase()}
@@ -487,6 +734,9 @@ export const Dashboard: React.FC = () => {
           </Card>
         </Link>
       </div>
+
+      {/* WatchCount Scraper */}
+      <WatchCountScraper />
 
       {/* About ManaMargin */}
       <Card title="About ManaMargin">

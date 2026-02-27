@@ -75,10 +75,10 @@ export const CommanderDeckDetail: React.FC = () => {
       {/* Deck Header */}
       <Card>
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-1)] mb-2">
             {deck.deck_name || 'Unknown Deck'}
           </h1>
-          <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+          <div className="flex flex-wrap gap-4 text-sm text-[var(--text-2)]">
             <span className="font-medium">Code: {deck.code}</span>
             {deck.release_date && (
               <span>Released: {formatDate(deck.release_date, 'long')}</span>
@@ -91,8 +91,8 @@ export const CommanderDeckDetail: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
           <div className="text-center">
-            <p className="text-sm text-gray-600 mb-1">Total Cards</p>
-            <p className="text-3xl font-bold text-gray-900">
+            <p className="text-sm text-[var(--text-2)] mb-1">Total Cards</p>
+            <p className="text-2xl sm:text-3xl font-bold text-[var(--text-1)]">
               {deck.cardCount || deck.cards?.length || 0}
             </p>
           </div>
@@ -100,7 +100,7 @@ export const CommanderDeckDetail: React.FC = () => {
 
         <Card>
           <div className="text-center">
-            <p className="text-sm text-gray-600 mb-1">Total Deck Value</p>
+            <p className="text-sm text-[var(--text-2)] mb-1">Total Deck Value</p>
             <p className="text-3xl font-bold text-primary-600">
               ${deck.totalValue?.toFixed(2) || '0.00'}
             </p>
@@ -109,8 +109,8 @@ export const CommanderDeckDetail: React.FC = () => {
 
         <Card>
           <div className="text-center">
-            <p className="text-sm text-gray-600 mb-1">Average Card Value</p>
-            <p className="text-3xl font-bold text-gray-900">
+            <p className="text-sm text-[var(--text-2)] mb-1">Average Card Value</p>
+            <p className="text-2xl sm:text-3xl font-bold text-[var(--text-1)]">
               $
               {deck.totalValue && deck.cardCount
                 ? (deck.totalValue / deck.cardCount).toFixed(2)
@@ -125,7 +125,7 @@ export const CommanderDeckDetail: React.FC = () => {
 
       {/* Debug Info (development only) */}
       {import.meta.env.DEV && (
-        <div className="bg-gray-100 rounded-lg p-4 text-xs text-gray-600">
+        <div className="bg-[var(--bg-inset)] rounded-lg p-4 text-xs text-[var(--text-2)]">
           <p className="font-semibold mb-1">Debug Info:</p>
           <p>Deck Code: {code}</p>
           <p>File Name: {fileName}</p>

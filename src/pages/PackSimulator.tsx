@@ -86,7 +86,7 @@ export const PackSimulator: React.FC = () => {
   if (setsError) {
     return (
       <div className="space-y-6">
-        <h1 className="text-3xl font-bold text-[var(--text-1)]">Pack Simulator</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-1)]">Pack Simulator</h1>
         <ErrorMessage
           title="Failed to load available sets"
           message={setsError.message || 'Could not fetch sets from database'}
@@ -100,7 +100,7 @@ export const PackSimulator: React.FC = () => {
   if (setsLoading) {
     return (
       <div className="space-y-6">
-        <h1 className="text-3xl font-bold text-[var(--text-1)]">Pack Simulator</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-1)]">Pack Simulator</h1>
         <LoadingSpinner size="lg" text="Loading available sets..." />
       </div>
     )
@@ -110,7 +110,7 @@ export const PackSimulator: React.FC = () => {
   if (!availableSets || availableSets.length === 0) {
     return (
       <div className="space-y-6">
-        <h1 className="text-3xl font-bold text-[var(--text-1)]">Pack Simulator</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-1)]">Pack Simulator</h1>
         <ErrorMessage
           title="No sets available"
           message="No cards found in your database. Please check the following:"
@@ -153,7 +153,7 @@ FOR SELECT USING (true);`}
     <div className="space-y-6">
       {/* Page Header */}
       <div>
-        <h1 className="text-3xl font-bold text-[var(--text-1)]">Pack Simulator</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-1)]">Pack Simulator</h1>
         <p className="mt-2 text-[var(--text-2)]">
           Open virtual booster packs and calculate expected value based on current market prices
         </p>
