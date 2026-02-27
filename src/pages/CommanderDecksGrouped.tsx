@@ -566,17 +566,17 @@ export const CommanderDecksGrouped: React.FC<CommanderDecksGroupedProps> = ({ on
       </div>
 
       <div className="bg-[var(--bg-surface)] backdrop-blur-xl rounded-xl border border-[var(--border-color)] shadow-2xl overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left border-collapse">
+        <div>
+          <table className="w-full text-sm text-left border-collapse table-fixed">
             <thead className="bg-[var(--bg-surface-2)] text-[var(--text-2)] font-bold uppercase text-[10px] tracking-widest sticky top-0 z-10 border-b border-[var(--border-color-2)]">
               <tr>
-                <th className="px-3 sm:px-6 py-4">Set & Deck Name</th>
-                <th className="px-3 sm:px-6 py-4 text-right text-[var(--color-value)]">Value</th>
-                <th className="px-4 py-4 text-right text-[var(--color-ev)]">EV</th>
-                <th className="px-4 py-4 text-right text-[var(--color-value)] hidden md:table-cell">&gt;$0.25</th>
-                <th className="px-4 py-4 text-right text-[var(--color-value)]/60 hidden md:table-cell">&gt;$1.00</th>
-                <th className="px-3 sm:px-4 py-4 text-right text-[var(--color-ref)] hidden lg:table-cell">Ref Price</th>
-                <th className="px-3 sm:px-4 py-4 text-right text-[var(--color-buy)]">Market</th>
+                <th className="px-2 sm:px-3 py-4 w-auto">Set & Deck Name</th>
+                <th className="px-1 sm:px-2 lg:px-3 py-4 text-right text-[var(--color-value)] w-[70px] sm:w-[90px]">Value</th>
+                <th className="px-1 sm:px-2 lg:px-3 py-4 text-right text-[var(--color-ev)] hidden sm:table-cell w-[70px] sm:w-[90px]">EV</th>
+                <th className="px-1 lg:px-2 py-4 text-right text-[var(--color-value)] hidden lg:table-cell w-[80px]">&gt;$0.25</th>
+                <th className="px-1 lg:px-2 py-4 text-right text-[var(--color-value)]/60 hidden xl:table-cell w-[80px]">&gt;$1.00</th>
+                <th className="px-1 lg:px-2 py-4 text-right text-[var(--color-ref)] hidden xl:table-cell w-[90px]">Ref Price</th>
+                <th className="px-1 sm:px-2 lg:px-3 py-4 text-right text-[var(--color-buy)] w-[70px] sm:w-[100px]">Market</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
@@ -590,7 +590,7 @@ export const CommanderDecksGrouped: React.FC<CommanderDecksGroupedProps> = ({ on
                   <React.Fragment key={groupKey}>
                     {/* Set Header Row */}
                     <tr className="bg-[var(--bg-set-row)] border-y border-[var(--border-color-2)]">
-                      <td className="px-3 sm:px-6 py-2">
+                      <td className="px-2 sm:px-3 py-2">
                         <div className="flex items-center gap-2 sm:gap-3 flex-wrap sm:flex-nowrap">
                           <img
                             src={`https://svgs.scryfall.io/sets/${first.code.toLowerCase()}.svg`}
@@ -598,7 +598,7 @@ export const CommanderDecksGrouped: React.FC<CommanderDecksGroupedProps> = ({ on
                             className="w-5 h-5 invert opacity-70"
                             onError={(e) => (e.currentTarget.style.display = 'none')}
                           />
-                          <span className="text-sm font-bold text-[var(--text-1)] tracking-tight">
+                          <span className="text-xs sm:text-sm font-bold text-[var(--text-1)] tracking-tight">
                             {first.set_name || first.code.toUpperCase()}
                           </span>
                           {first.set_name && (
@@ -611,29 +611,29 @@ export const CommanderDecksGrouped: React.FC<CommanderDecksGroupedProps> = ({ on
                           </span>
                         </div>
                       </td>
-                      <td className="px-3 sm:px-6 py-2 text-right font-black font-mono text-[var(--color-value)] text-base sm:text-lg">
+                      <td className="px-1 sm:px-2 lg:px-3 py-2 text-right font-medium font-mono text-[var(--color-value)] text-xs sm:text-base">
                         ${totalValue.toFixed(2)}
                       </td>
-                      <td className="px-4 py-2 text-right">
+                      <td className="px-1 sm:px-2 lg:px-3 py-2 text-right hidden sm:table-cell">
                         {(() => {
                           const setName = first.set_name || first.code.toUpperCase()
                           const setEv = evData.get(`${setName}|Commander Deck Set`)
                           if (!setEv) return null
                           return (
-                            <span className="font-bold font-mono text-[var(--color-ev)] text-xs">
+                            <span className="font-medium font-mono text-[var(--color-ev)] text-xs sm:text-base">
                               ${setEv.expected_value.toFixed(2)}
                             </span>
                           )
                         })()}
                       </td>
-                      <td className="px-4 py-2 text-right font-mono text-[var(--color-value)]/80 text-xs hidden md:table-cell">
+                      <td className="px-1 lg:px-2 py-2 text-right font-medium font-mono text-[var(--color-value)]/80 text-xs sm:text-base hidden lg:table-cell">
                         ${total25c.toFixed(2)}
                       </td>
-                      <td className="px-4 py-2 text-right font-mono text-[var(--color-value)]/60 text-xs hidden md:table-cell">
+                      <td className="px-1 lg:px-2 py-2 text-right font-medium font-mono text-[var(--color-value)]/60 text-xs sm:text-base hidden xl:table-cell">
                         ${total1d.toFixed(2)}
                       </td>
-                      <td className="px-3 sm:px-4 py-2 hidden lg:table-cell"></td>
-                      <td className="px-3 sm:px-4 py-2"></td>
+                      <td className="px-1 lg:px-2 py-2 hidden xl:table-cell"></td>
+                      <td className="px-1 sm:px-2 lg:px-3 py-2"></td>
                     </tr>
 
                     {/* Individual Deck Rows */}
@@ -647,21 +647,23 @@ export const CommanderDecksGrouped: React.FC<CommanderDecksGroupedProps> = ({ on
                           className="group hover:bg-[var(--bg-row-hover)] transition-colors cursor-pointer"
                           onClick={() => onDeckSelect(deck.code, deck.deck_name)}
                         >
-                          <td className="px-3 sm:px-6 py-3 sm:py-4">
-                            <div className="flex items-center gap-2 sm:gap-3">
+                          <td className="px-2 sm:px-3 py-3 sm:py-4">
+                            <div className="flex items-center gap-1 sm:gap-2">
                               <span className="text-xs sm:text-sm font-bold text-[var(--text-1)] group-hover:text-[var(--brand)] transition-colors truncate">
                                 {deck.deck_name}
                               </span>
-                              <CheckEbayButton
-                                query={`mtg ${deck.set_name || ''} ${deck.deck_name}`}
-                                productLabel={`${deck.set_name || deck.code.toUpperCase()} ${deck.deck_name}`}
-                              />
+                              <span className="hidden sm:contents">
+                                <CheckEbayButton
+                                  query={`mtg ${deck.set_name || ''} ${deck.deck_name}`}
+                                  productLabel={`${deck.set_name || deck.code.toUpperCase()} ${deck.deck_name}`}
+                                />
+                              </span>
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation()
                                   setSelectedPriceDeck(deck)
                                 }}
-                                className="p-1.5 hover:bg-[var(--bg-hover-2)] rounded-lg text-[var(--text-2)] hover:text-[var(--brand)] transition-all shrink-0"
+                                className="p-1.5 hover:bg-[var(--bg-hover-2)] rounded-lg text-[var(--text-2)] hover:text-[var(--brand)] transition-all shrink-0 hidden sm:block"
                                 title="Compare All Prices"
                               >
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -682,7 +684,7 @@ export const CommanderDecksGrouped: React.FC<CommanderDecksGroupedProps> = ({ on
                                     shippingCost: 5,
                                   })
                                 }}
-                                className="p-1.5 hover:bg-[var(--bg-hover-2)] rounded-lg transition-all shrink-0 hover:scale-110"
+                                className="p-1.5 hover:bg-[var(--bg-hover-2)] rounded-lg transition-all shrink-0 hover:scale-110 hidden sm:block"
                                 title={isInInventory(deck.set_name || deck.code.toUpperCase(), 'Commander Deck') ? 'Remove from inventory' : 'Add to inventory'}
                               >
                                 <svg className="w-4 h-4" fill={isInInventory(deck.set_name || deck.code.toUpperCase(), 'Commander Deck') ? 'var(--brand)' : 'none'} stroke={isInInventory(deck.set_name || deck.code.toUpperCase(), 'Commander Deck') ? 'var(--brand)' : 'currentColor'} viewBox="0 0 24 24">
@@ -691,10 +693,10 @@ export const CommanderDecksGrouped: React.FC<CommanderDecksGroupedProps> = ({ on
                               </button>
                             </div>
                           </td>
-                          <td className="px-3 sm:px-6 py-3 sm:py-4 text-right font-black font-mono text-[var(--color-value)] text-sm sm:text-base">
+                          <td className="px-1 sm:px-2 lg:px-3 py-3 sm:py-4 text-right font-medium font-mono text-[var(--color-value)] text-xs sm:text-base">
                             ${(deck.total_value || 0).toFixed(2)}
                           </td>
-                          <td className="px-4 py-3 sm:py-4 text-right">
+                          <td className="px-1 sm:px-2 lg:px-3 py-3 sm:py-4 text-right hidden sm:table-cell">
                             {(() => {
                               const setName = deck.set_name || deck.code.toUpperCase()
                               // Try exact deck name match, then Commander Deck generic
@@ -702,19 +704,19 @@ export const CommanderDecksGrouped: React.FC<CommanderDecksGroupedProps> = ({ on
                                 || evData.get(`${setName}|Commander Deck`)
                               if (!deckEv) return <span className="text-[var(--text-2)] text-[10px] opacity-40">—</span>
                               return (
-                                <span className="font-bold font-mono text-[var(--color-ev)] text-xs">
+                                <span className="font-medium font-mono text-[var(--color-ev)] text-xs sm:text-base">
                                   ${deckEv.expected_value.toFixed(2)}
                                 </span>
                               )
                             })()}
                           </td>
-                          <td className="px-4 py-4 text-right font-mono text-[var(--color-value)]/80 text-xs hidden md:table-cell">
+                          <td className="px-1 lg:px-2 py-4 text-right font-medium font-mono text-[var(--color-value)]/80 text-xs sm:text-base hidden lg:table-cell">
                             ${(deck.value_over_25c || 0).toFixed(2)}
                           </td>
-                          <td className="px-4 py-4 text-right font-mono text-[var(--color-value)]/60 text-xs hidden md:table-cell">
+                          <td className="px-1 lg:px-2 py-4 text-right font-medium font-mono text-[var(--color-value)]/60 text-xs sm:text-base hidden xl:table-cell">
                             ${(deck.value_over_1 || 0).toFixed(2)}
                           </td>
-                          <td className="px-2 sm:px-4 py-3 sm:py-4 text-right hidden lg:table-cell">
+                          <td className="px-1 lg:px-2 py-3 sm:py-4 text-right hidden xl:table-cell">
                             {(() => {
                               const mtgPrice = mtgstocksPrices.get(deckKey)
                               if (!mtgPrice) return <span className="text-[var(--text-2)] text-[10px] opacity-40">—</span>
@@ -729,7 +731,7 @@ export const CommanderDecksGrouped: React.FC<CommanderDecksGroupedProps> = ({ on
                                   className="inline-flex flex-col items-end px-2 py-0.5 rounded-lg hover:bg-[var(--color-ref)]/10 transition-all group/mtg"
                                   title={`Avg $${mtgPrice.avg_price?.toFixed(2) ?? 'N/A'} / Market $${mtgPrice.market_price?.toFixed(2) ?? 'N/A'}`}
                                 >
-                                  <span className="font-bold font-mono text-[var(--color-ref)] text-xs">
+                                  <span className="font-medium font-mono text-[var(--color-ref)] text-xs sm:text-base">
                                     ${displayPrice.toFixed(2)}
                                   </span>
                                   {mtgPrice.avg_price && mtgPrice.market_price && (
@@ -741,20 +743,20 @@ export const CommanderDecksGrouped: React.FC<CommanderDecksGroupedProps> = ({ on
                               )
                             })()}
                           </td>
-                          <td className="px-2 sm:px-4 py-3 sm:py-4 text-right">
+                          <td className="px-1 sm:px-2 lg:px-3 py-3 sm:py-4 text-right">
                             {cheapest ? (
                               <a
                                 href={cheapest.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 onClick={(e) => e.stopPropagation()}
-                                className="inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 rounded-lg bg-[var(--color-buy-bg)] border border-[var(--color-buy-border)] hover:bg-[var(--color-buy-bg)] hover:border-[var(--color-buy-hover-border)] transition-all group/buy"
+                                className="inline-flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2.5 py-1 rounded-lg bg-[var(--color-buy-bg)] border border-[var(--color-buy-border)] hover:bg-[var(--color-buy-bg)] hover:border-[var(--color-buy-hover-border)] transition-all group/buy"
                                 title={`Buy from ${cheapest.marketplace}`}
                               >
-                                <svg className="w-3.5 h-3.5 text-[var(--color-buy)] opacity-60 group-hover/buy:opacity-100 transition-opacity shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-3.5 h-3.5 text-[var(--color-buy)] opacity-60 group-hover/buy:opacity-100 transition-opacity shrink-0 hidden sm:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                                 </svg>
-                                <span className="font-black font-mono text-[var(--color-buy)] text-xs sm:text-sm">
+                                <span className="font-medium font-mono text-[var(--color-buy)] text-xs sm:text-base">
                                   ${cheapest.price.toFixed(2)}
                                 </span>
                               </a>

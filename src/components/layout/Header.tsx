@@ -80,7 +80,7 @@ export const Header: React.FC = () => {
 
   return (
     <>
-      <header className="bg-[var(--bg-surface)]/80 backdrop-blur-xl border-b border-[var(--border-color)] sticky top-0 z-50 safe-area-pt safe-area-pl safe-area-pr">
+      <header className="bg-[var(--bg-header)] backdrop-blur-xl border-b border-[var(--border-color)] sticky top-0 z-50 safe-area-pt safe-area-pl safe-area-pr">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
