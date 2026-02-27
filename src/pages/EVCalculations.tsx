@@ -9,6 +9,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import { supabase } from '../services/supabase'
 import { LoadingSpinner } from '../components/common/LoadingSpinner'
+import { CheckEbayButton } from '../components/common/CheckEbayButton'
 
 // --- Types ---
 
@@ -332,8 +333,14 @@ export const EVCalculations: React.FC = () => {
                     <td className="px-4 py-3 text-[var(--text-1)] font-medium max-w-[200px] truncate" title={row.set_name}>
                       {row.set_name}
                     </td>
-                    <td className="px-4 py-3 text-[var(--text-2)] max-w-[250px] truncate" title={row.botbox_product_name}>
-                      {row.product_type}
+                    <td className="px-4 py-3 text-[var(--text-2)] max-w-[250px]">
+                      <div className="flex items-center gap-1">
+                        <span className="truncate" title={row.botbox_product_name}>{row.product_type}</span>
+                        <CheckEbayButton
+                          query={`mtg ${row.set_name} ${row.product_type}`}
+                          productLabel={`${row.set_name} ${row.product_type}`}
+                        />
+                      </div>
                     </td>
                     <td className="px-4 py-3 text-right font-mono text-[var(--color-ev)] font-bold">
                       {row.expected_value !== null ? `$${row.expected_value.toFixed(2)}` : '\u2014'}
@@ -393,9 +400,15 @@ export const EVCalculations: React.FC = () => {
           displayRows.map((row, idx) => (
             <div key={`m-${row.canonical_product_id}-${idx}`} className="bg-[var(--bg-surface)] backdrop-blur-xl rounded-xl border border-[var(--border-color)] p-4 space-y-3">
               {/* Set & Product */}
-              <div>
-                <div className="text-[var(--text-1)] font-medium text-sm">{row.set_name}</div>
-                <div className="text-[var(--text-2)] text-xs">{row.product_type}</div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-[var(--text-1)] font-medium text-sm">{row.set_name}</div>
+                  <div className="text-[var(--text-2)] text-xs">{row.product_type}</div>
+                </div>
+                <CheckEbayButton
+                  query={`mtg ${row.set_name} ${row.product_type}`}
+                  productLabel={`${row.set_name} ${row.product_type}`}
+                />
               </div>
               {/* Stats grid */}
               <div className="grid grid-cols-3 gap-2 text-xs">

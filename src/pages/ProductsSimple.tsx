@@ -11,6 +11,7 @@ import { useSupabaseQuery } from '../hooks/useSupabaseQuery'
 import { supabase } from '../services/supabase'
 import { LoadingSpinner } from '../components/common/LoadingSpinner'
 import { ErrorMessage } from '../components/common/ErrorMessage'
+import { useTheme } from '../contexts/ThemeContext'
 
 interface ProductRow {
   product_type: string
@@ -116,6 +117,8 @@ async function fetchGroupedProducts(): Promise<SetGroup[]> {
 
 // --- Expandable offers sub-row ---
 const OffersPanel: React.FC<{ setName: string; productType: string }> = ({ setName, productType }) => {
+  const { theme } = useTheme()
+  const placeholder = theme === 'dark' ? '/Card_Product_Placeholder_Dark.png' : '/Card_Product_Placeholder.png'
   const [offers, setOffers] = useState<OfferDetail[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
@@ -182,18 +185,12 @@ const OffersPanel: React.FC<{ setName: string; productType: string }> = ({ setNa
                 className={`flex items-center justify-between p-3 bg-[var(--bg-hover)] border border-[var(--border-color-2)] rounded-lg hover:border-[var(--brand)]/40 hover:bg-[var(--bg-hover)] transition-all group/offer ${!offer.in_stock ? 'opacity-40' : ''}`}
               >
                 <div className="flex items-center gap-3 min-w-0">
-                  {offer.image_url ? (
-                    <img
-                      src={offer.image_url}
-                      alt=""
-                      className="w-10 h-10 object-contain rounded shrink-0"
-                      onError={(e) => (e.currentTarget.style.display = 'none')}
-                    />
-                  ) : (
-                    <svg className="w-5 h-5 text-[var(--color-buy)] opacity-60 group-hover/offer:opacity-100 transition-opacity shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                    </svg>
-                  )}
+                  <img
+                    src={offer.image_url || placeholder}
+                    alt=""
+                    className="w-10 h-10 object-contain rounded shrink-0"
+                    onError={(e) => (e.currentTarget.src = placeholder)}
+                  />
                   <div className="min-w-0">
                     <div className="text-[10px] uppercase font-black tracking-widest text-[var(--brand)] mb-0.5">
                       {offer.marketplace}

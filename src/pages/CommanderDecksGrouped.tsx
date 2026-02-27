@@ -9,6 +9,7 @@
 import React, { useEffect, useState, useMemo } from 'react'
 import { supabase, queryWithRetry } from '../services/supabase'
 import { useInventory } from '../hooks/useInventory'
+import { CheckEbayButton } from '../components/common/CheckEbayButton'
 
 interface CommanderDeckValue {
   code: string
@@ -651,6 +652,10 @@ export const CommanderDecksGrouped: React.FC<CommanderDecksGroupedProps> = ({ on
                               <span className="text-xs sm:text-sm font-bold text-[var(--text-1)] group-hover:text-[var(--brand)] transition-colors truncate">
                                 {deck.deck_name}
                               </span>
+                              <CheckEbayButton
+                                query={`mtg ${deck.set_name || ''} ${deck.deck_name}`}
+                                productLabel={`${deck.set_name || deck.code.toUpperCase()} ${deck.deck_name}`}
+                              />
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation()

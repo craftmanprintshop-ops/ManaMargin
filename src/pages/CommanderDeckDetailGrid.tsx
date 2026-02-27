@@ -9,6 +9,7 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase, queryWithRetry } from '../services/supabase'
+import { useTheme } from '../contexts/ThemeContext'
 
 interface DeckCard {
   code: string
@@ -28,6 +29,8 @@ interface DeckCard {
 type FilterTab = 'all' | '25c' | '1d'
 
 export const CommanderDeckDetailGrid: React.FC = () => {
+  const { theme } = useTheme()
+  const placeholder = theme === 'dark' ? '/Card_Product_Placeholder_Dark.png' : '/Card_Product_Placeholder.png'
   const { code, fileName } = useParams<{ code: string; fileName: string }>()
   const navigate = useNavigate()
   const [cards, setCards] = useState<DeckCard[]>([])
@@ -173,18 +176,13 @@ export const CommanderDeckDetailGrid: React.FC = () => {
             >
               {/* Card Image */}
               <div className="aspect-[3/4] relative overflow-hidden bg-[var(--bg-image)]">
-                {card.image_url ? (
-                  <img
-                    src={card.image_url}
-                    alt={card.card_name}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                    loading="lazy"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-[var(--text-2)] text-[10px] uppercase font-bold text-center p-4">
-                    Image Not Found
-                  </div>
-                )}
+                <img
+                  src={card.image_url || placeholder}
+                  alt={card.card_name}
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  loading="lazy"
+                  onError={(e) => (e.currentTarget.src = placeholder)}
+                />
 
                 {/* Card Count Badge */}
                 {card.count > 1 && (

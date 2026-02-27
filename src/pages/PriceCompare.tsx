@@ -9,6 +9,8 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { supabase } from '../services/supabase'
 import { useInventory } from '../hooks/useInventory'
+import { useTheme } from '../contexts/ThemeContext'
+import { CheckEbayButton } from '../components/common/CheckEbayButton'
 
 // --- Types ---
 
@@ -77,6 +79,8 @@ const DEFAULT_SETTINGS: MarketplaceSetting[] = [
 // --- Component ---
 
 export const PriceCompare: React.FC = () => {
+  const { theme } = useTheme()
+  const placeholder = theme === 'dark' ? '/Card_Product_Placeholder_Dark.png' : '/Card_Product_Placeholder.png'
   // Inventory
   const { isInInventory, toggleItem } = useInventory()
 
@@ -737,11 +741,20 @@ export const PriceCompare: React.FC = () => {
                           )}
                         </td>
                         <td className="px-3 py-2.5 max-w-[280px]">
-                          <div className="text-[var(--text-1)] font-medium truncate" title={offer.title}>
-                            {offer.set_name || offer.title}
-                          </div>
-                          <div className="text-[10px] text-[var(--text-2)] truncate">
-                            {offer.product_type || offer.title}
+                          <div className="flex items-center gap-1">
+                            <div className="min-w-0">
+                              <div className="text-[var(--text-1)] font-medium truncate" title={offer.title}>
+                                {offer.set_name || offer.title}
+                              </div>
+                              <div className="text-[10px] text-[var(--text-2)] truncate">
+                                {offer.product_type || offer.title}
+                              </div>
+                            </div>
+                            <CheckEbayButton
+                              query={`mtg ${offer.set_name || ''} ${offer.product_type || offer.title}`}
+                              productLabel={`${offer.set_name || ''} ${offer.product_type || offer.title}`}
+                              className="shrink-0"
+                            />
                           </div>
                         </td>
                         <td className="px-3 py-2.5">
@@ -804,6 +817,11 @@ export const PriceCompare: React.FC = () => {
                         <div className="text-sm font-medium text-[var(--text-1)] truncate">{offer.set_name || offer.title}</div>
                         <div className="text-[10px] text-[var(--text-2)] truncate">{offer.product_type}</div>
                       </div>
+                      <CheckEbayButton
+                        query={`mtg ${offer.set_name || ''} ${offer.product_type || offer.title}`}
+                        productLabel={`${offer.set_name || ''} ${offer.product_type || offer.title}`}
+                        className="shrink-0"
+                      />
                       {offer.set_name && offer.product_type && (
                         <button
                           onClick={() => toggleItem({
@@ -866,35 +884,13 @@ export const PriceCompare: React.FC = () => {
                     <div className="aspect-[16/9] relative overflow-hidden bg-[var(--bg-image)]">
                       {(() => {
                         const firstWithImage = group.offers.find(o => o.image_url)
-                        if (firstWithImage && firstWithImage.image_url) {
-                          return (
-                            <img
-                              src={firstWithImage.image_url}
-                              alt={group.set_name}
-                              className="w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-500"
-                            />
-                          )
-                        }
                         return (
-                          <div className="w-full h-full flex flex-col items-center justify-center gap-3 p-4">
-                            <div className="flex gap-2 flex-wrap justify-center">
-                              {Array.from(new Set(group.offers.map(o => {
-                                try { return new URL(o.url).hostname } catch { return '' }
-                              }).filter(Boolean))).slice(0, 4).map((hostname, i) => (
-                                <div key={i} className="w-10 h-10 rounded-lg bg-[var(--bg-hover)] border border-[var(--border-color)] flex items-center justify-center">
-                                  <img
-                                    src={`https://www.google.com/s2/favicons?domain=${hostname}&sz=32`}
-                                    alt=""
-                                    className="w-6 h-6 opacity-60 group-hover:opacity-100 transition-opacity"
-                                    onError={(e) => (e.currentTarget.style.display = 'none')}
-                                  />
-                                </div>
-                              ))}
-                            </div>
-                            <span className="text-[9px] text-[var(--text-2)] uppercase tracking-widest font-bold opacity-40">
-                              {group.offers.length} marketplace{group.offers.length !== 1 ? 's' : ''}
-                            </span>
-                          </div>
+                          <img
+                            src={firstWithImage?.image_url || placeholder}
+                            alt={group.set_name}
+                            className="w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-500"
+                            onError={(e) => (e.currentTarget.src = placeholder)}
+                          />
                         )
                       })()}
                       <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg-surface)] via-transparent to-transparent pointer-events-none" />
@@ -920,9 +916,16 @@ export const PriceCompare: React.FC = () => {
                       )}
                       <div className="absolute bottom-0 left-0 right-0 p-4">
                         <div className="flex items-end justify-between gap-2">
-                          <h3 className="text-sm font-bold text-white line-clamp-2 drop-shadow-lg" title={group.set_name}>
-                            {group.set_name}
-                          </h3>
+                          <div className="flex items-center gap-1">
+                            <h3 className="text-sm font-bold text-white line-clamp-2 drop-shadow-lg" title={group.set_name}>
+                              {group.set_name}
+                            </h3>
+                            <CheckEbayButton
+                              query={`mtg ${group.set_name} ${group.product_type}`}
+                              productLabel={`${group.set_name} ${group.product_type}`}
+                              className="shrink-0"
+                            />
+                          </div>
                           <span className="text-[10px] font-bold text-white/70 uppercase shrink-0 bg-[var(--bg-overlay)] backdrop-blur-sm px-1.5 py-0.5 rounded">
                             {group.product_type}
                           </span>

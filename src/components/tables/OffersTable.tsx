@@ -9,6 +9,7 @@ import React, { useState, useMemo } from 'react'
 import type { OffersLatestEnriched } from '../../types/models'
 import { Badge } from '../common/Badge'
 import { formatCurrency, formatDate } from '../../utils/formatters'
+import { useTheme } from '../../contexts/ThemeContext'
 
 interface OffersTableProps {
   /** Array of offers to display */
@@ -26,6 +27,8 @@ type SortOrder = 'asc' | 'desc'
  * Data comes from the offers_latest_enriched view
  */
 export const OffersTable: React.FC<OffersTableProps> = ({ data, loading }) => {
+  const { theme } = useTheme()
+  const placeholder = theme === 'dark' ? '/Card_Product_Placeholder_Dark.png' : '/Card_Product_Placeholder.png'
   const [sortField, setSortField] = useState<SortField>('price')
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc')
 
@@ -172,16 +175,14 @@ export const OffersTable: React.FC<OffersTableProps> = ({ data, loading }) => {
                   <div className="font-medium text-[var(--text-1)]">
                     {offer.display_name || offer.title || 'Unknown Product'}
                   </div>
-                  {offer.image_url && (
-                    <img
-                      src={offer.image_url}
-                      alt={offer.title || ''}
-                      className="mt-1 h-12 w-auto object-contain"
-                      onError={(e) => {
-                        e.currentTarget.style.display = 'none'
-                      }}
-                    />
-                  )}
+                  <img
+                    src={offer.image_url || placeholder}
+                    alt={offer.title || ''}
+                    className="mt-1 h-12 w-auto object-contain"
+                    onError={(e) => {
+                      e.currentTarget.src = placeholder
+                    }}
+                  />
                 </td>
 
                 {/* Set Name */}

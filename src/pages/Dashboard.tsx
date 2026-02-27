@@ -13,6 +13,7 @@ import { Link } from 'react-router-dom'
 import { useSupabaseQuery } from '../hooks/useSupabaseQuery'
 import { dashboardService } from '../services/dashboardService'
 import { supabase } from '../services/supabase'
+import { useTheme } from '../contexts/ThemeContext'
 import { Card } from '../components/common/Card'
 import { LoadingSpinner } from '../components/common/LoadingSpinner'
 import { ErrorMessage } from '../components/common/ErrorMessage'
@@ -284,6 +285,8 @@ const WatchCountScraper: React.FC = () => {
  * Dashboard page with statistics and overview
  */
 export const Dashboard: React.FC = () => {
+  const { theme } = useTheme()
+  const placeholder = theme === 'dark' ? '/Card_Product_Placeholder_Dark.png' : '/Card_Product_Placeholder.png'
   // Fetch dashboard data
   const {
     data: summary,
@@ -459,18 +462,12 @@ export const Dashboard: React.FC = () => {
               >
                 {/* Product Image */}
                 <div className="aspect-square relative overflow-hidden bg-[var(--bg-image)]">
-                  {deal.best_image_url ? (
-                    <img
-                      src={deal.best_image_url}
-                      alt={`${deal.set_name} ${deal.product_type}`}
-                      className="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform duration-500"
-                      onError={(e) => (e.currentTarget.style.display = 'none')}
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <span className="text-3xl text-[var(--text-2)]/30">?</span>
-                    </div>
-                  )}
+                  <img
+                    src={deal.best_image_url || placeholder}
+                    alt={`${deal.set_name} ${deal.product_type}`}
+                    className="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform duration-500"
+                    onError={(e) => (e.currentTarget.src = placeholder)}
+                  />
                   {/* Best Price - top right */}
                   <div className="absolute top-2 right-2">
                     {deal.best_url ? (
