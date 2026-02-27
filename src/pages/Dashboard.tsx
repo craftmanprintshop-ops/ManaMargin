@@ -634,7 +634,7 @@ export const Dashboard: React.FC = () => {
                 className="flex justify-between items-center p-3 bg-[var(--bg-hover)] rounded-lg hover:bg-[var(--bg-hover-2)] transition-colors"
               >
                 <div className="flex items-center gap-3">
-                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary-100 text-primary-600 font-bold text-sm">
+                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-[var(--brand)] text-white font-bold text-sm">
                     {index + 1}
                   </div>
                   <span className="font-medium text-[var(--text-1)]">{set.set_name}</span>
