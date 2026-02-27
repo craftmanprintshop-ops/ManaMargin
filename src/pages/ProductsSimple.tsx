@@ -195,7 +195,7 @@ const OffersPanel: React.FC<{ setName: string; productType: string }> = ({ setNa
                     <div className="text-[10px] uppercase font-black tracking-widest text-[var(--brand)] mb-0.5">
                       {offer.marketplace}
                     </div>
-                    <div className="text-white text-xs font-medium truncate" title={offer.title}>
+                    <div className="text-[var(--text-1)] text-xs font-medium truncate" title={offer.title}>
                       {offer.title}
                     </div>
                     <div className="flex items-center gap-2 mt-0.5">
@@ -320,7 +320,7 @@ export const ProductsSimple: React.FC = () => {
                   <tr className="bg-[var(--bg-set-row)] border-y border-[var(--border-color-2)]">
                     <td className="px-3 sm:px-6 py-3">
                       <div className="flex flex-wrap items-center gap-1 sm:gap-3">
-                        <span className="text-xs sm:text-sm font-bold text-white uppercase tracking-tight">
+                        <span className="text-xs sm:text-sm font-bold text-[var(--text-1)] uppercase tracking-tight">
                           {group.set_name}
                         </span>
                         {group.set_type && (
@@ -333,13 +333,13 @@ export const ProductsSimple: React.FC = () => {
                         </span>
                       </div>
                     </td>
-                    <td className="px-2 sm:px-4 py-3 text-right font-bold text-white text-xs hidden sm:table-cell">
+                    <td className="px-2 sm:px-4 py-3 text-right font-bold text-[var(--text-1)] text-xs hidden sm:table-cell">
                       {group.total_offers}
                     </td>
-                    <td className="px-2 sm:px-4 py-3 text-right font-mono text-white/70 text-xs hidden md:table-cell">
+                    <td className="px-2 sm:px-4 py-3 text-right font-mono text-[var(--text-2)] text-xs hidden md:table-cell">
                       {group.total_avg !== null ? `$${group.total_avg.toFixed(2)}` : '—'}
                     </td>
-                    <td className="px-2 sm:px-4 py-3 text-right font-mono text-white/70 text-xs">
+                    <td className="px-2 sm:px-4 py-3 text-right font-mono text-[var(--text-2)] text-xs">
                       {group.total_min !== null ? `$${group.total_min.toFixed(2)}` : '—'}
                     </td>
                     <td className="px-2 sm:px-4 py-3 text-right font-mono font-bold text-[var(--color-value)] text-sm">

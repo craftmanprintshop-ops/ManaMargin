@@ -111,7 +111,7 @@ const PricePopup: React.FC<{ deck: CommanderDeckValue; onClose: () => void; mtgs
         {/* Header */}
         <div className="p-4 border-b border-[var(--border-color)] flex justify-between items-center bg-[var(--bg-hover)]">
           <div>
-            <h3 className="font-bold text-white text-lg">{deck.deck_name}</h3>
+            <h3 className="font-bold text-[var(--text-1)] text-lg">{deck.deck_name}</h3>
             <div className="flex items-center gap-3">
               <p className="text-xs text-[var(--text-2)]">{deck.set_name || deck.code.toUpperCase()}</p>
               {mtgstocksPrice && (mtgstocksPrice.market_price || mtgstocksPrice.avg_price) && (
@@ -176,7 +176,7 @@ const PricePopup: React.FC<{ deck: CommanderDeckValue; onClose: () => void; mtgs
                       <div className="text-[10px] uppercase font-black tracking-widest text-[var(--text-2)] mb-0.5">
                         {offer.marketplace}
                       </div>
-                      <div className="text-white font-bold text-sm truncate max-w-[240px]">
+                      <div className="text-[var(--text-1)] font-bold text-sm truncate max-w-[240px]">
                         {offer.title}
                       </div>
                       {!offer.in_stock && (

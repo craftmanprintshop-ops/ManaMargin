@@ -449,7 +449,7 @@ export const Dashboard: React.FC = () => {
             </div>
             <Link
               to={ROUTES.EV_CALCULATIONS}
-              className="text-[10px] font-bold text-[var(--brand)] hover:text-white uppercase tracking-widest transition-colors"
+              className="text-[10px] font-bold text-[var(--brand)] hover:text-[var(--text-1)] uppercase tracking-widest transition-colors"
             >
               View All EV →
             </Link>
@@ -542,7 +542,7 @@ export const Dashboard: React.FC = () => {
             </div>
             <Link
               to={ROUTES.COMMANDER_DECKS}
-              className="text-[10px] font-bold text-[var(--brand)] hover:text-white uppercase tracking-widest transition-colors"
+              className="text-[10px] font-bold text-[var(--brand)] hover:text-[var(--text-1)] uppercase tracking-widest transition-colors"
             >
               View All Decks →
             </Link>

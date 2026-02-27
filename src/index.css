@@ -99,11 +99,7 @@
    Light theme overrides
    ======================================== */
 
-/* Text that was white → dark */
-[data-theme="light"] .text-white {
-  color: var(--text-1);
-}
-
+/* Remap gray-100 text for light theme */
 [data-theme="light"] .text-gray-100 {
   color: var(--text-1);
 }
