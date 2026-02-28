@@ -26,7 +26,7 @@ interface ScrapeResult {
   query?: string
   rows_found?: number
   rows_upserted?: number
-  history_events?: number
+  pages_scraped?: number
   error?: string
   message?: string
 }
@@ -61,11 +61,11 @@ interface EVDeal {
   ev_difference: number
 }
 
-const PERIOD_OPTIONS = [
-  { label: '7 days', value: '7days' },
-  { label: '14 days', value: '14days' },
-  { label: '30 days', value: '30days' },
-  { label: '90 days', value: '90days' },
+const MAX_PAGES_OPTIONS = [
+  { label: '1 page', value: '1' },
+  { label: '2 pages', value: '2' },
+  { label: '3 pages', value: '3' },
+  { label: '5 pages', value: '5' },
 ]
 
 const getFunctionsBaseUrl = (): string | null => {
@@ -95,13 +95,12 @@ const parseFunctionBody = async (response: Response): Promise<ScrapeErrorShape |
   return { status: response.status, error: response.statusText || 'Function request failed' }
 }
 
-const invokeWatchcountScrape = async (
+const invokeEbaySoldScrape = async (
   query: string,
-  days: string,
-  expandHistory: boolean,
+  maxPages: string,
 ): Promise<{ data: ScrapeResult | null; error: ScrapeErrorShape | null }> => {
-  const { data, error: invokeError } = await supabase.functions.invoke('watchcount-scrape', {
-    body: { q: query, days, expand_history: expandHistory ? 'true' : 'false' },
+  const { data, error: invokeError } = await supabase.functions.invoke('ebay-sold-scrape', {
+    body: { q: query, max_pages: parseInt(maxPages) || 3 },
   })
 
   if (!invokeError) return { data: (data as ScrapeResult) || null, error: null }
@@ -118,10 +117,9 @@ const invokeWatchcountScrape = async (
     return { data: null, error: { error: invokeError.message || 'Edge Function error' } }
   }
 
-  const url = new URL(`${functionsBaseUrl}/watchcount-scrape`)
+  const url = new URL(`${functionsBaseUrl}/ebay-sold-scrape`)
   url.searchParams.set('q', query)
-  url.searchParams.set('days', days)
-  url.searchParams.set('expand_history', expandHistory ? 'true' : 'false')
+  url.searchParams.set('max_pages', maxPages)
 
   const directResp = await fetch(url.toString(), {
     method: 'GET',
@@ -143,16 +141,13 @@ const formatScrapeError = (err: ScrapeErrorShape | null): string => {
   if (!err) return 'Edge Function error'
   const combined = `${err.error || ''} ${err.message || ''}`.toLowerCase()
   if (combined.includes('scraper_base_url') && combined.includes('not configured')) {
-    return 'Scraper host is not configured in Supabase. Add Edge Function secret SCRAPER_BASE_URL and redeploy watchcount-scrape.'
+    return 'Scraper host is not configured in Supabase. Add Edge Function secret SCRAPER_BASE_URL and redeploy ebay-sold-scrape.'
   }
   if (combined.includes('requested path is invalid') || combined.includes('function not found')) {
-    return 'watchcount-scrape is not deployed in this Supabase project (or .env points to a different project). Deploy watchcount-scrape, then retry.'
-  }
-  if (err.error === 'captcha_detected') {
-    return 'WatchCount captcha detected on the scraper host. Save fresh watchcount cookies and retry.'
+    return 'ebay-sold-scrape is not deployed in this Supabase project. Deploy the edge function, then retry.'
   }
   if (err.status === 409) {
-    return 'WatchCount scrape already in progress. Wait about a minute and retry.'
+    return 'eBay sold scrape already in progress. Wait about a minute and retry.'
   }
   if (err.message) return err.message
   if (err.error) return err.error
@@ -160,10 +155,9 @@ const formatScrapeError = (err: ScrapeErrorShape | null): string => {
   return 'Edge Function error'
 }
 
-const WatchCountScraper: React.FC = () => {
+const EbaySoldScraper: React.FC = () => {
   const [query, setQuery] = useState('')
-  const [days, setDays] = useState('30days')
-  const [expandHistory, setExpandHistory] = useState(false)
+  const [maxPages, setMaxPages] = useState('3')
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<ScrapeResult | null>(null)
 
@@ -172,7 +166,7 @@ const WatchCountScraper: React.FC = () => {
     setLoading(true)
     setResult(null)
     try {
-      const { data, error } = await invokeWatchcountScrape(query.trim(), days, expandHistory)
+      const { data, error } = await invokeEbaySoldScrape(query.trim(), maxPages)
       if (error) {
         setResult({ ok: false, error: formatScrapeError(error), message: error.message })
       } else {
@@ -183,12 +177,12 @@ const WatchCountScraper: React.FC = () => {
     } finally {
       setLoading(false)
     }
-  }, [query, days, expandHistory])
+  }, [query, maxPages])
 
   return (
-    <Card title="WatchCount eBay Scraper">
+    <Card title="eBay Sold Listings Scraper">
       <div className="space-y-4">
-        <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_auto_auto] gap-3 items-end">
+        <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_auto] gap-3 items-end">
           {/* Search query */}
           <div>
             <label className="block text-xs font-bold text-[var(--text-2)] uppercase tracking-wider mb-1">
@@ -204,34 +198,20 @@ const WatchCountScraper: React.FC = () => {
             />
           </div>
 
-          {/* Time period */}
+          {/* Max pages */}
           <div>
             <label className="block text-xs font-bold text-[var(--text-2)] uppercase tracking-wider mb-1">
-              Period
+              Pages
             </label>
             <select
-              value={days}
-              onChange={(e) => setDays(e.target.value)}
+              value={maxPages}
+              onChange={(e) => setMaxPages(e.target.value)}
               className="px-3 py-2 rounded-lg bg-[var(--bg-inset)] border border-[var(--border-color)] text-[var(--text-1)] text-sm focus:outline-none focus:border-[var(--brand)] transition-colors"
             >
-              {PERIOD_OPTIONS.map((o) => (
+              {MAX_PAGES_OPTIONS.map((o) => (
                 <option key={o.value} value={o.value}>{o.label}</option>
               ))}
             </select>
-          </div>
-
-          {/* Expand history checkbox */}
-          <div className="flex items-center gap-2 pb-0.5">
-            <input
-              type="checkbox"
-              id="expand-history"
-              checked={expandHistory}
-              onChange={(e) => setExpandHistory(e.target.checked)}
-              className="rounded border-[var(--border-color)] accent-[var(--brand)]"
-            />
-            <label htmlFor="expand-history" className="text-xs text-[var(--text-2)] whitespace-nowrap">
-              eBay History
-            </label>
           </div>
 
           {/* Scrape button */}
@@ -248,7 +228,7 @@ const WatchCountScraper: React.FC = () => {
         {loading && (
           <div className="flex items-center gap-2 text-xs text-[var(--text-2)]">
             <div className="w-4 h-4 border-2 border-[var(--brand)] border-t-transparent rounded-full animate-spin" />
-            Scraping WatchCount... this may take a minute.
+            Scraping eBay sold listings... this may take a minute.
           </div>
         )}
 
@@ -264,7 +244,6 @@ const WatchCountScraper: React.FC = () => {
                 <div className="font-bold">Scrape complete</div>
                 <div className="text-xs opacity-80">
                   Query: "{result.query}" &middot; Found: {result.rows_found} &middot; Upserted: {result.rows_upserted}
-                  {result.history_events !== undefined && ` · History events: ${result.history_events}`}
                 </div>
               </div>
             ) : (
@@ -732,8 +711,8 @@ export const Dashboard: React.FC = () => {
         </Link>
       </div>
 
-      {/* WatchCount Scraper */}
-      <WatchCountScraper />
+      {/* eBay Sold Listings Scraper */}
+      <EbaySoldScraper />
 
       {/* About ManaMargin */}
       <Card title="About ManaMargin">

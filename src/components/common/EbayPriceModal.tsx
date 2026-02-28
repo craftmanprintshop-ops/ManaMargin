@@ -57,9 +57,9 @@ const parseFunctionBody = async (response: Response): Promise<ScrapeErrorShape |
   return { status: response.status, error: response.statusText || 'Function request failed' }
 }
 
-const invokeWatchcountScrape = async (query: string, days: string): Promise<ScrapeErrorShape | null> => {
-  const { error: invokeError } = await supabase.functions.invoke('watchcount-scrape', {
-    body: { q: query, days },
+const invokeEbaySoldScrape = async (query: string): Promise<ScrapeErrorShape | null> => {
+  const { error: invokeError } = await supabase.functions.invoke('ebay-sold-scrape', {
+    body: { q: query, max_pages: 3 },
   })
 
   if (!invokeError) return null
@@ -76,9 +76,9 @@ const invokeWatchcountScrape = async (query: string, days: string): Promise<Scra
     return { error: invokeError.message || 'Scrape failed' }
   }
 
-  const url = new URL(`${functionsBaseUrl}/watchcount-scrape`)
+  const url = new URL(`${functionsBaseUrl}/ebay-sold-scrape`)
   url.searchParams.set('q', query)
-  url.searchParams.set('days', days)
+  url.searchParams.set('max_pages', '3')
 
   const directResp = await fetch(url.toString(), {
     method: 'GET',
@@ -96,16 +96,13 @@ const formatScrapeError = (err: ScrapeErrorShape | null): string => {
   if (!err) return 'Scrape failed'
   const combined = `${err.error || ''} ${err.message || ''}`.toLowerCase()
   if (combined.includes('scraper_base_url') && combined.includes('not configured')) {
-    return 'Scraper host is not configured in Supabase. Add Edge Function secret SCRAPER_BASE_URL and redeploy watchcount-scrape.'
+    return 'Scraper host is not configured in Supabase. Add Edge Function secret SCRAPER_BASE_URL and redeploy ebay-sold-scrape.'
   }
   if (combined.includes('requested path is invalid') || combined.includes('function not found')) {
-    return 'watchcount-scrape is not deployed in this Supabase project (or .env points to a different project). Deploy watchcount-scrape, then retry.'
-  }
-  if (err.error === 'captcha_detected') {
-    return 'WatchCount captcha detected on the scraper. Save fresh watchcount cookies on the scraper host and retry.'
+    return 'ebay-sold-scrape is not deployed in this Supabase project. Deploy the edge function, then retry.'
   }
   if (err.status === 409) {
-    return 'A WatchCount scrape is already in progress. Wait about a minute and try again.'
+    return 'An eBay sold scrape is already in progress. Wait about a minute and try again.'
   }
   if (err.message) return err.message
   if (err.error) return err.error
@@ -120,7 +117,7 @@ export const EbayPriceModal: React.FC<EbayPriceModalProps> = ({ query, productLa
 
   const fetchEvents = async (): Promise<SoldEvent[]> => {
     const { data, error: fetchErr } = await supabase
-      .from('watchcount_sold_events')
+      .from('ebay_sold_events')
       .select('sold_date_utc, price_usd, title, type')
       .eq('query', query)
       .not('price_usd', 'is', null)
@@ -148,7 +145,7 @@ export const EbayPriceModal: React.FC<EbayPriceModalProps> = ({ query, productLa
         // No cached data — trigger scrape
         setState('scraping')
         if (cancelled) return
-        const scrapeErr = await invokeWatchcountScrape(query, '30days')
+        const scrapeErr = await invokeEbaySoldScrape(query)
         if (scrapeErr) {
           setError(formatScrapeError(scrapeErr))
           setState('error')
@@ -243,7 +240,7 @@ export const EbayPriceModal: React.FC<EbayPriceModalProps> = ({ query, productLa
           {state === 'scraping' && (
             <div className="flex flex-col items-center gap-2 py-16 text-sm text-[var(--text-2)]">
               <div className="w-5 h-5 border-2 border-[var(--brand)] border-t-transparent rounded-full animate-spin" />
-              <span>No cached data — scraping WatchCount...</span>
+              <span>No cached data — scraping eBay sold listings...</span>
               <span className="text-[10px] text-[var(--text-muted)]">This may take up to a minute.</span>
             </div>
           )}
@@ -335,7 +332,7 @@ export const EbayPriceModal: React.FC<EbayPriceModalProps> = ({ query, productLa
 
         {/* Footer */}
         <div className="px-5 py-3 border-t border-[var(--border-color)] text-[10px] text-[var(--text-muted)] text-center">
-          Data from WatchCount / eBay
+          Data from eBay Sold Listings
         </div>
       </div>
     </div>
