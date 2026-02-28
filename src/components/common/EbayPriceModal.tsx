@@ -210,10 +210,9 @@ export const EbayPriceModal: React.FC<EbayPriceModalProps> = ({ query, productLa
   }, [events])
 
   return (
-    <div className="fixed inset-0 z-50 bg-[var(--bg-overlay)] backdrop-blur-sm overflow-y-auto" onClick={onClose}>
-      <div className="min-h-full flex items-center justify-center p-4">
+    <div className="fixed top-0 left-0 w-screen h-screen z-50 flex items-center justify-center bg-[var(--bg-overlay)] backdrop-blur-sm p-4" onClick={onClose}>
       <div
-        className="bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-xl w-full max-w-2xl overflow-hidden"
+        className="bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-xl w-full max-w-2xl overflow-hidden max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -335,7 +334,6 @@ export const EbayPriceModal: React.FC<EbayPriceModalProps> = ({ query, productLa
         <div className="px-5 py-3 border-t border-[var(--border-color)] text-[10px] text-[var(--text-muted)] text-center">
           Data from eBay Sold Listings
         </div>
-      </div>
       </div>
     </div>
   )
