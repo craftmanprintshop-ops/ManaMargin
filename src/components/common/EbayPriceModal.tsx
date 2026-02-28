@@ -59,7 +59,7 @@ const parseFunctionBody = async (response: Response): Promise<ScrapeErrorShape |
 
 const invokeEbaySoldScrape = async (query: string): Promise<ScrapeErrorShape | null> => {
   const { error: invokeError } = await supabase.functions.invoke('ebay-sold-scrape', {
-    body: { q: query, max_pages: 3 },
+    body: { q: query, max_pages: 1 },
   })
 
   if (!invokeError) return null
@@ -78,7 +78,7 @@ const invokeEbaySoldScrape = async (query: string): Promise<ScrapeErrorShape | n
 
   const url = new URL(`${functionsBaseUrl}/ebay-sold-scrape`)
   url.searchParams.set('q', query)
-  url.searchParams.set('max_pages', '3')
+  url.searchParams.set('max_pages', '1')
 
   const directResp = await fetch(url.toString(), {
     method: 'GET',

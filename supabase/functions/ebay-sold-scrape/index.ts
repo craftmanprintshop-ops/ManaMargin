@@ -16,13 +16,13 @@ Deno.serve(async (req: Request) => {
   }
 
   let q = '';
-  let maxPages = '3';
+  let maxPages = '1';
 
   if (req.method === 'POST') {
     try {
       const body = await req.json();
       q = body.q || '';
-      maxPages = String(body.max_pages || '3');
+      maxPages = String(body.max_pages || '1');
     } catch {
       return new Response(
         JSON.stringify({ error: 'Invalid JSON body' }),

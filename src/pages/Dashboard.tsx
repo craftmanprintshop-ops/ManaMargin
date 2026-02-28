@@ -157,7 +157,7 @@ const formatScrapeError = (err: ScrapeErrorShape | null): string => {
 
 const EbaySoldScraper: React.FC = () => {
   const [query, setQuery] = useState('')
-  const [maxPages, setMaxPages] = useState('3')
+  const [maxPages, setMaxPages] = useState('1')
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<ScrapeResult | null>(null)
 
