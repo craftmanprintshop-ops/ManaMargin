@@ -13,6 +13,7 @@ interface SoldEvent {
   price_usd: number
   title: string | null
   type: string | null
+  scraped_at?: string
 }
 
 interface DayBucket {
@@ -118,7 +119,7 @@ export const EbayPriceModal: React.FC<EbayPriceModalProps> = ({ query, productLa
   const fetchEvents = async (): Promise<SoldEvent[]> => {
     const { data, error: fetchErr } = await supabase
       .from('ebay_sold_events')
-      .select('sold_date_utc, price_usd, title, type')
+      .select('sold_date_utc, price_usd, title, type, scraped_at')
       .eq('query', query)
       .not('price_usd', 'is', null)
       .not('sold_date_utc', 'is', null)
@@ -137,12 +138,19 @@ export const EbayPriceModal: React.FC<EbayPriceModalProps> = ({ query, productLa
 
         if (cancelled) return
         if (rows.length > 0) {
+          // Check if data is fresh (scraped within last 3 hours)
+          const newest = rows.reduce((latest, r) => {
+            const t = r.scraped_at ? new Date(r.scraped_at).getTime() : 0
+            return t > latest ? t : latest
+          }, 0)
+          const isFresh = newest > 0 && (Date.now() - newest) < 3 * 60 * 60 * 1000
+
           setEvents(rows)
           setState('ready')
-          return
+          if (isFresh) return // Data is fresh, no need to re-scrape
         }
 
-        // No cached data — trigger scrape
+        // No cached data or data is stale — trigger scrape
         setState('scraping')
         if (cancelled) return
         const scrapeErr = await invokeEbaySoldScrape(query)
