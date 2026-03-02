@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react'
+import { createPortal } from 'react-dom'
 import { supabase } from '../../services/supabase'
 import { ComposedChart, Bar, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 
@@ -217,7 +218,7 @@ export const EbayPriceModal: React.FC<EbayPriceModalProps> = ({ query, productLa
     }
   }, [events])
 
-  return (
+  return createPortal(
     <div className="fixed top-0 left-0 w-screen h-screen z-50 flex items-center justify-center bg-[var(--bg-overlay)] backdrop-blur-sm p-4" onClick={onClose}>
       <div
         className="bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-xl w-full max-w-2xl overflow-hidden max-h-[90vh] overflow-y-auto"
@@ -343,6 +344,7 @@ export const EbayPriceModal: React.FC<EbayPriceModalProps> = ({ query, productLa
           Data from eBay Sold Listings
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
