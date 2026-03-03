@@ -11,6 +11,7 @@ import { useSupabaseQuery } from '../hooks/useSupabaseQuery'
 import { supabase } from '../services/supabase'
 import { LoadingSpinner } from '../components/common/LoadingSpinner'
 import { ErrorMessage } from '../components/common/ErrorMessage'
+import { CheckEbayButton } from '../components/common/CheckEbayButton'
 import { useTheme } from '../contexts/ThemeContext'
 
 interface ProductRow {
@@ -372,6 +373,10 @@ export const ProductsSimple: React.FC = () => {
                               <span className={`text-xs sm:text-sm ${isExpanded ? 'text-[var(--brand)] font-bold' : 'text-[var(--text-1)]'}`}>
                                 {product.product_type}
                               </span>
+                              <CheckEbayButton
+                                query={`mtg ${group.set_name} ${product.product_type}`}
+                                productLabel={`${group.set_name} ${product.product_type}`}
+                              />
                             </div>
                           </td>
                           <td className="px-2 sm:px-4 py-3 text-right text-[var(--text-2)] text-xs hidden sm:table-cell">
