@@ -79,37 +79,44 @@ interface RawListing {
 function extractListingsFromHtml(html: string): RawListing[] {
   const listings: RawListing[] = [];
 
-  // Split HTML by s-item boundaries (eBay uses both s-item and s-card)
-  // Try to find item blocks
-  const itemRegex = /<li[^>]*class="[^"]*s-item[^"]*"[^>]*>([\s\S]*?)<\/li>/gi;
-  let match;
+  // eBay's server-rendered HTML uses <li ... class="s-card s-card--horizontal">
+  // or class=s-card (unquoted). Split by finding each s-card <li> boundary.
+  const srpStart = html.indexOf('srp-results');
+  if (srpStart === -1) return listings;
+  const srpSection = html.substring(srpStart);
 
-  while ((match = itemRegex.exec(html)) !== null) {
-    const block = match[1];
+  // Find all s-card <li> tag positions
+  const liRegex = /<li\b[^>]*\bs-card\b[^>]*>/gi;
+  const positions: number[] = [];
+  let m;
+  while ((m = liRegex.exec(srpSection)) !== null) {
+    positions.push(m.index);
+  }
 
-    // Skip promos
+  for (let i = 0; i < positions.length; i++) {
+    const start = positions[i];
+    const end = i + 1 < positions.length ? positions[i + 1] : srpSection.indexOf('</ul>', start);
+    if (end <= start) continue;
+    const block = srpSection.substring(start, end);
+
+    // Skip promos/ads
     if (block.includes('srp-river-answer')) continue;
 
-    // Title
+    // Title — look for role="heading" or role=heading (may be unquoted)
     let title = '';
-    const titleMatch = block.match(/role="heading"[^>]*>(.*?)<\/(?:span|h3)/i) ||
-                        block.match(/class="s-item__title[^"]*"[^>]*>(.*?)<\/(?:span|h3|div)/i);
-    if (titleMatch) {
-      title = titleMatch[1].replace(/<[^>]+>/g, '').trim();
+    const headingMatch = block.match(/role=["']?heading["']?[^>]*>([^<]+)/i);
+    if (headingMatch) title = headingMatch[1].trim();
+    if (!title) {
+      const altMatch = block.match(/alt=["']([^"']+)["']/i);
+      if (altMatch) title = altMatch[1].trim();
     }
-    title = title.replace(/Opens in a new window or tab$/i, '').trim();
+    title = title.replace(/<[^>]+>/g, '').replace(/Opens in a new window or tab$/i, '').trim();
     if (!title || title === 'Shop on eBay' || title === 'Results matching fewer words' || title.length < 5) continue;
 
-    // Price
+    // Price — find $xxx.xx pattern
     let priceText = '';
-    const priceMatch = block.match(/class="s-item__price[^"]*"[^>]*>(.*?)<\/span/i);
-    if (priceMatch) {
-      priceText = priceMatch[1].replace(/<[^>]+>/g, '').trim();
-    }
-    if (!priceText) {
-      const dollarMatch = block.match(/>\$[\d,.]+</);
-      if (dollarMatch) priceText = dollarMatch[0].replace(/[<>]/g, '').trim();
-    }
+    const priceMatch = block.match(/>\$[\d,.]+</);
+    if (priceMatch) priceText = priceMatch[0].replace(/[<>]/g, '').trim();
 
     // Sold date
     let soldDateRaw = '';
@@ -118,20 +125,18 @@ function extractListingsFromHtml(html: string): RawListing[] {
 
     // Shipping
     let shippingText = '';
-    const shipMatch = block.match(/class="s-item__(?:shipping|freeXDays|logisticsCost)[^"]*"[^>]*>(.*?)<\/span/i);
-    if (shipMatch) shippingText = shipMatch[1].replace(/<[^>]+>/g, '').trim();
-    if (!shippingText) {
-      const freeMatch = block.match(/>Free (?:shipping|delivery)</i);
-      if (freeMatch) shippingText = 'Free shipping';
+    const freeShipMatch = block.match(/>Free [sd](?:hipping|elivery)/i);
+    if (freeShipMatch) {
+      shippingText = 'Free shipping';
+    } else {
+      const shipCostMatch = block.match(/>\+?\$[\d,.]+\s*(?:shipping|delivery)[^<]*/i);
+      if (shipCostMatch) shippingText = shipCostMatch[0].replace(/^>/, '').trim();
     }
 
     // Condition
     let condition: string | null = null;
-    const condMatch = block.match(/class="(?:SECONDARY_INFO|s-item__subtitle)"[^>]*>(.*?)<\/span/i);
-    if (condMatch) {
-      const ct = condMatch[1].replace(/<[^>]+>/g, '').trim();
-      if (/^(New|Used|Pre-Owned|Brand New|Open Box|Sealed)/i.test(ct)) condition = ct;
-    }
+    const condMatch = block.match(/>(?:New|Brand New|Pre-Owned|Used|Open Box|Sealed)\b[^<]*/i);
+    if (condMatch) condition = condMatch[0].replace(/^>/, '').trim();
 
     // Bids
     let bidsText = '';
@@ -143,14 +148,14 @@ function extractListingsFromHtml(html: string): RawListing[] {
     const qtyMatch = block.match(/>(\d+\+?\s*sold)</i);
     if (qtyMatch) qtyText = qtyMatch[1];
 
-    // URL
+    // URL — may be quoted or unquoted href
     let url: string | null = null;
-    const urlMatch = block.match(/href="(https?:\/\/www\.ebay\.com\/itm\/[^"]+)"/i);
-    if (urlMatch) url = urlMatch[1];
+    const urlMatch = block.match(/href=["']?(https?:\/\/(?:www\.)?ebay\.com\/itm\/[^\s"'>]+)/i);
+    if (urlMatch) url = urlMatch[1].replace(/&amp;/g, '&');
 
     // Image
     let imageUrl: string | null = null;
-    const imgMatch = block.match(/src="(https?:\/\/i\.ebayimg\.com[^"]+)"/i);
+    const imgMatch = block.match(/src=["']?(https?:\/\/i\.ebayimg\.com[^\s"'>]+)/i);
     if (imgMatch) imageUrl = imgMatch[1];
 
     listings.push({ title, priceText, soldDateRaw, shippingText, condition, bidsText, qtyText, url, imageUrl });
