@@ -231,6 +231,13 @@ const OffersPanel: React.FC<{ setName: string; productType: string }> = ({ setNa
   )
 }
 
+// --- eBay median price helper ---
+function computeMedian(prices: number[]): number {
+  const sorted = [...prices].sort((a, b) => a - b)
+  const mid = Math.floor(sorted.length / 2)
+  return sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid]
+}
+
 // --- Main Component ---
 export const ProductsSimple: React.FC = () => {
   const { data: groups, loading, error } = useSupabaseQuery(
@@ -240,6 +247,37 @@ export const ProductsSimple: React.FC = () => {
 
   const [expandedKey, setExpandedKey] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
+
+  // Fetch eBay median prices keyed by query string
+  const [ebayMedians, setEbayMedians] = useState<Map<string, number>>(new Map())
+
+  useEffect(() => {
+    const loadEbayMedians = async () => {
+      try {
+        const { data, error: err } = await supabase
+          .from('ebay_sold_events')
+          .select('query, price_usd')
+          .not('price_usd', 'is', null)
+
+        if (err || !data) return
+
+        const grouped = new Map<string, number[]>()
+        for (const row of data as { query: string; price_usd: number }[]) {
+          if (!grouped.has(row.query)) grouped.set(row.query, [])
+          grouped.get(row.query)!.push(row.price_usd)
+        }
+
+        const medians = new Map<string, number>()
+        for (const [query, prices] of grouped) {
+          medians.set(query, computeMedian(prices))
+        }
+        setEbayMedians(medians)
+      } catch {
+        // silent — eBay median is optional
+      }
+    }
+    loadEbayMedians()
+  }, [])
 
   const toggleExpand = (key: string) => {
     setExpandedKey(prev => prev === key ? null : key)
@@ -311,6 +349,7 @@ export const ProductsSimple: React.FC = () => {
                 <th className="px-2 sm:px-4 py-4 text-right hidden md:table-cell">Avg Price</th>
                 <th className="px-2 sm:px-4 py-4 text-right">Min</th>
                 <th className="px-2 sm:px-4 py-4 text-right text-[var(--color-value)]">Max</th>
+                <th className="px-2 sm:px-4 py-4 text-right hidden sm:table-cell">eBay 30d</th>
                 <th className="px-2 sm:px-4 py-4 text-right hidden lg:table-cell">Updated</th>
               </tr>
             </thead>
@@ -346,6 +385,7 @@ export const ProductsSimple: React.FC = () => {
                     <td className="px-2 sm:px-4 py-3 text-right font-mono font-bold text-[var(--color-value)] text-sm">
                       {group.total_max !== null ? `$${group.total_max.toFixed(2)}` : '—'}
                     </td>
+                    <td className="px-2 sm:px-4 py-3 hidden sm:table-cell"></td>
                     <td className="px-2 sm:px-4 py-3 hidden lg:table-cell"></td>
                   </tr>
 
@@ -390,6 +430,15 @@ export const ProductsSimple: React.FC = () => {
                           </td>
                           <td className="px-2 sm:px-4 py-3 text-right font-mono font-bold text-[var(--color-value)] text-xs">
                             {product.max_price !== null ? `$${product.max_price.toFixed(2)}` : '—'}
+                          </td>
+                          <td className="px-2 sm:px-4 py-3 text-right font-mono text-xs hidden sm:table-cell">
+                            {(() => {
+                              const ebayKey = `mtg ${group.set_name} ${product.product_type}`
+                              const median = ebayMedians.get(ebayKey)
+                              return median !== undefined
+                                ? <span className="text-[var(--brand)] font-bold">${median.toFixed(2)}</span>
+                                : <span className="text-[var(--text-2)]">—</span>
+                            })()}
                           </td>
                           <td className="px-2 sm:px-4 py-3 text-right text-[var(--text-2)] text-[10px] font-mono hidden lg:table-cell">
                             {product.latest_fetch
