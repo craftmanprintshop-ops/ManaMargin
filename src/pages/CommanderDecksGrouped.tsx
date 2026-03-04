@@ -654,7 +654,7 @@ export const CommanderDecksGrouped: React.FC<CommanderDecksGroupedProps> = ({ on
                               </span>
                               <span className="hidden sm:contents">
                                 <CheckEbayButton
-                                  query={`mtg ${deck.set_name || ''} ${deck.deck_name}`}
+                                  query={`"${deck.set_name || ''} ${deck.deck_name}"`}
                                   productLabel={`${deck.set_name || deck.code.toUpperCase()} ${deck.deck_name}`}
                                 />
                               </span>

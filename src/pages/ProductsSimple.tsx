@@ -414,7 +414,7 @@ export const ProductsSimple: React.FC = () => {
                                 {product.product_type}
                               </span>
                               <CheckEbayButton
-                                query={`mtg ${group.set_name} ${product.product_type}`}
+                                query={`"${group.set_name} ${product.product_type}"`}
                                 productLabel={`${group.set_name} ${product.product_type}`}
                               />
                             </div>
@@ -433,7 +433,7 @@ export const ProductsSimple: React.FC = () => {
                           </td>
                           <td className="px-2 sm:px-4 py-3 text-right font-mono text-xs hidden sm:table-cell">
                             {(() => {
-                              const ebayKey = `mtg ${group.set_name} ${product.product_type}`
+                              const ebayKey = `"${group.set_name} ${product.product_type}"`
                               const median = ebayMedians.get(ebayKey)
                               return median !== undefined
                                 ? <span className="text-[var(--brand)] font-bold">${median.toFixed(2)}</span>

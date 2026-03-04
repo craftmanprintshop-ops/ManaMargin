@@ -478,7 +478,7 @@ export const Dashboard: React.FC = () => {
                       <div className="text-[10px] text-[var(--text-2)] leading-tight line-clamp-1">{deal.product_type}</div>
                     </div>
                     <CheckEbayButton
-                      query={`mtg ${deal.set_name} ${deal.product_type}`}
+                      query={`"${deal.set_name} ${deal.product_type}"`}
                       productLabel={`${deal.set_name} ${deal.product_type}`}
                     />
                   </div>
@@ -544,7 +544,7 @@ export const Dashboard: React.FC = () => {
                       {deal.deck_name}
                     </span>
                     <CheckEbayButton
-                      query={`mtg ${deal.set_name || ''} ${deal.deck_name}`}
+                      query={`"${deal.set_name || ''} ${deal.deck_name}"`}
                       productLabel={`${deal.set_name || deal.code.toUpperCase()} ${deal.deck_name}`}
                     />
                   </div>

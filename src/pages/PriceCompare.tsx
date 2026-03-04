@@ -751,7 +751,7 @@ export const PriceCompare: React.FC = () => {
                               </div>
                             </div>
                             <CheckEbayButton
-                              query={`mtg ${offer.set_name || ''} ${offer.product_type || offer.title}`}
+                              query={`"${offer.set_name || ''} ${offer.product_type || offer.title}"`}
                               productLabel={`${offer.set_name || ''} ${offer.product_type || offer.title}`}
                               className="shrink-0"
                             />
@@ -818,7 +818,7 @@ export const PriceCompare: React.FC = () => {
                         <div className="text-[10px] text-[var(--text-2)] truncate">{offer.product_type}</div>
                       </div>
                       <CheckEbayButton
-                        query={`mtg ${offer.set_name || ''} ${offer.product_type || offer.title}`}
+                        query={`"${offer.set_name || ''} ${offer.product_type || offer.title}"`}
                         productLabel={`${offer.set_name || ''} ${offer.product_type || offer.title}`}
                         className="shrink-0"
                       />
@@ -921,7 +921,7 @@ export const PriceCompare: React.FC = () => {
                               {group.set_name}
                             </h3>
                             <CheckEbayButton
-                              query={`mtg ${group.set_name} ${group.product_type}`}
+                              query={`"${group.set_name} ${group.product_type}"`}
                               productLabel={`${group.set_name} ${group.product_type}`}
                               className="shrink-0"
                             />

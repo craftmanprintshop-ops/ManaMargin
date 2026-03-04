@@ -337,7 +337,7 @@ export const EVCalculations: React.FC = () => {
                       <div className="flex items-center gap-1">
                         <span className="truncate" title={row.botbox_product_name}>{row.product_type}</span>
                         <CheckEbayButton
-                          query={`mtg ${row.set_name} ${row.product_type}`}
+                          query={`"${row.set_name} ${row.product_type}"`}
                           productLabel={`${row.set_name} ${row.product_type}`}
                         />
                       </div>
@@ -406,7 +406,7 @@ export const EVCalculations: React.FC = () => {
                   <div className="text-[var(--text-2)] text-xs">{row.product_type}</div>
                 </div>
                 <CheckEbayButton
-                  query={`mtg ${row.set_name} ${row.product_type}`}
+                  query={`"${row.set_name} ${row.product_type}"`}
                   productLabel={`${row.set_name} ${row.product_type}`}
                 />
               </div>
