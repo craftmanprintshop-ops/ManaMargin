@@ -107,7 +107,7 @@ export function useInventory(userId?: string | null) {
           count: item.count,
           fee_percent: item.feePercent,
           shipping_cost: item.shippingCost,
-        })
+        } as any)
         .select()
         .single()
       if (!error && data) {
@@ -151,7 +151,7 @@ export function useInventory(userId?: string | null) {
         if (updates.feePercent !== undefined) dbUpdates.fee_percent = updates.feePercent
         if (updates.shippingCost !== undefined) dbUpdates.shipping_cost = updates.shippingCost
         if (Object.keys(dbUpdates).length > 0) {
-          await supabase.from('user_inventory').update(dbUpdates).eq('id', id)
+          await (supabase.from('user_inventory') as any).update(dbUpdates).eq('id', id)
         }
         delete debounceRef.current[id]
       }, 500)
@@ -194,7 +194,7 @@ export function useInventory(userId?: string | null) {
 
     const { error } = await supabase
       .from('user_inventory')
-      .upsert(rows, { onConflict: 'user_id,set_name,product_type' })
+      .upsert(rows as any, { onConflict: 'user_id,set_name,product_type' })
 
     if (!error) {
       localStorage.removeItem(STORAGE_KEY)
