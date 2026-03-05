@@ -161,6 +161,38 @@ export interface Database {
           release_date?: string | null
         }
       }
+      user_inventory: {
+        Row: {
+          id: string
+          user_id: string
+          set_name: string
+          product_type: string
+          title: string
+          cost_paid: number
+          count: number
+          fee_percent: number
+          shipping_cost: number
+          added_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          set_name: string
+          product_type: string
+          title: string
+          cost_paid?: number
+          count?: number
+          fee_percent?: number
+          shipping_cost?: number
+        }
+        Update: {
+          cost_paid?: number
+          count?: number
+          fee_percent?: number
+          shipping_cost?: number
+        }
+      }
       commander_deck_cards: {
         Row: {
           code: string

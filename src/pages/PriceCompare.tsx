@@ -9,6 +9,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { supabase } from '../services/supabase'
 import { useInventory } from '../hooks/useInventory'
+import { useAuth } from '../contexts/AuthContext'
 import { useTheme } from '../contexts/ThemeContext'
 import { CheckEbayButton } from '../components/common/CheckEbayButton'
 
@@ -82,7 +83,8 @@ export const PriceCompare: React.FC = () => {
   const { theme } = useTheme()
   const placeholder = theme === 'dark' ? '/Card_Product_Placeholder_Dark.png' : '/Card_Product_Placeholder.png'
   // Inventory
-  const { isInInventory, toggleItem } = useInventory()
+  const { user } = useAuth()
+  const { isInInventory, toggleItem } = useInventory(user?.id)
 
   // Dropdown options
   const [availableSets, setAvailableSets] = useState<SetOption[]>([])

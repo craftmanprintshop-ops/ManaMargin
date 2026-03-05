@@ -9,7 +9,8 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { supabase } from '../services/supabase'
 import type { InventoryItem } from '../hooks/useInventory'
-import { useInventory } from '../hooks/useInventory'
+import { useInventory, hasLocalInventory } from '../hooks/useInventory'
+import { useAuth } from '../contexts/AuthContext'
 
 interface SearchResult {
   set_name: string
@@ -27,7 +28,24 @@ interface MtgstocksRef {
 }
 
 export const Inventory: React.FC = () => {
-  const { items, addItem, removeItem, updateItem } = useInventory()
+  const { user, loading: authLoading, signInWithEmail } = useAuth()
+  const [loginEmail, setLoginEmail] = useState('')
+  const [loginStatus, setLoginStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
+  const [loginError, setLoginError] = useState('')
+  const { items, addItem, removeItem, updateItem, migrateFromLocalStorage, loading } = useInventory(user?.id)
+
+  // Migration prompt for localStorage -> Supabase
+  const [showMigrate, setShowMigrate] = useState(false)
+  useEffect(() => {
+    if (user && !loading && hasLocalInventory()) {
+      setShowMigrate(true)
+    }
+  }, [user, loading])
+
+  const handleMigrate = async () => {
+    await migrateFromLocalStorage()
+    setShowMigrate(false)
+  }
 
   // Search state
   const [searchQuery, setSearchQuery] = useState('')
@@ -170,6 +188,83 @@ export const Inventory: React.FC = () => {
 
   return (
     <div className="w-full animate-fade-in space-y-6">
+      {/* Auth banner — shown when not logged in */}
+      {!user && !authLoading && (
+        <div className="bg-[var(--bg-surface)] p-4 rounded-xl border border-[var(--border-color)]">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div>
+              <p className="text-sm text-[var(--text-1)] font-medium">Sign in to save your inventory across devices</p>
+              <p className="text-xs text-[var(--text-2)]">Currently using local browser storage</p>
+            </div>
+            {loginStatus === 'sent' ? (
+              <div className="text-right shrink-0">
+                <p className="text-sm text-[var(--color-positive)] font-medium">Check your email!</p>
+                <p className="text-[10px] text-[var(--text-2)]">Click the link to sign in</p>
+              </div>
+            ) : (
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault()
+                  if (!loginEmail.trim()) return
+                  setLoginStatus('sending')
+                  setLoginError('')
+                  const { error } = await signInWithEmail(loginEmail.trim())
+                  if (error) {
+                    setLoginError(error)
+                    setLoginStatus('error')
+                  } else {
+                    setLoginStatus('sent')
+                  }
+                }}
+                className="flex items-center gap-2 shrink-0"
+              >
+                <input
+                  type="email"
+                  value={loginEmail}
+                  onChange={(e) => setLoginEmail(e.target.value)}
+                  placeholder="Email address"
+                  className="bg-[var(--bg-2)] border border-[var(--border-color)] rounded-lg px-3 py-2 text-sm text-[var(--text-1)] outline-none focus:border-[var(--brand)] placeholder:text-[var(--text-2)]/50 w-48"
+                  required
+                />
+                <button
+                  type="submit"
+                  disabled={loginStatus === 'sending'}
+                  className="px-4 py-2 bg-[var(--brand)] hover:bg-[var(--primary-700)] text-white text-sm font-bold rounded-lg transition-colors whitespace-nowrap disabled:opacity-50"
+                >
+                  {loginStatus === 'sending' ? 'Sending...' : 'Sign In'}
+                </button>
+              </form>
+            )}
+          </div>
+          {loginStatus === 'error' && (
+            <p className="text-xs text-[var(--color-negative)] mt-2">{loginError}</p>
+          )}
+        </div>
+      )}
+
+      {/* Migration prompt — import localStorage data to account */}
+      {showMigrate && (
+        <div className="bg-blue-500/10 border border-blue-500/30 p-4 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <p className="text-sm text-[var(--text-1)]">
+            You have inventory data saved locally. Import it to your account?
+          </p>
+          <div className="flex gap-2 shrink-0">
+            <button
+              onClick={handleMigrate}
+              className="px-4 py-2 bg-[var(--brand)] hover:bg-[var(--primary-700)] text-white text-sm font-bold rounded-lg transition-colors"
+            >
+              Import
+            </button>
+            <button
+              onClick={() => setShowMigrate(false)}
+              className="px-4 py-2 text-sm text-[var(--text-2)] hover:text-[var(--text-1)] transition-colors"
+            >
+              Skip
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="bg-[var(--bg-surface)] backdrop-blur-xl p-6 rounded-xl border border-[var(--border-color)] shadow-2xl">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">

@@ -9,6 +9,7 @@
 import React, { useEffect, useState, useMemo } from 'react'
 import { supabase, queryWithRetry } from '../services/supabase'
 import { useInventory } from '../hooks/useInventory'
+import { useAuth } from '../contexts/AuthContext'
 import { CheckEbayButton } from '../components/common/CheckEbayButton'
 
 interface CommanderDeckValue {
@@ -227,7 +228,8 @@ interface CommanderDecksGroupedProps {
 type DeckFilter = 'all' | 'deals'
 
 export const CommanderDecksGrouped: React.FC<CommanderDecksGroupedProps> = ({ onDeckSelect }) => {
-  const { isInInventory, toggleItem } = useInventory()
+  const { user } = useAuth()
+  const { isInInventory, toggleItem } = useInventory(user?.id)
   const [decks, setDecks] = useState<CommanderDeckValue[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)

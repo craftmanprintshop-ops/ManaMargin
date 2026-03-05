@@ -9,6 +9,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { ROUTES } from '../../utils/constants'
 import { useTheme } from '../../contexts/ThemeContext'
+import { useAuth } from '../../contexts/AuthContext'
 
 /**
  * Application header with navigation
@@ -16,7 +17,11 @@ import { useTheme } from '../../contexts/ThemeContext'
 export const Header: React.FC = () => {
   const location = useLocation()
   const { theme, toggleTheme } = useTheme()
+  const { user, signInWithEmail, signOut } = useAuth()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [loginEmail, setLoginEmail] = useState('')
+  const [loginStatus, setLoginStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
+  const [loginError, setLoginError] = useState('')
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const settingsRef = useRef<HTMLDivElement>(null)
 
@@ -171,6 +176,64 @@ export const Header: React.FC = () => {
                           />
                         </button>
                       </div>
+                    </div>
+
+                    {/* Auth Section */}
+                    <div className="p-3 border-t border-[var(--border-color-2)]">
+                      {user ? (
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-[var(--text-1)] truncate min-w-0">
+                            {user.email}
+                          </span>
+                          <button
+                            onClick={signOut}
+                            className="text-xs text-[var(--text-2)] hover:text-[var(--color-negative)] ml-2 shrink-0 transition-colors"
+                          >
+                            Sign Out
+                          </button>
+                        </div>
+                      ) : loginStatus === 'sent' ? (
+                        <div className="text-center py-1">
+                          <p className="text-sm text-[var(--color-positive)] font-medium">Check your email!</p>
+                          <p className="text-[10px] text-[var(--text-2)] mt-1">Click the link to sign in</p>
+                        </div>
+                      ) : (
+                        <form
+                          onSubmit={async (e) => {
+                            e.preventDefault()
+                            if (!loginEmail.trim()) return
+                            setLoginStatus('sending')
+                            setLoginError('')
+                            const { error } = await signInWithEmail(loginEmail.trim())
+                            if (error) {
+                              setLoginError(error)
+                              setLoginStatus('error')
+                            } else {
+                              setLoginStatus('sent')
+                            }
+                          }}
+                          className="space-y-2"
+                        >
+                          <input
+                            type="email"
+                            value={loginEmail}
+                            onChange={(e) => setLoginEmail(e.target.value)}
+                            placeholder="Email address"
+                            className="w-full bg-[var(--bg-2)] border border-[var(--border-color)] rounded-lg px-3 py-2 text-sm text-[var(--text-1)] outline-none focus:border-[var(--brand)] placeholder:text-[var(--text-2)]/50"
+                            required
+                          />
+                          {loginStatus === 'error' && (
+                            <p className="text-[10px] text-[var(--color-negative)]">{loginError}</p>
+                          )}
+                          <button
+                            type="submit"
+                            disabled={loginStatus === 'sending'}
+                            className="w-full px-3 py-2 bg-[var(--brand)] hover:bg-[var(--primary-700)] text-white text-sm font-bold rounded-lg transition-colors disabled:opacity-50"
+                          >
+                            {loginStatus === 'sending' ? 'Sending...' : 'Sign in with Email'}
+                          </button>
+                        </form>
+                      )}
                     </div>
                   </div>
                 )}
