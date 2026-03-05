@@ -118,10 +118,16 @@ function extractListingsFromHtml(html: string): RawListing[] {
     const priceMatch = block.match(/>\$[\d,.]+</);
     if (priceMatch) priceText = priceMatch[0].replace(/[<>]/g, '').trim();
 
-    // Sold date
+    // Sold date — try multiple patterns since eBay splits across tags sometimes
     let soldDateRaw = '';
     const soldMatch = block.match(/>Sold\s+([^<]+)</i);
-    if (soldMatch) soldDateRaw = 'Sold ' + soldMatch[1].trim();
+    if (soldMatch) {
+      soldDateRaw = 'Sold ' + soldMatch[1].trim();
+    } else {
+      // Fallback: "Sold" in one tag, date in next tag
+      const soldSplit = block.match(/>Sold<[^>]*>\s*([A-Z][a-z]{2}\s+\d{1,2},?\s+\d{4})/i);
+      if (soldSplit) soldDateRaw = 'Sold ' + soldSplit[1].trim();
+    }
 
     // Shipping
     let shippingText = '';
@@ -224,6 +230,8 @@ Deno.serve(async (req: Request) => {
         LH_Complete: '1',
         rt: 'nc',
         LH_PrefLoc: '1',
+        _sop: '13',   // Sort by end date: recent first
+        _ipg: '240',  // Max items per page
       });
       if (pageNum > 1) params.set('_pgn', String(pageNum));
 
