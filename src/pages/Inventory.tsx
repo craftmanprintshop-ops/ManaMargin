@@ -56,6 +56,9 @@ export const Inventory: React.FC = () => {
   // MTGStocks prices keyed by "setName|productType"
   const [mtgPrices, setMtgPrices] = useState<Map<string, number>>(new Map())
 
+  // eBay median prices keyed by query string (e.g. '"Set Name Product Type"')
+  const [ebayMedians, setEbayMedians] = useState<Map<string, number>>(new Map())
+
   // Search for sealed products
   const handleSearch = useCallback(async (query: string) => {
     setSearchQuery(query)
@@ -141,6 +144,39 @@ export const Inventory: React.FC = () => {
 
     fetchPrices()
   }, [items.length])
+
+  // Fetch eBay median prices for inventory items
+  useEffect(() => {
+    if (items.length === 0) return
+    const loadEbayMedians = async () => {
+      try {
+        const { data, error: err } = await supabase
+          .from('ebay_sold_events')
+          .select('query, price_usd')
+          .not('price_usd', 'is', null)
+        if (err || !data) return
+        const grouped = new Map<string, number[]>()
+        for (const row of data as { query: string; price_usd: number }[]) {
+          if (!grouped.has(row.query)) grouped.set(row.query, [])
+          grouped.get(row.query)!.push(row.price_usd)
+        }
+        const medians = new Map<string, number>()
+        for (const [query, prices] of grouped) {
+          const sorted = [...prices].sort((a, b) => a - b)
+          const mid = Math.floor(sorted.length / 2)
+          medians.set(query, sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid])
+        }
+        setEbayMedians(medians)
+      } catch { /* eBay median is optional */ }
+    }
+    loadEbayMedians()
+  }, [items.length])
+
+  // Get eBay median price for an inventory item
+  const getEbayMedian = useCallback((item: InventoryItem): number | null => {
+    const key = `"${item.setName} ${item.productType}"`
+    return ebayMedians.get(key) ?? null
+  }, [ebayMedians])
 
   // Get MTGStocks price for an inventory item
   const getMtgPrice = useCallback((item: InventoryItem): number | null => {
@@ -374,17 +410,18 @@ export const Inventory: React.FC = () => {
           <div className="overflow-x-auto">
             <table className="w-full text-sm text-left border-collapse table-fixed">
               <colgroup>
-                <col className="w-[18%]" />
+                <col className="w-[16%]" />
+                <col className="w-[7%]" />
+                <col className="w-[5%]" />
+                <col className="w-[6%]" />
+                <col className="w-[6%]" />
                 <col className="w-[8%]" />
-                <col className="w-[6%]" />
-                <col className="w-[7%]" />
-                <col className="w-[7%]" />
+                <col className="w-[8%]" />
                 <col className="w-[9%]" />
-                <col className="w-[10%]" />
-                <col className="w-[10%]" />
                 <col className="w-[9%]" />
-                <col className="w-[10%]" />
-                <col className="w-[6%]" />
+                <col className="w-[8%]" />
+                <col className="w-[9%]" />
+                <col className="w-[5%]" />
               </colgroup>
               <thead className="bg-[var(--bg-2)]/80 text-[var(--text-2)] font-bold uppercase text-[10px] tracking-widest border-b border-[var(--border-color-2)]">
                 <tr>
@@ -393,6 +430,7 @@ export const Inventory: React.FC = () => {
                   <th className="px-3 py-4 text-center">Qty</th>
                   <th className="px-3 py-4 text-right">Fee %</th>
                   <th className="px-3 py-4 text-right">Ship $</th>
+                  <th className="px-3 py-4 text-right">eBay Avg</th>
                   <th className="px-3 py-4 text-right">Avg Value</th>
                   <th className="px-3 py-4 text-right">Cost to Sell</th>
                   <th className="px-3 py-4 text-right">Actual Value</th>
@@ -459,6 +497,16 @@ export const Inventory: React.FC = () => {
                           className="w-16 bg-[var(--bg-2)] border border-[var(--border-color)] rounded px-2 py-1 text-xs text-right font-mono text-[var(--text-2)] outline-none focus:border-[var(--brand)]"
                         />
                       </td>
+
+                      {/* eBay Avg */}
+                      {(() => {
+                        const ebayPrice = getEbayMedian(item)
+                        return (
+                          <td className="px-3 py-3 text-right font-mono text-xs text-[var(--brand)]">
+                            {ebayPrice !== null ? `$${ebayPrice.toFixed(2)}` : '\u2014'}
+                          </td>
+                        )
+                      })()}
 
                       {/* Avg Value */}
                       <td className="px-3 py-3 text-right font-mono text-xs text-[var(--color-ref)]">
