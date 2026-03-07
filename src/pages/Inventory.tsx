@@ -223,7 +223,7 @@ export const Inventory: React.FC = () => {
   }
 
   return (
-    <div className="w-full animate-fade-in space-y-6">
+    <div className="animate-fade-in space-y-6">
       {/* Auth banner — shown when not logged in */}
       {!user && !authLoading && (
         <div className="bg-[var(--bg-surface)] p-4 rounded-xl border border-[var(--border-color)]">
