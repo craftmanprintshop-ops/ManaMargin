@@ -39,6 +39,12 @@
     # Don't cache the HTML file
     Cache-Control = "public, max-age=0, must-revalidate"
 
+[[headers]]
+  for = "/jobs.html"
+  [headers.values]
+    # Jobs dashboard: always fetch fresh
+    Cache-Control = "public, max-age=0, must-revalidate"
+
 # Environment variables (set these in Netlify dashboard)
 # VITE_SUPABASE_URL - Your Supabase project URL
 # VITE_SUPABASE_ANON_KEY - Your Supabase anonymous/public key

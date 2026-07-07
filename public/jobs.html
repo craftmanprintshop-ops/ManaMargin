@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ManaMargin — Jobs</title>
+<style>
+  :root {
+    --page: #f9f9f7;
+    --surface: #fcfcfb;
+    --ink-1: #0b0b0b;
+    --ink-2: #52514e;
+    --ink-muted: #898781;
+    --hairline: #e1e0d9;
+    --ring: rgba(11,11,11,0.10);
+    --accent: #2a78d6;
+    --good: #0ca30c;
+    --good-text: #006300;
+    --critical: #d03b3b;
+    --warning: #fab219;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --page: #0d0d0d;
+      --surface: #1a1a19;
+      --ink-1: #ffffff;
+      --ink-2: #c3c2b7;
+      --ink-muted: #898781;
+      --hairline: #2c2c2a;
+      --ring: rgba(255,255,255,0.10);
+      --accent: #3987e5;
+      --good: #0ca30c;
+      --good-text: #0ca30c;
+      --critical: #d03b3b;
+      --warning: #fab219;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--page);
+    color: var(--ink-1);
+    font: 15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 24px 16px 64px; }
+  header { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+  h1 { font-size: 20px; margin: 0; }
+  .sub { color: var(--ink-2); font-size: 13px; }
+  .spacer { flex: 1; }
+  button {
+    font: inherit; font-size: 13px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--ring);
+    background: var(--surface);
+    color: var(--ink-1);
+    cursor: pointer;
+  }
+  button:hover { border-color: var(--accent); }
+  button:disabled { opacity: .45; cursor: default; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(245px, 1fr));
+    gap: 12px;
+  }
+  .tile {
+    background: var(--surface);
+    border: 1px solid var(--ring);
+    border-radius: 12px;
+    padding: 14px 16px;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .tile h2 { font-size: 14px; margin: 0; font-weight: 600; }
+  .status { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 600; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+  .dot.running { background: var(--accent); animation: pulse 1.2s ease-in-out infinite; }
+  .dot.success { background: var(--good); }
+  .dot.failure { background: var(--critical); }
+  .dot.neutral { background: var(--ink-muted); }
+  .dot.queued  { background: var(--warning); }
+  @keyframes pulse { 50% { opacity: .35; } }
+  .meta { color: var(--ink-2); font-size: 13px; }
+  .meta a { color: var(--accent); text-decoration: none; }
+  .meta a:hover { text-decoration: underline; }
+  .actions { display: flex; gap: 8px; margin-top: 2px; }
+  .banner {
+    border: 1px solid var(--ring); border-left: 3px solid var(--warning);
+    background: var(--surface); border-radius: 8px;
+    padding: 10px 14px; margin: 0 0 16px; font-size: 13px; color: var(--ink-2);
+    display: none;
+  }
+  .banner.error { border-left-color: var(--critical); }
+  table { width: 100%; border-collapse: collapse; margin-top: 28px; font-size: 13.5px; }
+  caption { text-align: left; font-size: 15px; font-weight: 600; padding-bottom: 8px; color: var(--ink-1); }
+  th { text-align: left; color: var(--ink-muted); font-weight: 500; font-size: 12px; padding: 6px 10px; border-bottom: 1px solid var(--hairline); }
+  td { padding: 8px 10px; border-bottom: 1px solid var(--hairline); color: var(--ink-2); }
+  td:first-child { color: var(--ink-1); }
+  td.num { font-variant-numeric: tabular-nums; }
+  .cellstatus { display: inline-flex; align-items: center; gap: 6px; }
+  .tablewrap { overflow-x: auto; }
+  footer { margin-top: 24px; color: var(--ink-muted); font-size: 12.5px; }
+  footer a { color: var(--accent); }
+  dialog {
+    background: var(--surface); color: var(--ink-1);
+    border: 1px solid var(--ring); border-radius: 12px; padding: 20px;
+    max-width: 460px; width: calc(100vw - 40px);
+  }
+  dialog::backdrop { background: rgba(0,0,0,.45); }
+  dialog input {
+    width: 100%; font: inherit; padding: 8px 10px; margin: 10px 0 14px;
+    border-radius: 8px; border: 1px solid var(--hairline);
+    background: var(--page); color: var(--ink-1);
+  }
+  dialog p { color: var(--ink-2); font-size: 13.5px; margin: 6px 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>ManaMargin jobs</h1>
+      <div class="sub" id="updated">loading…</div>
+    </div>
+    <div class="spacer"></div>
+    <button id="refreshBtn" title="Refresh now">↻ Refresh</button>
+    <button id="tokenBtn"></button>
+  </header>
+
+  <div class="banner" id="banner"></div>
+  <div class="tiles" id="tiles"></div>
+
+  <div class="tablewrap">
+    <table id="runsTable" hidden>
+      <caption>Recent runs</caption>
+      <thead>
+        <tr><th>Workflow</th><th>Status</th><th>Started</th><th>Duration</th><th></th></tr>
+      </thead>
+      <tbody id="runsBody"></tbody>
+    </table>
+  </div>
+
+  <footer>
+    Reads public run data from the GitHub API and refreshes every 60&nbsp;s.
+    A token (stored only in this browser) is needed for the Run&nbsp;now / Cancel buttons.
+    <a href="https://github.com/craftmanprintshop-ops/ManaMargin/actions" target="_blank" rel="noopener">Open in GitHub Actions →</a>
+  </footer>
+</div>
+
+<dialog id="tokenDialog">
+  <h2 style="margin:0 0 4px;font-size:16px;">GitHub token</h2>
+  <p>Needed only for the <b>Run now</b> and <b>Cancel</b> buttons. Create a fine-grained token at
+  github.com → Settings → Developer settings, scoped to the <b>ManaMargin</b> repo with
+  <b>Actions: read &amp; write</b>. It is stored in this browser's localStorage and sent only to api.github.com.</p>
+  <input id="tokenInput" type="password" placeholder="github_pat_… or ghp_…" autocomplete="off">
+  <div style="display:flex;gap:8px;justify-content:flex-end;">
+    <button id="tokenClear">Remove token</button>
+    <button id="tokenCancel">Cancel</button>
+    <button class="primary" id="tokenSave">Save</button>
+  </div>
+</dialog>
+
+<script>
+const OWNER = 'craftmanprintshop-ops';
+const REPO = 'ManaMargin';
+const API = `https://api.github.com/repos/${OWNER}/${REPO}`;
+const LS_KEY = 'mm_gh_token';
+const REFRESH_MS = 60_000;
+
+const $ = (id) => document.getElementById(id);
+let workflows = [];
+let runs = [];
+let timer = null;
+
+const token = () => localStorage.getItem(LS_KEY) || '';
+
+function headers() {
+  const h = { Accept: 'application/vnd.github+json' };
+  if (token()) h.Authorization = `Bearer ${token()}`;
+  return h;
+}
+
+function relTime(iso) {
+  if (!iso) return '—';
+  const s = (Date.now() - new Date(iso)) / 1000;
+  if (s < 60) return `${Math.floor(s)}s ago`;
+  if (s < 3600) return `${Math.floor(s / 60)}m ago`;
+  if (s < 86400) return `${Math.floor(s / 3600)}h ${Math.floor((s % 3600) / 60)}m ago`;
+  return `${Math.floor(s / 86400)}d ago`;
+}
+
+function duration(run) {
+  const start = new Date(run.run_started_at);
+  const end = run.status === 'completed' ? new Date(run.updated_at) : new Date();
+  const s = Math.max(0, (end - start) / 1000);
+  if (s < 60) return `${Math.floor(s)}s`;
+  if (s < 3600) return `${Math.floor(s / 60)}m ${Math.floor(s % 60)}s`;
+  return `${Math.floor(s / 3600)}h ${Math.floor((s % 3600) / 60)}m`;
+}
+
+function statusInfo(run) {
+  if (!run) return { cls: 'neutral', label: 'No runs yet', icon: '–' };
+  if (run.status === 'queued' || run.status === 'waiting' || run.status === 'pending')
+    return { cls: 'queued', label: 'Queued', icon: '…' };
+  if (run.status === 'in_progress') return { cls: 'running', label: 'Running', icon: '▶' };
+  switch (run.conclusion) {
+    case 'success': return { cls: 'success', label: 'Success', icon: '✓' };
+    case 'failure': case 'startup_failure': case 'timed_out':
+      return { cls: 'failure', label: run.conclusion === 'timed_out' ? 'Timed out' : 'Failed', icon: '✕' };
+    case 'cancelled': return { cls: 'neutral', label: 'Cancelled', icon: '⊘' };
+    default: return { cls: 'neutral', label: run.conclusion || run.status, icon: '·' };
+  }
+}
+
+function banner(msg, isError) {
+  const b = $('banner');
+  if (!msg) { b.style.display = 'none'; return; }
+  b.textContent = msg;
+  b.className = 'banner' + (isError ? ' error' : '');
+  b.style.display = 'block';
+}
+
+async function gh(path, opts = {}) {
+  const res = await fetch(`${API}${path}`, { headers: headers(), ...opts });
+  if (res.status === 403 && res.headers.get('x-ratelimit-remaining') === '0') {
+    const reset = new Date(Number(res.headers.get('x-ratelimit-reset')) * 1000);
+    throw new Error(`GitHub API rate limit hit — resets ${reset.toLocaleTimeString()}. Add a token to raise the limit.`);
+  }
+  if (!res.ok && res.status !== 204) throw new Error(`GitHub API ${res.status} on ${path}`);
+  return res.status === 204 ? null : res.json();
+}
+
+async function load() {
+  try {
+    if (workflows.length === 0) {
+      const wf = await gh('/actions/workflows?per_page=50');
+      workflows = wf.workflows.filter((w) => w.state === 'active');
+    }
+    const data = await gh('/actions/runs?per_page=100');
+    runs = data.workflow_runs;
+    banner('');
+    render();
+    $('updated').textContent = `updated ${new Date().toLocaleTimeString()} · auto-refreshes every 60s`;
+  } catch (err) {
+    banner(err.message, true);
+  }
+}
+
+function latestRunFor(wfId) {
+  return runs.find((r) => r.workflow_id === wfId) || null;
+}
+
+function render() {
+  const tiles = $('tiles');
+  tiles.innerHTML = '';
+  for (const wf of workflows) {
+    const run = latestRunFor(wf.id);
+    const st = statusInfo(run);
+    const tile = document.createElement('div');
+    tile.className = 'tile';
+    tile.innerHTML = `
+      <h2></h2>
+      <div class="status"><span class="dot ${st.cls}"></span><span>${st.icon} ${st.label}</span></div>
+      <div class="meta">
+        ${run ? `started ${relTime(run.run_started_at)} · took ${duration(run)}` : 'never run'}
+        ${run ? ` · <a href="${run.html_url}" target="_blank" rel="noopener">log</a>` : ''}
+      </div>
+      <div class="actions">
+        <button class="runBtn" ${token() ? '' : 'disabled title="Add a token to enable"'}>Run now</button>
+        ${run && run.status !== 'completed' ? `<button class="cancelBtn" ${token() ? '' : 'disabled'}>Cancel</button>` : ''}
+      </div>`;
+    tile.querySelector('h2').textContent = wf.name;
+    tile.querySelector('.runBtn').onclick = () => dispatch(wf);
+    const c = tile.querySelector('.cancelBtn');
+    if (c) c.onclick = () => cancelRun(run, wf);
+    tiles.appendChild(tile);
+  }
+
+  const body = $('runsBody');
+  body.innerHTML = '';
+  for (const run of runs.slice(0, 20)) {
+    const st = statusInfo(run);
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td></td>
+      <td><span class="cellstatus"><span class="dot ${st.cls}"></span>${st.icon} ${st.label}</span></td>
+      <td class="num">${relTime(run.run_started_at)}</td>
+      <td class="num">${duration(run)}</td>
+      <td><a href="${run.html_url}" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none;">log →</a></td>`;
+    tr.children[0].textContent = run.name;
+    body.appendChild(tr);
+  }
+  $('runsTable').hidden = runs.length === 0;
+}
+
+async function dispatch(wf) {
+  if (!confirm(`Start "${wf.name}" now?`)) return;
+  try {
+    await gh(`/actions/workflows/${wf.id}/dispatches`, {
+      method: 'POST',
+      body: JSON.stringify({ ref: 'main' }),
+    });
+    banner(`Triggered "${wf.name}" — it appears in the list within ~10s.`);
+    setTimeout(load, 8000);
+  } catch (err) {
+    banner(`Could not trigger: ${err.message}`, true);
+  }
+}
+
+async function cancelRun(run, wf) {
+  if (!confirm(`Cancel the running "${wf.name}"?`)) return;
+  try {
+    await gh(`/actions/runs/${run.id}/cancel`, { method: 'POST' });
+    banner(`Cancel requested for "${wf.name}".`);
+    setTimeout(load, 5000);
+  } catch (err) {
+    banner(`Could not cancel: ${err.message}`, true);
+  }
+}
+
+// token dialog
+function refreshTokenBtn() {
+  $('tokenBtn').textContent = token() ? '🔑 Token set' : '🔑 Add token';
+}
+$('tokenBtn').onclick = () => { $('tokenInput').value = ''; $('tokenDialog').showModal(); };
+$('tokenSave').onclick = () => {
+  const v = $('tokenInput').value.trim();
+  if (v) localStorage.setItem(LS_KEY, v);
+  $('tokenDialog').close(); refreshTokenBtn(); render();
+};
+$('tokenClear').onclick = () => { localStorage.removeItem(LS_KEY); $('tokenDialog').close(); refreshTokenBtn(); render(); };
+$('tokenCancel').onclick = () => $('tokenDialog').close();
+
+$('refreshBtn').onclick = load;
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { clearInterval(timer); timer = null; }
+  else { load(); timer = setInterval(load, REFRESH_MS); }
+});
+
+refreshTokenBtn();
+load();
+timer = setInterval(load, REFRESH_MS);
+</script>
+</body>
+</html>
