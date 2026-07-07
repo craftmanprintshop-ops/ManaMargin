@@ -1006,23 +1006,46 @@ async function crawlPaginatedCollection({
 
 // -------------------- Market-specific crawlers --------------------
 
-// 1) TradingCardMarket
+// Shopify stores expose /collections/<handle>/products.json — structured
+// title/price/availability with no HTML scraping. Used for stores on Shopify.
+async function crawlShopifyCollectionJson({ base, handle, maxPages = 8 }) {
+  const items = [];
+  for (let pageNum = 1; pageNum <= maxPages; pageNum++) {
+    const url = `${base}/collections/${handle}/products.json?limit=250&page=${pageNum}`;
+    const res = await fetch(url, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; ManaMargin/1.0)' },
+      signal: AbortSignal.timeout(60_000),
+    });
+    if (!res.ok) throw new Error(`GET ${url} -> ${res.status}`);
+    const data = await res.json();
+    const products = data.products || [];
+    if (products.length === 0) break;
+
+    for (const p of products) {
+      const variants = Array.isArray(p.variants) ? p.variants : [];
+      const availableVariants = variants.filter((v) => v.available);
+      const priced = (availableVariants.length ? availableVariants : variants)
+        .map((v) => Number(v.price))
+        .filter((n) => Number.isFinite(n) && n > 0);
+      items.push({
+        title: p.title || null,
+        url: `${base}/products/${p.handle}`,
+        priceText: priced.length ? String(Math.min(...priced)) : null,
+        soldOut: availableVariants.length === 0,
+        imageUrl: p.images?.[0]?.src || null,
+      });
+    }
+    await sleep(jitter(600, 0.3));
+  }
+  return items;
+}
+
+// 1) TradingCardMarket (Shopify) — previously scraped the homepage, which
+// mixes nav/featured tiles without prices; the MTG collection JSON is exact.
 async function crawlTradingCardMarket({ context }) {
-  // NOTE: This is a best-effort example. Adjust startUrl & pagesToCrawl as needed.
-  const startUrl = 'https://www.tradingcardmarket.com/';
-  const pagesToCrawl = 1;
-
-  const evalOpts = {
-    productUrlIncludes: 'tradingcardmarket.com',
-    productPathIncludes: '/products/',
-  };
-
-  const items = await crawlPaginatedCollection({
-    startUrl,
-    pagesToCrawl,
-    context,
-    evalOpts,
-    evalFn: listingEvalCommon(),
+  const items = await crawlShopifyCollectionJson({
+    base: 'https://tradingcardmarket.com',
+    handle: 'magic-the-gathering',
   });
 
   return items.map((x) => ({
@@ -1103,161 +1126,17 @@ async function crawlGeekeryGames({ context }) {
   }));
 }
 
-// 5) SagaConcepts (BigCommerce - infinite scroll, loads ~72 items as you scroll)
-// Falls back to sequential ?page=N if pagination exists
+// 5) SagaConcepts (moved from BigCommerce to Shopify; the old
+// /trading-cards/... URL redirects to /collections/magic-the-gathering,
+// so we read the collection's products.json instead of scraping HTML)
 async function crawlSagaConcepts({ context }) {
-  const baseUrl = 'https://sagaconcepts.com/trading-cards/magic-the-gathering/';
-  const maxPages = 10;
+  const items = await crawlShopifyCollectionJson({
+    base: 'https://sagaconcepts.com',
+    handle: 'magic-the-gathering',
+  });
 
-  console.log('[SagaConcepts] Starting crawl...');
-
-  const page = await context.newPage();
-  const allItems = [];
-  const seenUrls = new Set();
-
-  // Product extraction function (reused per page)
-  const extractProducts = async () => {
-    return page.evaluate(() => {
-      const clean = (s) => (s ? String(s).trim() : null);
-      const cards = Array.from(document.querySelectorAll('.card, .product, .productGrid .product, li.product'));
-
-      const productEls = cards.length > 0 ? cards : Array.from(document.querySelectorAll('[data-product-price-with-tax], .price--withTax')).map(el => {
-        let card = el;
-        for (let i = 0; i < 8 && card; i++) {
-          if (card.tagName === 'LI' || card.tagName === 'ARTICLE' || card.classList?.contains('card') || card.classList?.contains('product')) break;
-          card = card.parentElement;
-        }
-        return card || el;
-      });
-
-      const items = [];
-      const seen = new Set();
-
-      for (const card of productEls) {
-        const a =
-          card.querySelector('h4.card-title a') ||
-          card.querySelector('.card-figure__link') ||
-          card.querySelector('a[href]');
-
-        if (!a) continue;
-        const href = a.href;
-        if (!href || !href.includes('sagaconcepts.com')) continue;
-        if (href.includes('/trading-cards/') || href.includes('Brand=') || href.includes('page=')) continue;
-        if (seen.has(href)) continue;
-
-        const title =
-          clean(card.querySelector('h4.card-title a')?.textContent) ||
-          clean(card.querySelector('h4.card-title')?.textContent) ||
-          clean(card.querySelector('h3 a')?.textContent) ||
-          clean(card.querySelector('h3')?.textContent) ||
-          clean(card.querySelector('[class*="title"] a')?.textContent) ||
-          clean(card.querySelector('[class*="title"]')?.textContent) ||
-          null;
-
-        let priceText = null;
-        const priceEl =
-          card.querySelector('.price-section--withTax .price--withTax') ||
-          card.querySelector('[data-product-price-with-tax]') ||
-          card.querySelector('.price.price--withTax') ||
-          card.querySelector('.price--main .price') ||
-          card.querySelector('.price');
-
-        if (priceEl) {
-          const attrVal = priceEl.getAttribute('data-product-price-with-tax');
-          if (attrVal && attrVal.trim()) priceText = attrVal.trim();
-          if (!priceText) priceText = clean(priceEl.textContent);
-        }
-
-        const cardTextLower = (card.innerText || card.textContent || '').toLowerCase();
-        const soldOut =
-          cardTextLower.includes('sold out') ||
-          cardTextLower.includes('out of stock') ||
-          !!card.querySelector('[class*="soldout"], [class*="sold-out"], .sold-out');
-
-        let imageUrl = null;
-        const img =
-          card.querySelector('img.card-image') ||
-          card.querySelector('.card-figure img') ||
-          card.querySelector('.card-img-container img') ||
-          card.querySelector('img');
-
-        if (img) {
-          imageUrl = img.currentSrc || img.src || null;
-          if (!imageUrl || imageUrl.startsWith('data:') || imageUrl.includes('placeholder')) {
-            imageUrl =
-              img.getAttribute('data-src') ||
-              img.getAttribute('data-lazy-src') ||
-              img.getAttribute('data-original') ||
-              null;
-          }
-        }
-
-        items.push({ title, url: href, priceText, soldOut, imageUrl });
-        seen.add(href);
-      }
-
-      return items;
-    });
-  };
-
-  try {
-    await applyPoliteRouting(page);
-
-    for (let pageNum = 1; pageNum <= maxPages; pageNum++) {
-      const url = pageNum === 1 ? baseUrl : `${baseUrl}?page=${pageNum}`;
-      console.log(`[SagaConcepts] Loading page ${pageNum}: ${url}`);
-      await gotoWithRetry(page, url);
-
-      // Wait for product cards to render
-      await page.waitForSelector('.card, .product, [class*="ProductItem"]', { timeout: 15000 }).catch(() => null);
-
-      // Scroll down repeatedly to trigger infinite scroll / lazy loading
-      let prevCount = 0;
-      let stableRounds = 0;
-
-      for (let scroll = 0; scroll < 30; scroll++) {
-        await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-        await sleep(1500);
-
-        const currentCount = await page.evaluate(() =>
-          document.querySelectorAll('.card, .product, li.product').length
-        );
-
-        if (currentCount === prevCount) {
-          stableRounds++;
-          if (stableRounds >= 3) break; // No new items after 3 scrolls
-        } else {
-          stableRounds = 0;
-        }
-        prevCount = currentCount;
-      }
-
-      // Extract products from fully-loaded page
-      const items = await extractProducts();
-
-      // Dedupe against previously seen URLs (across pages)
-      const newItems = items.filter(it => !seenUrls.has(it.url));
-      for (const it of newItems) seenUrls.add(it.url);
-      allItems.push(...newItems);
-
-      console.log(`[SagaConcepts] Page ${pageNum}: ${items.length} items (${newItems.length} new, ${allItems.length} total)`);
-
-      // If no new items found, we've seen everything
-      if (newItems.length === 0) {
-        console.log('[SagaConcepts] No new items found, stopping');
-        break;
-      }
-
-      await sleep(jitter(1000, 0.3));
-    }
-  } catch (e) {
-    console.error('[SagaConcepts] Crawl error:', e?.message || e);
-  } finally {
-    await page.close();
-  }
-
-  console.log(`[SagaConcepts] Total items: ${allItems.length}`);
-  return allItems.map((x) => ({
+  console.log(`[SagaConcepts] Total items: ${items.length}`);
+  return items.map((x) => ({
     ...x,
     market: 'sagaconcepts',
   }));

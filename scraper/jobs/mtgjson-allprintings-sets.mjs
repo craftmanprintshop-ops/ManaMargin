@@ -125,16 +125,33 @@ async function rpcImportCards(rows) {
   }
 }
 
-// Import a batch; if a large batch fails (e.g. statement timeout), fall back
-// to smaller chunks of 25 before giving up.
+// Statement timeouts (57014) are transient under load — retry with backoff
+// before treating a batch as failed. The old n8n version had no retry here,
+// so one timeout killed an hour-long import.
+async function rpcImportCardsWithRetry(rows, attempts = 3) {
+  for (let i = 1; i <= attempts; i++) {
+    try {
+      await rpcImportCards(rows);
+      return;
+    } catch (err) {
+      const transient = err.message.includes('57014') || err.message.includes('timeout');
+      if (i === attempts || !transient) throw err;
+      console.warn(`  batch of ${rows.length} hit a timeout (attempt ${i}); backing off`);
+      await sleep(1500 * i);
+    }
+  }
+}
+
+// Import a batch; if a large batch still fails after retries, fall back to
+// chunks of 25 before giving up.
 async function rpcImportCardsSafe(rows) {
   try {
-    await rpcImportCards(rows);
+    await rpcImportCardsWithRetry(rows);
   } catch (err) {
     if (rows.length <= 25) throw err;
     console.warn(`  batch of ${rows.length} failed (${err.message.slice(0, 200)}); retrying in chunks of 25`);
     for (const part of chunkArray(rows, 25)) {
-      await rpcImportCards(part);
+      await rpcImportCardsWithRetry(part);
     }
   }
 }
