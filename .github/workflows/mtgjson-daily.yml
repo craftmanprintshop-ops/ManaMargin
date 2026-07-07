@@ -1,0 +1,42 @@
+name: MTGJSON daily imports
+
+on:
+  schedule:
+    - cron: '0 11 * * *' # ~6 AM US Eastern, matching the old n8n cron
+  workflow_dispatch:
+
+concurrency:
+  group: mtgjson-daily
+  cancel-in-progress: false
+
+jobs:
+  allprices-today:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Import AllPricesToday
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          NODE_OPTIONS: --max-old-space-size=6144
+        run: node scraper/jobs/mtgjson-allprices-today.mjs
+
+  allprintings-sets:
+    runs-on: ubuntu-latest
+    needs: allprices-today
+    timeout-minutes: 340
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Import AllPrintings sets + cards
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          NODE_OPTIONS: --max-old-space-size=6144
+        run: node scraper/jobs/mtgjson-allprintings-sets.mjs

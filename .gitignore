@@ -1,3 +1,8 @@
+# Secrets - never commit
+.env
+scraper/.env
+cookies_watchcount.json
+
 # Logs
 logs
 *.log
