@@ -23,9 +23,10 @@ const RPC_IMPORT_CARDS_URL = `${SUPABASE_URL}/rest/v1/rpc/import_allprintings_ca
 const SETLIST_GZ_URL = 'https://mtgjson.com/api/v5/SetList.json.gz';
 const SETFILE_GZ_URL = (code) => `https://mtgjson.com/api/v5/${encodeURIComponent(code)}.json.gz`;
 
-// Tuning
-const SET_CONCURRENCY = 2; // start safe; can increase later
-const CARD_RPC_BATCH = 25;
+// Tuning (overridable via env; the job is network-latency-bound, so
+// concurrency and batch size are the main speed levers)
+const SET_CONCURRENCY = Number(process.env.SET_CONCURRENCY) || 6;
+const CARD_RPC_BATCH = Number(process.env.CARD_RPC_BATCH) || 100;
 const RETRIES = 3;
 
 const HEADERS = {
@@ -121,6 +122,20 @@ async function rpcImportCards(rows) {
   if (!res.ok) {
     const t = await res.text().catch(() => '');
     throw new Error(`CARDS RPC failed ${res.status}: ${t.slice(0, 1200)}`);
+  }
+}
+
+// Import a batch; if a large batch fails (e.g. statement timeout), fall back
+// to smaller chunks of 25 before giving up.
+async function rpcImportCardsSafe(rows) {
+  try {
+    await rpcImportCards(rows);
+  } catch (err) {
+    if (rows.length <= 25) throw err;
+    console.warn(`  batch of ${rows.length} failed (${err.message.slice(0, 200)}); retrying in chunks of 25`);
+    for (const part of chunkArray(rows, 25)) {
+      await rpcImportCards(part);
+    }
   }
 }
 
@@ -236,6 +251,10 @@ async function runPool(items, worker, concurrency) {
   await Promise.all(Array.from({ length: concurrency }, runner));
 }
 
+const T0 = Date.now();
+const elapsedMin = () => ((Date.now() - T0) / 60000).toFixed(1);
+
+console.log(`Tuning: SET_CONCURRENCY=${SET_CONCURRENCY}, CARD_RPC_BATCH=${CARD_RPC_BATCH}`);
 console.log('1) Truncating via RPC (CASCADE)...');
 await callRpcTruncate();
 console.log('   Truncate done.');
@@ -274,18 +293,18 @@ await runPool(
         if (row.uuid) rows.push(row);
       }
       for (const part of chunkArray(rows, CARD_RPC_BATCH)) {
-        await rpcImportCards(part);
+        await rpcImportCardsSafe(part);
         cardsPosted += part.length;
       }
     }
 
     if ((i + 1) % 25 === 0) {
-      console.log(`   Progress: sets=${i + 1}/${codes.length}, sets_upserted=${setsPosted}, cards_upserted=${cardsPosted}`);
+      console.log(`   Progress: sets=${i + 1}/${codes.length}, sets_upserted=${setsPosted}, cards_upserted=${cardsPosted}, elapsed=${elapsedMin()}min`);
     }
   },
   SET_CONCURRENCY
 );
 
-console.log('DONE.');
+console.log(`DONE in ${elapsedMin()} minutes.`);
 console.log('   Total sets upserted:', setsPosted);
 console.log('   Total cards inserted/upserted:', cardsPosted);
