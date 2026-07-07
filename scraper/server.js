@@ -934,6 +934,7 @@ async function crawlPaginatedCollection({
   evalOpts,
   evalFn, // optional override
   nextHrefFn, // optional custom next-href getter
+  waitSelector, // optional: wait for JS-hydrated content before extracting
 }) {
   const page = await context.newPage();
   const all = [];
@@ -943,6 +944,9 @@ async function crawlPaginatedCollection({
     if (!resp) throw new Error('No response');
 
     for (let i = 0; i < pagesToCrawl; i++) {
+      if (waitSelector) {
+        await page.waitForSelector(waitSelector, { timeout: 20000 }).catch(() => null);
+      }
       // Scroll to trigger lazy images
       await page.evaluate(async () => {
         const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -1261,22 +1265,23 @@ async function crawlSagaConcepts({ context }) {
 
 // 6) GameNerdz
 async function crawlGameNerdz({ context }) {
-  const startUrl = 'https://www.gamenerdz.com/collections/all';
-  const pagesToCrawl = 3;
+  // The old /collections/all URL 404s now; the MTG category uses JS-hydrated
+  // "store pass" cards with numbered pagination driven by a ?page= param.
+  const startUrl = 'https://www.gamenerdz.com/magic-the-gathering';
+  const pagesToCrawl = 5;
 
   const nextHrefFn = () => {
-    const a =
-      document.querySelector('a.pagination-next') ||
-      document.querySelector('a[rel="next"]') ||
-      document.querySelector('a[aria-label*="Next"]');
-    if (!a) return null;
-    const href = a.getAttribute('href') || a.href;
-    if (!href) return null;
-    try {
-      return new URL(href, location.origin).href;
-    } catch {
-      return href;
-    }
+    const cur = Number(new URLSearchParams(location.search).get('page') || '1');
+    const nums = Array.from(
+      document.querySelectorAll('.store-pass-pagination a[aria-label^="Go to page"]')
+    )
+      .map((a) => Number((a.getAttribute('aria-label') || '').replace('Go to page ', '')))
+      .filter((n) => Number.isFinite(n));
+    const max = nums.length ? Math.max(...nums) : cur;
+    if (cur >= max) return null;
+    const u = new URL(location.href);
+    u.searchParams.set('page', String(cur + 1));
+    return u.href;
   };
 
   const items = await crawlPaginatedCollection({
@@ -1286,6 +1291,7 @@ async function crawlGameNerdz({ context }) {
     evalOpts: {},
     evalFn: listingEvalGameNerdz(),
     nextHrefFn,
+    waitSelector: '.store-pass-product',
   });
 
   return items.map((x) => ({
