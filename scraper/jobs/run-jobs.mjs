@@ -49,20 +49,42 @@ async function waitForServer(proc) {
   throw new Error('server did not become ready within 60s');
 }
 
+// Classify pending offers in bounded batches. The all-in-one
+// run_batch_classification() RPC loops until the whole backlog is done inside
+// a single SQL statement, which hits Supabase's statement timeout as soon as
+// a backlog exists — so we drive the loop from here with the bounded
+// classify_pending_offers(batch_limit) RPC instead. On a statement timeout
+// the batch size is halved and processing continues.
 async function runClassification() {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/run_batch_classification`, {
-    method: 'POST',
-    headers: {
-      apikey: SUPABASE_SERVICE_ROLE_KEY,
-      Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: '{}',
-    signal: AbortSignal.timeout(10 * 60 * 1000),
-  });
-  const text = await res.text();
-  console.log(`  classification RPC -> ${res.status} ${text.slice(0, 300)}`);
-  if (!res.ok) throw new Error(`run_batch_classification failed: ${res.status}`);
+  let batchLimit = 250;
+  let totals = { processed: 0, classified: 0, skipped: 0 };
+  for (let i = 0; i < 400; i++) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/classify_pending_offers`, {
+      method: 'POST',
+      headers: {
+        apikey: SUPABASE_SERVICE_ROLE_KEY,
+        Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ batch_limit: batchLimit }),
+      signal: AbortSignal.timeout(5 * 60 * 1000),
+    });
+    const text = await res.text();
+    if (!res.ok) {
+      if (text.includes('57014') && batchLimit > 25) {
+        batchLimit = Math.floor(batchLimit / 2);
+        console.warn(`  classification batch timed out; retrying with batch_limit=${batchLimit}`);
+        continue;
+      }
+      throw new Error(`classify_pending_offers failed: ${res.status} ${text.slice(0, 300)}`);
+    }
+    const [row] = JSON.parse(text);
+    totals.processed += row.total_processed;
+    totals.classified += row.total_classified;
+    totals.skipped += row.total_skipped;
+    if (row.total_processed === 0) break;
+  }
+  console.log(`  classification done: processed=${totals.processed} classified=${totals.classified} skipped=${totals.skipped}`);
 }
 
 const server = spawn(process.execPath, ['server.js'], {
