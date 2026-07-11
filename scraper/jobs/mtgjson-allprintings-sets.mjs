@@ -1,7 +1,21 @@
-// Port of the "MTGJSON AllPrintings Sets (delete cards + sets, reload sets)"
-// n8n workflow. Truncates via RPC, fetches the MTGJSON SetList, then per set
-// upserts the set row and imports its cards through the
-// import_allprintings_cards RPC. Logic lifted verbatim from the n8n script.
+// MTGJSON AllPrintings incremental import.
+//
+// Replaces the old truncate-and-reload port of the n8n workflow. That version
+// truncated allprintings_sets/_cards, then re-imported all ~865 sets over ~2h;
+// when Supabase RPC calls started 504ing under the load, the job died partway
+// and left the site missing whichever sets hadn't loaded yet.
+//
+// This version never truncates. Per set it decides whether an import is
+// needed (new set, size changed, recent release, or a previous run didn't
+// finish it), then does delete-cards + insert-cards for just that set. A
+// success marker is stored in allprintings_sets.raw->_import only after the
+// set's cards are fully imported, so a crash at any point leaves at most one
+// set to be redone on the next run — never a wiped database.
+//
+// Env knobs:
+//   SET_CONCURRENCY (default 3), CARD_RPC_BATCH (default 50)
+//   SET_LIMIT       process only the first N SetList entries (testing)
+//   FULL_RELOAD=1   truncate first and re-import everything (old behavior)
 
 import zlib from 'node:zlib';
 
@@ -13,6 +27,7 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
 const SUPABASE_KEY = SUPABASE_SERVICE_ROLE_KEY;
 
 const SETS_TABLE = 'allprintings_sets';
+const CARDS_TABLE = 'allprintings_cards';
 
 const RPC_TRUNCATE_URL = `${SUPABASE_URL}/rest/v1/rpc/truncate_allprintings`;
 const UPSERT_SETS_URL = `${SUPABASE_URL}/rest/v1/${SETS_TABLE}?on_conflict=code`;
@@ -23,11 +38,17 @@ const RPC_IMPORT_CARDS_URL = `${SUPABASE_URL}/rest/v1/rpc/import_allprintings_ca
 const SETLIST_GZ_URL = 'https://mtgjson.com/api/v5/SetList.json.gz';
 const SETFILE_GZ_URL = (code) => `https://mtgjson.com/api/v5/${encodeURIComponent(code)}.json.gz`;
 
-// Tuning (overridable via env; the job is network-latency-bound, so
-// concurrency and batch size are the main speed levers)
-const SET_CONCURRENCY = Number(process.env.SET_CONCURRENCY) || 6;
-const CARD_RPC_BATCH = Number(process.env.CARD_RPC_BATCH) || 100;
+const SET_CONCURRENCY = Number(process.env.SET_CONCURRENCY) || 3;
+const CARD_RPC_BATCH = Number(process.env.CARD_RPC_BATCH) || 50;
+const SET_LIMIT = Number(process.env.SET_LIMIT) || 0;
+const FULL_RELOAD = process.env.FULL_RELOAD === '1';
 const RETRIES = 3;
+
+// Sets released within this window (or in the future) are refreshed every
+// run, since MTGJSON keeps adding spoiled/promo cards to them.
+const RECENT_SET_WINDOW_DAYS = 60;
+// ...but at most once per this many hours (lets a rerun on the same day skip them).
+const RECENT_REFRESH_HOURS = 20;
 
 const HEADERS = {
   apikey: SUPABASE_KEY,
@@ -82,6 +103,30 @@ async function fetchGzJson(url) {
   return JSON.parse(jsonText);
 }
 
+function isTransient(err) {
+  const m = String(err && err.message || err);
+  return (
+    m.includes('57014') || // statement timeout
+    m.includes('timeout') ||
+    m.includes(' 500') || m.includes(' 502') || m.includes(' 503') || m.includes(' 504') ||
+    m.includes('fetch failed') ||
+    m.includes('ECONNRESET')
+  );
+}
+
+// Generic retry with linear backoff for transient Supabase/network errors.
+async function withRetry(fn, label, attempts = 4) {
+  for (let i = 1; i <= attempts; i++) {
+    try {
+      return await fn();
+    } catch (err) {
+      if (i === attempts || !isTransient(err)) throw err;
+      console.warn(`  ${label} failed (attempt ${i}: ${String(err.message).slice(0, 160)}); backing off`);
+      await sleep(3000 * i);
+    }
+  }
+}
+
 async function callRpcTruncate() {
   const res = await fetch(RPC_TRUNCATE_URL, {
     method: 'POST',
@@ -112,6 +157,19 @@ async function upsertSets(rows) {
   }
 }
 
+async function deleteSetCards(code) {
+  const url = `${SUPABASE_URL}/rest/v1/${CARDS_TABLE}?set_code=eq.${encodeURIComponent(code)}`;
+  const res = await fetch(url, {
+    method: 'DELETE',
+    headers: { ...HEADERS, Prefer: 'return=minimal' },
+    signal: AbortSignal.timeout(300_000),
+  });
+  if (!res.ok) {
+    const t = await res.text().catch(() => '');
+    throw new Error(`CARDS DELETE (${code}) failed ${res.status}: ${t.slice(0, 1200)}`);
+  }
+}
+
 async function rpcImportCards(rows) {
   const res = await fetch(RPC_IMPORT_CARDS_URL, {
     method: 'POST',
@@ -125,33 +183,16 @@ async function rpcImportCards(rows) {
   }
 }
 
-// Statement timeouts (57014) are transient under load — retry with backoff
-// before treating a batch as failed. The old n8n version had no retry here,
-// so one timeout killed an hour-long import.
-async function rpcImportCardsWithRetry(rows, attempts = 3) {
-  for (let i = 1; i <= attempts; i++) {
-    try {
-      await rpcImportCards(rows);
-      return;
-    } catch (err) {
-      const transient = err.message.includes('57014') || err.message.includes('timeout');
-      if (i === attempts || !transient) throw err;
-      console.warn(`  batch of ${rows.length} hit a timeout (attempt ${i}); backing off`);
-      await sleep(1500 * i);
-    }
-  }
-}
-
-// Import a batch; if a large batch still fails after retries, fall back to
+// Import a batch with retries; if a large batch still fails, fall back to
 // chunks of 25 before giving up.
 async function rpcImportCardsSafe(rows) {
   try {
-    await rpcImportCardsWithRetry(rows);
+    await withRetry(() => rpcImportCards(rows), `batch of ${rows.length}`);
   } catch (err) {
     if (rows.length <= 25) throw err;
     console.warn(`  batch of ${rows.length} failed (${err.message.slice(0, 200)}); retrying in chunks of 25`);
     for (const part of chunkArray(rows, 25)) {
-      await rpcImportCardsWithRetry(part);
+      await withRetry(() => rpcImportCards(part), `chunk of ${part.length}`);
     }
   }
 }
@@ -170,6 +211,18 @@ async function fetchSetWithRetries(code) {
     }
   }
   throw lastErr;
+}
+
+// Fetch existing set rows with their import markers (raw->_import).
+async function fetchDbSetMarkers() {
+  const url = `${SUPABASE_URL}/rest/v1/${SETS_TABLE}?select=code,total_set_size,imp:raw->_import&limit=5000`;
+  const res = await fetch(url, { headers: HEADERS, signal: AbortSignal.timeout(300_000) });
+  if (!res.ok) {
+    const t = await res.text().catch(() => '');
+    throw new Error(`SETS GET failed ${res.status}: ${t.slice(0, 1200)}`);
+  }
+  const rows = await res.json();
+  return new Map(rows.map((r) => [r.code, r]));
 }
 
 // Trim set raw (keep small)
@@ -256,6 +309,69 @@ function mapCardToRow(cardObj, setCode) {
   };
 }
 
+// Decide whether a SetList entry needs (re)import. Returns a reason string
+// or null to skip.
+function importReason(entry, dbRow, now) {
+  if (FULL_RELOAD) return 'full reload';
+  if (!dbRow) return 'new set';
+  const imp = dbRow.imp;
+  if (!imp || typeof imp.card_rows !== 'number') return 'no completed import on record';
+  if ((imp.source_total ?? null) !== (entry.totalSetSize ?? null)) {
+    return `set size changed (${imp.source_total} -> ${entry.totalSetSize})`;
+  }
+  const rel = entry.releaseDate ? Date.parse(entry.releaseDate) : NaN;
+  const isRecentOrUpcoming = !Number.isNaN(rel) && now - rel < RECENT_SET_WINDOW_DAYS * 86_400_000;
+  if (isRecentOrUpcoming) {
+    const impAt = imp.imported_at ? Date.parse(imp.imported_at) : 0;
+    if (now - impAt > RECENT_REFRESH_HOURS * 3_600_000) return 'recent set refresh';
+  }
+  return null;
+}
+
+// Import one set: upsert set row, delete+insert its cards, then stamp the
+// success marker. The delete+insert pair is retried as a unit so a partially
+// committed insert can never leave duplicates behind.
+async function importSet(entry) {
+  const setObj = await fetchSetWithRetries(entry.code);
+  const setRow = mapSetToRow(setObj);
+  if (!setRow.code) return 0;
+
+  await withRetry(() => upsertSets([setRow]), `set upsert ${setRow.code}`);
+
+  const cards = Array.isArray(setObj.cards) ? setObj.cards : [];
+  const rows = [];
+  for (const c of cards) {
+    const row = mapCardToRow(c, setObj.code);
+    if (row.uuid) rows.push(row);
+  }
+
+  for (let attempt = 1; ; attempt++) {
+    try {
+      await withRetry(() => deleteSetCards(setRow.code), `cards delete ${setRow.code}`);
+      for (const part of chunkArray(rows, CARD_RPC_BATCH)) {
+        await rpcImportCardsSafe(part);
+      }
+      break;
+    } catch (err) {
+      if (attempt >= 2) throw err;
+      console.warn(`  set ${setRow.code}: import failed (${String(err.message).slice(0, 160)}); redoing delete+insert`);
+      await sleep(5000);
+    }
+  }
+
+  // Marker written only after every card batch committed.
+  setRow.raw = {
+    ...setRow.raw,
+    _import: {
+      card_rows: rows.length,
+      source_total: entry.totalSetSize ?? null,
+      imported_at: new Date().toISOString(),
+    },
+  };
+  await withRetry(() => upsertSets([setRow]), `marker upsert ${setRow.code}`);
+  return rows.length;
+}
+
 async function runPool(items, worker, concurrency) {
   let idx = 0;
   async function runner() {
@@ -271,57 +387,85 @@ async function runPool(items, worker, concurrency) {
 const T0 = Date.now();
 const elapsedMin = () => ((Date.now() - T0) / 60000).toFixed(1);
 
-console.log(`Tuning: SET_CONCURRENCY=${SET_CONCURRENCY}, CARD_RPC_BATCH=${CARD_RPC_BATCH}`);
-console.log('1) Truncating via RPC (CASCADE)...');
-await callRpcTruncate();
-console.log('   Truncate done.');
+console.log(`Tuning: SET_CONCURRENCY=${SET_CONCURRENCY}, CARD_RPC_BATCH=${CARD_RPC_BATCH}, FULL_RELOAD=${FULL_RELOAD}`);
 
-console.log('2) Fetching SetList:', SETLIST_GZ_URL);
+if (FULL_RELOAD) {
+  console.log('1) FULL_RELOAD: truncating via RPC (CASCADE)...');
+  await callRpcTruncate();
+  console.log('   Truncate done.');
+}
+
+console.log('1) Fetching SetList:', SETLIST_GZ_URL);
 const setListRoot = await fetchGzJson(SETLIST_GZ_URL);
 const list = setListRoot && setListRoot.data;
 if (!Array.isArray(list)) throw new Error('Unexpected SetList: expected root.data array');
 
-const codes = list.map((s) => s && s.code).filter(Boolean);
-console.log('   Set codes:', codes.length);
+let entries = list.filter((s) => s && s.code);
+if (SET_LIMIT > 0) entries = entries.slice(0, SET_LIMIT);
+console.log('   Sets in SetList:', entries.length);
 
-let setsPosted = 0;
-let cardsPosted = 0;
+console.log('2) Reading existing set markers from DB...');
+const dbSets = FULL_RELOAD ? new Map() : await fetchDbSetMarkers();
+console.log('   Sets already in DB:', dbSets.size);
 
-console.log('3) Downloading per-set files; upserting set first; then importing cards via RPC (concurrency =', SET_CONCURRENCY + ')');
+const now = Date.now();
+const toImport = [];
+for (const entry of entries) {
+  const reason = importReason(entry, dbSets.get(entry.code), now);
+  if (reason) toImport.push({ entry, reason });
+}
+console.log(`3) Sets needing import: ${toImport.length} of ${entries.length}`);
+for (const { entry, reason } of toImport.slice(0, 40)) {
+  console.log(`   - ${entry.code}: ${reason}`);
+}
+if (toImport.length > 40) console.log(`   ... and ${toImport.length - 40} more`);
+
+let setsImported = 0;
+let cardsImported = 0;
+const failures = [];
+
+async function importWithLogging({ entry, reason }) {
+  const n = await importSet(entry);
+  setsImported += 1;
+  cardsImported += n;
+  if (setsImported % 25 === 0) {
+    console.log(`   Progress: sets=${setsImported}/${toImport.length}, cards=${cardsImported}, elapsed=${elapsedMin()}min`);
+  }
+}
 
 await runPool(
-  codes,
-  async (code, i) => {
-    const setObj = await fetchSetWithRetries(code);
-
-    // upsert THIS set immediately (prevents FK violations)
-    const setRow = mapSetToRow(setObj);
-    if (setRow.code) {
-      await upsertSets([setRow]);
-      setsPosted += 1;
-    }
-
-    // cards via RPC for this set
-    const cards = Array.isArray(setObj.cards) ? setObj.cards : [];
-    if (cards.length) {
-      const rows = [];
-      for (const c of cards) {
-        const row = mapCardToRow(c, setObj.code);
-        if (row.uuid) rows.push(row);
-      }
-      for (const part of chunkArray(rows, CARD_RPC_BATCH)) {
-        await rpcImportCardsSafe(part);
-        cardsPosted += part.length;
-      }
-    }
-
-    if ((i + 1) % 25 === 0) {
-      console.log(`   Progress: sets=${i + 1}/${codes.length}, sets_upserted=${setsPosted}, cards_upserted=${cardsPosted}, elapsed=${elapsedMin()}min`);
+  toImport,
+  async (item) => {
+    try {
+      await importWithLogging(item);
+    } catch (err) {
+      console.error(`   FAILED ${item.entry.code}: ${String(err.message).slice(0, 300)}`);
+      failures.push(item);
     }
   },
   SET_CONCURRENCY
 );
 
+if (failures.length) {
+  console.log(`4) Retrying ${failures.length} failed set(s) sequentially...`);
+  const still = [];
+  for (const item of failures) {
+    try {
+      await importWithLogging(item);
+    } catch (err) {
+      console.error(`   FAILED AGAIN ${item.entry.code}: ${String(err.message).slice(0, 300)}`);
+      still.push(item);
+    }
+  }
+  failures.length = 0;
+  failures.push(...still);
+}
+
 console.log(`DONE in ${elapsedMin()} minutes.`);
-console.log('   Total sets upserted:', setsPosted);
-console.log('   Total cards inserted/upserted:', cardsPosted);
+console.log('   Sets imported:', setsImported);
+console.log('   Cards imported:', cardsImported);
+if (failures.length) {
+  console.error('   Unrecovered sets:', failures.map((f) => f.entry.code).join(', '));
+  console.error('   (Database remains consistent; these will be retried on the next run.)');
+  process.exit(1);
+}
