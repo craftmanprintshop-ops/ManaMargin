@@ -226,6 +226,7 @@ interface CommanderDecksGroupedProps {
 }
 
 type DeckFilter = 'all' | 'deals'
+type DeckSort = 'newest' | 'oldest' | 'name'
 
 export const CommanderDecksGrouped: React.FC<CommanderDecksGroupedProps> = ({ onDeckSelect }) => {
   const { user } = useAuth()
@@ -238,6 +239,7 @@ export const CommanderDecksGrouped: React.FC<CommanderDecksGroupedProps> = ({ on
   const [mtgstocksPrices, setMtgstocksPrices] = useState<Map<string, MtgstocksPrice>>(new Map())
   const [evData, setEvData] = useState<Map<string, EVData>>(new Map())
   const [activeFilter, setActiveFilter] = useState<DeckFilter>('all')
+  const [sortBy, setSortBy] = useState<DeckSort>('newest')
 
   const loadDecks = async () => {
     setIsLoading(true)
@@ -462,8 +464,29 @@ export const CommanderDecksGrouped: React.FC<CommanderDecksGroupedProps> = ({ on
       if (!groups[key]) groups[key] = []
       groups[key].push(deck)
     })
-    return groups
-  }, [decks, activeFilter, cheapestOffers])
+
+    const entries = Object.entries(groups)
+    entries.sort(([, a], [, b]) => {
+      const nameA = a[0].set_name || a[0].code.toUpperCase()
+      const nameB = b[0].set_name || b[0].code.toUpperCase()
+      const dateA = new Date(a[0].release_date).getTime()
+      const dateB = new Date(b[0].release_date).getTime()
+      switch (sortBy) {
+        case 'name':
+          return nameA.localeCompare(nameB) || dateB - dateA
+        case 'oldest':
+          return dateA - dateB || nameA.localeCompare(nameB)
+        case 'newest':
+        default:
+          return dateB - dateA || nameA.localeCompare(nameB)
+      }
+    })
+    if (sortBy === 'name') {
+      entries.forEach(([, groupDecks]) =>
+        groupDecks.sort((a, b) => a.deck_name.localeCompare(b.deck_name)))
+    }
+    return entries
+  }, [decks, activeFilter, cheapestOffers, sortBy])
 
   const dealCount = useMemo(() => {
     let count = 0
@@ -565,6 +588,28 @@ export const CommanderDecksGrouped: React.FC<CommanderDecksGroupedProps> = ({ on
             Market price &lt; card value (&gt;$0.25)
           </span>
         )}
+        <div className="flex items-center gap-2 ml-auto">
+          <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-2)] opacity-60">Sort</span>
+          <div className="flex bg-[var(--bg-inset)] p-1 rounded-xl border border-[var(--border-color-2)]">
+            {[
+              { id: 'newest' as DeckSort, label: 'Newest' },
+              { id: 'oldest' as DeckSort, label: 'Oldest' },
+              { id: 'name' as DeckSort, label: 'Name' },
+            ].map((opt) => (
+              <button
+                key={opt.id}
+                onClick={() => setSortBy(opt.id)}
+                className={`px-4 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all ${
+                  sortBy === opt.id
+                    ? 'bg-[var(--brand)] text-white shadow-lg shadow-[var(--brand)]/20'
+                    : 'text-[var(--text-2)] hover:text-[var(--text-1)]'
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       <div className="bg-[var(--bg-surface)] backdrop-blur-xl rounded-xl border border-[var(--border-color)] shadow-2xl overflow-hidden">
@@ -582,7 +627,7 @@ export const CommanderDecksGrouped: React.FC<CommanderDecksGroupedProps> = ({ on
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
-              {Object.entries(groupedDecks).map(([groupKey, groupDecks]) => {
+              {groupedDecks.map(([groupKey, groupDecks]) => {
                 const first = groupDecks[0]
                 const totalValue = groupDecks.reduce((sum, d) => sum + (d.total_value || 0), 0)
                 const total25c = groupDecks.reduce((sum, d) => sum + (d.value_over_25c || 0), 0)
@@ -772,7 +817,7 @@ export const CommanderDecksGrouped: React.FC<CommanderDecksGroupedProps> = ({ on
                   </React.Fragment>
                 )
               })}
-              {activeFilter === 'deals' && Object.keys(groupedDecks).length === 0 && (
+              {activeFilter === 'deals' && groupedDecks.length === 0 && (
                 <tr>
                   <td colSpan={99} className="px-6 py-20 text-center">
                     <div className="text-[var(--text-2)] text-sm font-bold opacity-50">
