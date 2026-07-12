@@ -1,0 +1,25 @@
+name: MTGJSON commander decks import
+
+on:
+  schedule:
+    - cron: '0 12 * * 0' # Sundays 12:00 UTC, matching the old weekly n8n cadence
+  workflow_dispatch:
+
+concurrency:
+  group: commander-decks
+  cancel-in-progress: false
+
+jobs:
+  commander-decks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Import commander decks
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scraper/jobs/mtgjson-commander-decks.mjs
