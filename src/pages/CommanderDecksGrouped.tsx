@@ -422,16 +422,21 @@ export const CommanderDecksGrouped: React.FC<CommanderDecksGroupedProps> = ({ on
         // Set-bundle offers ("Commander Decks Set of 4" displays) shown on
         // the set header row — bundle prices belong to the set, not to any
         // individual deck.
-        const bundleSetByUuid = new Map<string, string>()
+        // Keyed by set code + collector-ness so the Collector's Edition group
+        // shows its own bundle price, not the regular set's.
+        const bundleKeyByUuid = new Map<string, string>()
         for (const p of (bundlesRes.data ?? []) as any[]) {
-          if (/set of \d/i.test(p.name || '')) bundleSetByUuid.set(p.uuid, p.set_code)
+          if (/set of \d/i.test(p.name || '')) {
+            const kind = /collector/i.test(p.name) ? 'collector' : 'normal'
+            bundleKeyByUuid.set(p.uuid, `${p.set_code}|${kind}`)
+          }
         }
         const bundleMap = new Map<string, CheapestOffer>()
         for (const o of offers) {
           const uuid = uuidByTitle.get(o.title)
-          const setCode = uuid ? bundleSetByUuid.get(uuid) : undefined
-          if (setCode && !bundleMap.has(setCode)) {
-            bundleMap.set(setCode, {
+          const key = uuid ? bundleKeyByUuid.get(uuid) : undefined
+          if (key && !bundleMap.has(key)) {
+            bundleMap.set(key, {
               price: parseFloat(String(o.price ?? '0')) || 0,
               marketplace: o.marketplace,
               url: o.url,
@@ -785,7 +790,8 @@ export const CommanderDecksGrouped: React.FC<CommanderDecksGroupedProps> = ({ on
                       <td className="px-1 lg:px-2 py-2 hidden xl:table-cell"></td>
                       <td className="px-1 sm:px-2 lg:px-3 py-2 text-right">
                         {(() => {
-                          const bundle = setBundleOffers.get(first.code)
+                          const kind = groupKey.endsWith('_collector') ? 'collector' : 'normal'
+                          const bundle = setBundleOffers.get(`${first.code}|${kind}`)
                           if (!bundle) return null
                           return (
                             <a
