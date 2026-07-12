@@ -1,0 +1,26 @@
+name: MTGJSON extras import (identifiers, legalities, prices)
+
+on:
+  schedule:
+    - cron: '0 14 * * 0' # Sundays 14:00 UTC (after the daily + commander runs)
+  workflow_dispatch:
+
+concurrency:
+  group: mtgjson-extras
+  cancel-in-progress: false
+
+jobs:
+  extras:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Import identifiers, legalities, prices
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          NODE_OPTIONS: --max-old-space-size=6144
+        run: node scraper/jobs/mtgjson-extras.mjs
