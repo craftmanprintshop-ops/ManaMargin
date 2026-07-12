@@ -238,6 +238,22 @@ async function importCardPrices() {
   console.log(`   Parsed ${rows.length} price rows`);
   if (rows.length === 0) return 0;
 
+  // The table's unique constraint is (uuid, date, priceProvider, cardFinish,
+  // currency, providerListing) — no gameAvailability — and some providers
+  // (e.g. manapool) list both paper and mtgo, which collide on that key.
+  // Dedupe preferring paper, since deck values are paper prices.
+  const byKey = new Map();
+  for (const r of rows) {
+    const key = `${r.uuid}|${r.date}|${r.priceProvider}|${r.cardFinish}|${r.currency}|${r.providerListing}`;
+    const existing = byKey.get(key);
+    if (!existing || (existing.gameAvailability !== 'paper' && r.gameAvailability === 'paper')) {
+      byKey.set(key, r);
+    }
+  }
+  const deduped = rows.length - byKey.size;
+  rows = [...byKey.values()];
+  if (deduped) console.log(`   Deduped ${deduped} rows colliding on the unique key (kept paper)`);
+
   const newDate = rows.reduce((m, r) => (r.date > m ? r.date : m), rows[0].date);
   console.log(`   Snapshot date: ${newDate}`);
 
@@ -246,15 +262,20 @@ async function importCardPrices() {
   console.log('   Clearing any existing rows for this date...');
   await deletePricesWhere(`eq.${newDate}`);
 
+  // Insert with a small worker pool. While two snapshot dates coexist the
+  // downstream views double-count, so shortening this window matters.
   const batches = chunkArray(rows, PRICE_BATCH_SIZE);
   let imported = 0;
-  for (let i = 0; i < batches.length; i++) {
-    await withRetry(() => postRows('allprintings_card_prices', batches[i]), 'cardPrices');
-    imported += batches[i].length;
-    if ((i + 1) % 100 === 0 || i === batches.length - 1) {
-      console.log(`   Progress: ${imported}/${rows.length}`);
+  let nextBatch = 0;
+  await Promise.all(Array.from({ length: 4 }, async () => {
+    while (true) {
+      const i = nextBatch++;
+      if (i >= batches.length) break;
+      await withRetry(() => postRows('allprintings_card_prices', batches[i], { onConflict: 'uuid,date,priceProvider,cardFinish,currency,providerListing' }), 'cardPrices');
+      imported += batches[i].length;
+      if (i > 0 && i % 100 === 0) console.log(`   Progress: ~${imported}/${rows.length}`);
     }
-  }
+  }));
 
   if (ROW_LIMIT > 0) {
     console.log('   ROW_LIMIT set — keeping older price snapshots (test mode).');
