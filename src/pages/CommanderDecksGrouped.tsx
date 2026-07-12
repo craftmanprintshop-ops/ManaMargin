@@ -103,9 +103,20 @@ const PricePopup: React.FC<{ deck: CommanderDeckValue; onClose: () => void; mtgs
     loadPrices()
   }, [deck])
 
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onClose])
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[var(--bg-overlay)] backdrop-blur-sm" onClick={onClose}>
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={`Marketplace prices for ${deck.deck_name}`}
         className="bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col shadow-2xl animate-fade-in"
         onClick={e => e.stopPropagation()}
       >
@@ -129,9 +140,11 @@ const PricePopup: React.FC<{ deck: CommanderDeckValue; onClose: () => void; mtgs
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-[var(--bg-hover-2)] rounded-full text-[var(--text-2)] transition-colors"
+            autoFocus
+            aria-label="Close price comparison"
+            className="p-2 hover:bg-[var(--bg-hover-2)] rounded-full text-[var(--text-2)] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--brand)]"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
@@ -149,7 +162,11 @@ const PricePopup: React.FC<{ deck: CommanderDeckValue; onClose: () => void; mtgs
               <svg className="w-10 h-10 text-red-400 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <p className="text-xs text-[var(--text-2)]">Request timed out</p>
+              <p className="text-xs text-[var(--text-2)]">
+                {popupError.toLowerCase().includes('timeout') || popupError.toLowerCase().includes('canceling statement')
+                  ? 'Request timed out'
+                  : 'Could not load prices'}
+              </p>
               <button
                 onClick={loadPrices}
                 className="px-4 py-1.5 bg-[var(--brand)] hover:bg-[var(--primary-700)] text-white text-xs font-bold rounded-lg transition-colors"
@@ -294,56 +311,91 @@ export const CommanderDecksGrouped: React.FC<CommanderDecksGroupedProps> = ({ on
     loadDecks()
   }, [])
 
-  // Load cheapest marketplace offers for all commander decks in one query
+  // Load cheapest marketplace offers for all commander decks.
+  //
+  // Primary path: exact product identity. offer_product_matches maps scraped
+  // titles to canonical MTGJSON sealed-product uuids, and commander_decks
+  // carries each deck's sealed_product_uuid — joining through the uuid means
+  // a deck only ever shows an offer for that exact product. Fallback is a
+  // conservative title-contains-name check. There is deliberately no
+  // set-level fallback: it used to assign one set bundle's price to every
+  // deck in the set, which looked authoritative and was wrong.
   useEffect(() => {
     if (decks.length === 0) return
 
     const loadCheapest = async () => {
       try {
-        const { data, error } = await queryWithRetry(
-          () => supabase
-            .from('offers_latest_enriched_mv')
-            .select('title,marketplace,price,url,in_stock,set_name')
-            .in('product_type', ['Commander Deck', 'Commander Deck Set'])
-            .eq('in_stock', true)
-            .order('price', { ascending: true })
-            .limit(2000),
-          2,
-          1500,
-        )
+        const [offersRes, matchesRes, deckUuidsRes] = await Promise.all([
+          queryWithRetry(
+            () => supabase
+              .from('offers_latest_enriched_mv')
+              .select('title,marketplace,price,url,in_stock,set_name')
+              .in('product_type', ['Commander Deck', 'Commander Deck Set'])
+              .eq('in_stock', true)
+              .order('price', { ascending: true })
+              .limit(2000),
+            2,
+            1500,
+          ),
+          queryWithRetry(
+            () => supabase
+              .from('offer_product_matches')
+              .select('raw_title,sealed_product_uuid')
+              .not('sealed_product_uuid', 'is', null)
+              .limit(5000),
+            2,
+            1500,
+          ),
+          queryWithRetry(
+            () => supabase
+              .from('commander_decks')
+              .select('code,name,sealed_product_uuid')
+              .not('sealed_product_uuid', 'is', null)
+              .limit(2000),
+            2,
+            1500,
+          ),
+        ])
 
-        if (error) throw error
+        if (offersRes.error) throw offersRes.error
 
-        const offers = (data ?? []) as any[]
+        const offers = (offersRes.data ?? []) as any[]
 
-        // Build a map of cheapest set-level offers by set_name for fallback
-        const setOfferMap = new Map<string, any>()
-        for (const offer of offers) {
-          const setName = (offer.set_name || '').toLowerCase()
-          if (setName && !setOfferMap.has(setName)) {
-            setOfferMap.set(setName, offer)
-          }
+        // title -> canonical product uuid (from the matcher pipeline)
+        const uuidByTitle = new Map<string, string>()
+        for (const m of (matchesRes.data ?? []) as any[]) {
+          if (m.raw_title) uuidByTitle.set(m.raw_title, m.sealed_product_uuid)
         }
 
-        // Match offers to deck names
+        // deck (code|name) -> its canonical sealed product uuid
+        const deckUuid = new Map<string, string>()
+        for (const d of (deckUuidsRes.data ?? []) as any[]) {
+          deckUuid.set(`${d.code}|${d.name}`, d.sealed_product_uuid)
+        }
+
         const offerMap = new Map<string, CheapestOffer>()
         for (const deck of decks) {
           const deckKey = `${deck.code}|${deck.deck_name}`
           if (offerMap.has(deckKey)) continue
 
-          const nameLower = deck.deck_name.toLowerCase()
+          // 1. Exact product identity via matched uuid (offers are price-sorted,
+          //    so the first hit is the cheapest)
+          const uuid = deckUuid.get(deckKey)
+          let match = uuid
+            ? offers.find((o) => uuidByTitle.get(o.title) === uuid)
+            : undefined
 
-          // 1. Try exact deck name match in title
-          let match = offers.find((o) => {
-            const titleLower = (o.title || '').toLowerCase()
-            return titleLower.includes(nameLower)
-          })
-
-          // 2. Fallback: match by set_name on the offer
-          if (!match && deck.set_name) {
-            // Strip "Commander" suffix from set_name for matching (e.g. "Lorwyn Eclipsed Commander" -> "Lorwyn Eclipsed")
-            const baseSetName = deck.set_name.replace(/\s+Commander$/i, '').toLowerCase()
-            match = setOfferMap.get(baseSetName) || setOfferMap.get(deck.set_name.toLowerCase())
+          // 2. Conservative fallback: deck name appears verbatim in the title,
+          //    and "collector" agreement in both directions — a regular deck
+          //    must not inherit its Collector's Edition price or vice versa
+          if (!match) {
+            const nameLower = deck.deck_name.toLowerCase()
+            const deckIsCollector = nameLower.includes('collector')
+            match = offers.find((o) => {
+              const titleLower = (o.title || '').toLowerCase()
+              return titleLower.includes(nameLower)
+                && titleLower.includes('collector') === deckIsCollector
+            })
           }
 
           if (match) {
@@ -500,12 +552,32 @@ export const CommanderDecksGrouped: React.FC<CommanderDecksGroupedProps> = ({ on
   }, [decks, cheapestOffers])
 
   if (isLoading) {
+    // Skeleton mirrors the table shape so content doesn't jump on arrival
     return (
-      <div className="p-20 flex flex-col items-center justify-center space-y-4 animate-pulse">
-        <div className="w-12 h-12 border-4 border-[var(--brand)] border-t-transparent rounded-full animate-spin"></div>
-        <div className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-2)]">
-          Loading Decks...
+      <div className="w-full space-y-4" role="status" aria-label="Loading commander decks">
+        <div className="flex items-center gap-2">
+          <div className="h-9 w-44 rounded-xl bg-[var(--bg-inset)] animate-pulse" />
+          <div className="ml-auto h-9 w-56 rounded-xl bg-[var(--bg-inset)] animate-pulse" />
         </div>
+        <div className="bg-[var(--bg-surface)] rounded-xl border border-[var(--border-color)] overflow-hidden">
+          <div className="h-12 bg-[var(--bg-surface-2)] border-b border-[var(--border-color-2)]" />
+          {Array.from({ length: 9 }).map((_, i) => (
+            <div
+              key={i}
+              className={`flex items-center gap-4 px-3 py-4 border-b border-[var(--border-color-2)] ${i % 5 === 0 ? 'bg-[var(--bg-set-row)]' : ''}`}
+            >
+              <div
+                className="h-4 rounded bg-[var(--bg-hover-2)] animate-pulse"
+                style={{ width: `${i % 5 === 0 ? 30 : 18 + ((i * 7) % 12)}%`, animationDelay: `${i * 80}ms` }}
+              />
+              <div className="ml-auto flex gap-6">
+                <div className="h-4 w-16 rounded bg-[var(--bg-hover-2)] animate-pulse" style={{ animationDelay: `${i * 80}ms` }} />
+                <div className="h-4 w-16 rounded bg-[var(--bg-hover-2)] animate-pulse hidden sm:block" style={{ animationDelay: `${i * 80 + 40}ms` }} />
+              </div>
+            </div>
+          ))}
+        </div>
+        <span className="sr-only">Loading commander decks…</span>
       </div>
     )
   }
@@ -613,7 +685,7 @@ export const CommanderDecksGrouped: React.FC<CommanderDecksGroupedProps> = ({ on
       </div>
 
       <div className="bg-[var(--bg-surface)] backdrop-blur-xl rounded-xl border border-[var(--border-color)] shadow-2xl overflow-hidden">
-        <div>
+        <div className="overflow-x-auto">
           <table className="w-full text-sm text-left border-collapse table-fixed">
             <thead className="bg-[var(--bg-surface-2)] text-[var(--text-2)] font-bold uppercase text-[10px] tracking-widest sticky top-0 z-10 border-b border-[var(--border-color-2)]">
               <tr>
@@ -623,7 +695,7 @@ export const CommanderDecksGrouped: React.FC<CommanderDecksGroupedProps> = ({ on
                 <th className="px-1 lg:px-2 py-4 text-right text-[var(--color-value)] hidden lg:table-cell w-[80px]">&gt;$0.25</th>
                 <th className="px-1 lg:px-2 py-4 text-right text-[var(--color-value)]/60 hidden xl:table-cell w-[80px]">&gt;$1.00</th>
                 <th className="px-1 lg:px-2 py-4 text-right text-[var(--color-ref)] hidden xl:table-cell w-[90px]">Ref Price</th>
-                <th className="px-1 sm:px-2 lg:px-3 py-4 text-right text-[var(--color-buy)] w-[70px] sm:w-[100px]">Market</th>
+                <th className="px-1 sm:px-2 lg:px-3 py-4 text-right text-[var(--color-buy)] w-[70px] sm:w-[120px]">Market</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
@@ -691,8 +763,17 @@ export const CommanderDecksGrouped: React.FC<CommanderDecksGroupedProps> = ({ on
                       return (
                         <tr
                           key={`${deck.code}-${deck.deck_name}`}
-                          className="group hover:bg-[var(--bg-row-hover)] transition-colors cursor-pointer"
+                          className="group hover:bg-[var(--bg-row-hover)] transition-colors cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[var(--brand)]"
                           onClick={() => onDeckSelect(deck.code, deck.deck_name)}
+                          tabIndex={0}
+                          role="link"
+                          aria-label={`View ${deck.deck_name} deck details`}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault()
+                              onDeckSelect(deck.code, deck.deck_name)
+                            }
+                          }}
                         >
                           <td className="px-2 sm:px-3 py-3 sm:py-4">
                             <div className="flex items-center gap-1 sm:gap-2">
@@ -821,7 +902,19 @@ export const CommanderDecksGrouped: React.FC<CommanderDecksGroupedProps> = ({ on
                 <tr>
                   <td colSpan={99} className="px-6 py-20 text-center">
                     <div className="text-[var(--text-2)] text-sm font-bold opacity-50">
-                      No deals found — no decks have a market price below their &gt;$0.25 card value
+                      No deals right now — check back after the next price scrape
+                    </div>
+                  </td>
+                </tr>
+              )}
+              {activeFilter === 'all' && groupedDecks.length === 0 && (
+                <tr>
+                  <td colSpan={99} className="px-6 py-20 text-center">
+                    <div className="space-y-1">
+                      <div className="text-[var(--text-1)] text-sm font-bold">No commander decks yet</div>
+                      <div className="text-[var(--text-2)] text-xs">
+                        Deck data refreshes weekly — if this persists, the import may need attention
+                      </div>
                     </div>
                   </td>
                 </tr>

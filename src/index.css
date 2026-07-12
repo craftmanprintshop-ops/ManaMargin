@@ -151,6 +151,20 @@
   animation: fade-in 0.3s ease-out;
 }
 
+/* Reduced motion: crossfade instead of movement, no spins or pulses */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in {
+    animation: fade-in 0.01ms;
+  }
+  .animate-spin,
+  .animate-pulse {
+    animation: none;
+  }
+  body {
+    transition: none;
+  }
+}
+
 /* ========================================
    Component utilities
    ======================================== */
