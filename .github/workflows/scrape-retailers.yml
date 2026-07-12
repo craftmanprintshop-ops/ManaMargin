@@ -36,3 +36,14 @@ jobs:
           /jobs/sagaconcepts/crawl
           /jobs/gamenerdz/crawl
           /run
+      - name: Refresh offers_latest_enriched_mv
+        if: always()
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: >
+          curl -sS --fail --retry 3 -X POST
+          -H "apikey: $SUPABASE_SERVICE_ROLE_KEY"
+          -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY"
+          -H "Content-Type: application/json" -d '{}'
+          "$SUPABASE_URL/rest/v1/rpc/refresh_offers_latest_enriched_mv"
