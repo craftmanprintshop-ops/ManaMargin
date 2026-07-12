@@ -262,15 +262,20 @@ async function importCardPrices() {
   console.log('   Clearing any existing rows for this date...');
   await deletePricesWhere(`eq.${newDate}`);
 
+  // Insert with a small worker pool. While two snapshot dates coexist the
+  // downstream views double-count, so shortening this window matters.
   const batches = chunkArray(rows, PRICE_BATCH_SIZE);
   let imported = 0;
-  for (let i = 0; i < batches.length; i++) {
-    await withRetry(() => postRows('allprintings_card_prices', batches[i], { onConflict: 'uuid,date,priceProvider,cardFinish,currency,providerListing' }), 'cardPrices');
-    imported += batches[i].length;
-    if ((i + 1) % 100 === 0 || i === batches.length - 1) {
-      console.log(`   Progress: ${imported}/${rows.length}`);
+  let nextBatch = 0;
+  await Promise.all(Array.from({ length: 4 }, async () => {
+    while (true) {
+      const i = nextBatch++;
+      if (i >= batches.length) break;
+      await withRetry(() => postRows('allprintings_card_prices', batches[i], { onConflict: 'uuid,date,priceProvider,cardFinish,currency,providerListing' }), 'cardPrices');
+      imported += batches[i].length;
+      if (i > 0 && i % 100 === 0) console.log(`   Progress: ~${imported}/${rows.length}`);
     }
-  }
+  }));
 
   if (ROW_LIMIT > 0) {
     console.log('   ROW_LIMIT set — keeping older price snapshots (test mode).');

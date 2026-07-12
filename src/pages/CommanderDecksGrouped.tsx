@@ -253,6 +253,7 @@ export const CommanderDecksGrouped: React.FC<CommanderDecksGroupedProps> = ({ on
   const [error, setError] = useState<string | null>(null)
   const [selectedPriceDeck, setSelectedPriceDeck] = useState<CommanderDeckValue | null>(null)
   const [cheapestOffers, setCheapestOffers] = useState<Map<string, CheapestOffer>>(new Map())
+  const [setBundleOffers, setSetBundleOffers] = useState<Map<string, CheapestOffer>>(new Map())
   const [mtgstocksPrices, setMtgstocksPrices] = useState<Map<string, MtgstocksPrice>>(new Map())
   const [evData, setEvData] = useState<Map<string, EVData>>(new Map())
   const [activeFilter, setActiveFilter] = useState<DeckFilter>('all')
@@ -325,7 +326,7 @@ export const CommanderDecksGrouped: React.FC<CommanderDecksGroupedProps> = ({ on
 
     const loadCheapest = async () => {
       try {
-        const [offersRes, matchesRes, deckUuidsRes] = await Promise.all([
+        const [offersRes, matchesRes, deckUuidsRes, bundlesRes] = await Promise.all([
           queryWithRetry(
             () => supabase
               .from('offers_latest_enriched_mv')
@@ -351,6 +352,15 @@ export const CommanderDecksGrouped: React.FC<CommanderDecksGroupedProps> = ({ on
               .from('commander_decks')
               .select('code,name,sealed_product_uuid')
               .not('sealed_product_uuid', 'is', null)
+              .limit(2000),
+            2,
+            1500,
+          ),
+          queryWithRetry(
+            () => supabase
+              .from('sealed_products')
+              .select('uuid,set_code,name')
+              .ilike('name', '%commander%')
               .limit(2000),
             2,
             1500,
@@ -408,6 +418,27 @@ export const CommanderDecksGrouped: React.FC<CommanderDecksGroupedProps> = ({ on
         }
 
         setCheapestOffers(offerMap)
+
+        // Set-bundle offers ("Commander Decks Set of 4" displays) shown on
+        // the set header row — bundle prices belong to the set, not to any
+        // individual deck.
+        const bundleSetByUuid = new Map<string, string>()
+        for (const p of (bundlesRes.data ?? []) as any[]) {
+          if (/set of \d/i.test(p.name || '')) bundleSetByUuid.set(p.uuid, p.set_code)
+        }
+        const bundleMap = new Map<string, CheapestOffer>()
+        for (const o of offers) {
+          const uuid = uuidByTitle.get(o.title)
+          const setCode = uuid ? bundleSetByUuid.get(uuid) : undefined
+          if (setCode && !bundleMap.has(setCode)) {
+            bundleMap.set(setCode, {
+              price: parseFloat(String(o.price ?? '0')) || 0,
+              marketplace: o.marketplace,
+              url: o.url,
+            })
+          }
+        }
+        setSetBundleOffers(bundleMap)
       } catch (err) {
         console.error('Failed to load cheapest offers:', err)
       }
@@ -752,7 +783,27 @@ export const CommanderDecksGrouped: React.FC<CommanderDecksGroupedProps> = ({ on
                         ${total1d.toFixed(2)}
                       </td>
                       <td className="px-1 lg:px-2 py-2 hidden xl:table-cell"></td>
-                      <td className="px-1 sm:px-2 lg:px-3 py-2"></td>
+                      <td className="px-1 sm:px-2 lg:px-3 py-2 text-right">
+                        {(() => {
+                          const bundle = setBundleOffers.get(first.code)
+                          if (!bundle) return null
+                          return (
+                            <a
+                              href={bundle.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-lg bg-[var(--color-buy-bg)] border border-[var(--color-buy-border)] hover:border-[var(--color-buy-hover-border)] transition-colors"
+                              title={`All decks as a set — cheapest at ${bundle.marketplace}`}
+                            >
+                              <span className="text-[9px] font-black uppercase tracking-widest text-[var(--color-buy)] opacity-70">Set</span>
+                              <span className="font-medium font-mono text-[var(--color-buy)] text-xs sm:text-sm">
+                                ${bundle.price.toFixed(2)}
+                              </span>
+                            </a>
+                          )
+                        })()}
+                      </td>
                     </tr>
 
                     {/* Individual Deck Rows */}

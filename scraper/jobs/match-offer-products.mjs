@@ -106,7 +106,12 @@ const BASE_NOUNS = new Set(['box', 'bundle', 'deck', 'pack', 'case', 'tin', 'sce
 function normalize(text) {
   return String(text || '')
     .toLowerCase()
-    // drop count parentheticals — "(36 Packs)", "(4 Decks)" — which would
+    // Retailer bundle phrasings -> MTGJSON's "Commander Decks Set of N":
+    // "Commander Deck Display (4 Decks)" / "Commander Deck (Set of 4)"
+    .replace(/commander decks? (display|case)\b/g, 'commander deck set')
+    .replace(/\(\s*set of (\d+)[^)]*\)/g, ' set of $1 ')
+    .replace(/\(\s*(\d+)\s*decks?\s*\)/g, ' set of $1 ')
+    // drop remaining count parentheticals — "(36 Packs)" — which would
     // otherwise inject container nouns that break strict agreement
     .replace(/\([^)]*\d[^)]*\)/g, ' ')
     .replace(/&/g, ' and ')
@@ -222,6 +227,12 @@ console.log(`   ${skip.size} titles already decided${REMATCH ? ' (verified only 
 // Sort set names longest-first for title-based set detection
 const setNamesByLength = [...codeByNormName.keys()].filter(Boolean).sort((a, b) => b.length - a.length);
 
+// Normalized set names that are too generic to detect inside a title
+const GENERIC_SET_NAMES = new Set([
+  'unlimited', 'legends', 'revised', 'portal', 'chronicles', 'renaissance',
+  'anthologies', 'commander', 'jumpstart', 'unglued', 'prophecy', 'legions',
+]);
+
 function findSetCode(titleNorm, setName) {
   if (setName) {
     const code = codeByNormName.get(normalize(setName).join(' '));
@@ -229,6 +240,11 @@ function findSetCode(titleNorm, setName) {
   }
   const padded = ` ${titleNorm} `;
   for (const name of setNamesByLength) {
+    // Skip set names that are generic English words — "Unlimited" matches
+    // "Monarch Unlimited (Flesh and Blood)", which is not Unlimited Edition.
+    // Distinctive one-worders (Aetherdrift, Bloomburrow, ...) stay scannable;
+    // generic ones can still match via the classified set_name field above.
+    if (GENERIC_SET_NAMES.has(name)) continue;
     if (name.length < 4) continue;
     if (padded.includes(` ${name} `)) return codeByNormName.get(name);
   }
