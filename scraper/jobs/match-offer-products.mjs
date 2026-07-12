@@ -300,8 +300,15 @@ for (const [titleNorm, offer] of titleMap) {
         .map(({ c, titleTokens }) => ({ c, s: jaccard(titleTokens, c.tokens) }))
         .sort((a, b) => b.s - a.s);
       const best = scored[0];
-      const second = scored[1];
-      if (best.s >= 0.3 && (!second || best.s - second.s > 0.05 || second.c.uuid === best.c.uuid)) {
+      // A runner-up with the SAME normalized tokens is a catalog duplicate
+      // (MTGJSON ships e.g. "Collectors Edition" and "Collector's Edition"
+      // variants of one product) — not a real ambiguity. Only a genuinely
+      // different close-scoring product blocks the match.
+      const bestTokens = [...new Set(best.c.tokens)].sort().join(' ');
+      const second = scored.find(
+        (x) => x.c.uuid !== best.c.uuid && [...new Set(x.c.tokens)].sort().join(' ') !== bestTokens,
+      );
+      if (best.s >= 0.3 && (!second || best.s - second.s > 0.05)) {
         record.sealed_product_uuid = best.c.uuid;
         record.method = 'rules';
         record.score = Number(best.s.toFixed(3));
