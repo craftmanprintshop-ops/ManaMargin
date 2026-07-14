@@ -13,6 +13,8 @@ import { Badge } from '../common/Badge'
 interface CardListProps {
   /** Array of cards in the deck */
   cards: CommanderDeckCardDetail[]
+  /** TCGplayer market price per card uuid */
+  tcgPrices?: Record<string, number>
   /** Whether cards are loading */
   loading?: boolean
 }
@@ -22,7 +24,11 @@ interface CardListProps {
  *
  * Shows commander first, then sorts by total card value (descending)
  */
-export const CardList: React.FC<CardListProps> = ({ cards, loading = false }) => {
+export const CardList: React.FC<CardListProps> = ({ cards, tcgPrices = {}, loading = false }) => {
+  const tcgFor = (card: CommanderDeckCardDetail): number | null => {
+    const uuid = (card as any).uuid as string | null
+    return uuid != null && tcgPrices[uuid] != null ? tcgPrices[uuid] : null
+  }
   // Calculate total deck value
   const totalValue = useMemo(() => {
     return cards.reduce((sum, card) => sum + (card.total_card_value || 0), 0)
@@ -83,6 +89,9 @@ export const CardList: React.FC<CardListProps> = ({ cards, loading = false }) =>
               <th className="px-4 py-3 text-right font-semibold text-gray-700">
                 Unit Price
               </th>
+              <th className="px-4 py-3 text-right font-semibold text-[var(--color-tcg)]" title="TCGplayer market price">
+                TCG
+              </th>
               <th className="px-4 py-3 text-right font-semibold text-gray-700">
                 Total Value
               </th>
@@ -113,6 +122,9 @@ export const CardList: React.FC<CardListProps> = ({ cards, loading = false }) =>
                 <td className="px-4 py-3 text-right text-gray-900">
                   {formatCurrency(commander.price)}
                 </td>
+                <td className="px-4 py-3 text-right font-medium text-[var(--color-tcg)]">
+                  {tcgFor(commander) != null ? formatCurrency(tcgFor(commander)) : '—'}
+                </td>
                 <td className="px-4 py-3 text-right font-semibold text-gray-900">
                   {formatCurrency(commander.total_card_value)}
                 </td>
@@ -140,6 +152,9 @@ export const CardList: React.FC<CardListProps> = ({ cards, loading = false }) =>
                 </td>
                 <td className="px-4 py-3 text-right text-gray-600">
                   {formatCurrency(card.price)}
+                </td>
+                <td className="px-4 py-3 text-right text-[var(--color-tcg)]">
+                  {tcgFor(card) != null ? formatCurrency(tcgFor(card)) : '—'}
                 </td>
                 <td className="px-4 py-3 text-right font-medium text-gray-900">
                   {formatCurrency(card.total_card_value)}

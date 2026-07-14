@@ -88,7 +88,7 @@ export const CommanderDeckDetail: React.FC = () => {
       </Card>
 
       {/* Deck Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card>
           <div className="text-center">
             <p className="text-sm text-[var(--text-2)] mb-1">Total Cards</p>
@@ -109,6 +109,15 @@ export const CommanderDeckDetail: React.FC = () => {
 
         <Card>
           <div className="text-center">
+            <p className="text-sm text-[var(--text-2)] mb-1">TCGplayer Market</p>
+            <p className="text-3xl font-bold text-[var(--color-tcg)]">
+              {deck.tcgTotal ? `$${deck.tcgTotal.toFixed(2)}` : '—'}
+            </p>
+          </div>
+        </Card>
+
+        <Card>
+          <div className="text-center">
             <p className="text-sm text-[var(--text-2)] mb-1">Average Card Value</p>
             <p className="text-2xl sm:text-3xl font-bold text-[var(--text-1)]">
               $
@@ -121,7 +130,7 @@ export const CommanderDeckDetail: React.FC = () => {
       </div>
 
       {/* Card List */}
-      {deck.cards && <CardList cards={deck.cards} />}
+      {deck.cards && <CardList cards={deck.cards} tcgPrices={deck.tcgPrices} />}
 
       {/* Debug Info (development only) */}
       {import.meta.env.DEV && (
