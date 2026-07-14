@@ -156,7 +156,10 @@ export const commanderService = {
             const price = row?.market_price ?? row?.low_price
             if (price != null) {
               tcgPrices[card.uuid] = Number(price)
-              tcgTotal += Number(price) * (card.count || 1)
+              // Totals exclude bulk under $0.25, matching the >$0.25 valuation
+              if (Number(price) >= 0.25) {
+                tcgTotal += Number(price) * (card.count || 1)
+              }
             }
           }
         }
