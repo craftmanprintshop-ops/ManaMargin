@@ -107,7 +107,8 @@ export const CommanderDeckDetailGrid: React.FC = () => {
     let sum = 0
     for (const card of cards) {
       const p = tcgPrices.get(card.uuid)
-      if (p != null) sum += p * (card.count || 1)
+      // Totals exclude bulk under $0.25, matching the >$0.25 valuation
+      if (p != null && p >= 0.25) sum += p * (card.count || 1)
     }
     return sum
   }, [cards, tcgPrices])

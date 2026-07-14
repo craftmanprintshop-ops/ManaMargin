@@ -201,8 +201,10 @@ for (const dc of deckCards) {
   const preferred = dc.is_foil ? 'foil' : 'normal';
   const fallback = dc.is_foil ? 'normal' : 'foil';
   const p = priceByKey.get(`${dc.uuid}|${preferred}`) || priceByKey.get(`${dc.uuid}|${fallback}`);
-  if (p && (p.market_price != null || p.low_price != null)) {
-    a.tcg_market_total += (p.market_price ?? p.low_price ?? 0) * count;
+  // Totals exclude bulk under $0.25 — matching the site's >$0.25 valuation
+  const market = p ? (p.market_price ?? p.low_price) : null;
+  if (market != null && market >= 0.25) {
+    a.tcg_market_total += market * count;
     a.tcg_low_total += (p.low_price ?? p.market_price ?? 0) * count;
     a.cards_with_tcg += count;
   }
