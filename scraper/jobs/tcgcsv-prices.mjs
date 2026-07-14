@@ -52,7 +52,11 @@ async function withRetry(fn, label, attempts = 4) {
 }
 
 async function getJson(url) {
-  const res = await fetch(url, { signal: AbortSignal.timeout(120_000) });
+  // TCGCSV 401s requests without a browser-ish User-Agent
+  const res = await fetch(url, {
+    headers: { 'User-Agent': 'Mozilla/5.0 (compatible; ManaMargin/1.0; +https://manamargin.netlify.app)' },
+    signal: AbortSignal.timeout(120_000),
+  });
   if (!res.ok) throw new Error(`GET ${url} -> ${res.status}`);
   return res.json();
 }
