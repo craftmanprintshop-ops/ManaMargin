@@ -34,6 +34,7 @@ export const CommanderDeckDetailGrid: React.FC = () => {
   const { code, fileName } = useParams<{ code: string; fileName: string }>()
   const navigate = useNavigate()
   const [cards, setCards] = useState<DeckCard[]>([])
+  const [tcgPrices, setTcgPrices] = useState<Map<string, number>>(new Map())
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<FilterTab>('all')
@@ -67,6 +68,49 @@ export const CommanderDeckDetailGrid: React.FC = () => {
   useEffect(() => {
     loadCards()
   }, [code, fileName])
+
+  // TCGplayer market price per card (card_tcg_prices, maintained daily).
+  // Foil printings prefer the foil price.
+  useEffect(() => {
+    if (cards.length === 0) return
+    const loadTcg = async () => {
+      try {
+        const uuids = [...new Set(cards.map((c) => c.uuid).filter(Boolean))]
+        const { data } = await supabase
+          .from('card_tcg_prices')
+          .select('uuid,finish,market_price,low_price')
+          .in('uuid', uuids)
+        if (!data) return
+        const byUuid = new Map<string, any[]>()
+        for (const r of data as any[]) {
+          if (!byUuid.has(r.uuid)) byUuid.set(r.uuid, [])
+          byUuid.get(r.uuid)!.push(r)
+        }
+        const map = new Map<string, number>()
+        for (const card of cards) {
+          const rows = byUuid.get(card.uuid)
+          if (!rows) continue
+          const preferred = card.is_foil ? 'foil' : 'normal'
+          const row = rows.find((r) => r.finish === preferred) ?? rows[0]
+          const price = row?.market_price ?? row?.low_price
+          if (price != null) map.set(card.uuid, Number(price))
+        }
+        setTcgPrices(map)
+      } catch {
+        // TCG prices are additive — the grid works without them
+      }
+    }
+    loadTcg()
+  }, [cards])
+
+  const tcgTotal = useMemo(() => {
+    let sum = 0
+    for (const card of cards) {
+      const p = tcgPrices.get(card.uuid)
+      if (p != null) sum += p * (card.count || 1)
+    }
+    return sum
+  }, [cards, tcgPrices])
 
   const filteredCards = useMemo(() => {
     if (activeTab === '25c') return cards.filter(c => (c.price || 0) >= 0.25)
@@ -141,6 +185,11 @@ export const CommanderDeckDetailGrid: React.FC = () => {
                 <span className="text-[10px] font-bold text-[var(--text-2)]">
                   {cards.length} cards
                 </span>
+                {tcgTotal > 0 && (
+                  <span className="text-[10px] font-bold text-[var(--color-tcg)]" title="TCGplayer market value of the deck's cards">
+                    TCG ${tcgTotal.toFixed(2)}
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -224,6 +273,16 @@ export const CommanderDeckDetailGrid: React.FC = () => {
                     ${card.price ? card.price.toFixed(2) : '0.00'}
                   </span>
                 </div>
+                {tcgPrices.get(card.uuid) != null && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-[8px] font-black uppercase tracking-widest text-[var(--color-tcg)] opacity-60">
+                      TCG
+                    </span>
+                    <span className="font-black font-mono text-[var(--color-tcg)] text-xs">
+                      ${tcgPrices.get(card.uuid)!.toFixed(2)}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           ))}
