@@ -254,6 +254,7 @@ export const CommanderDecksGrouped: React.FC<CommanderDecksGroupedProps> = ({ on
   const [selectedPriceDeck, setSelectedPriceDeck] = useState<CommanderDeckValue | null>(null)
   const [cheapestOffers, setCheapestOffers] = useState<Map<string, CheapestOffer>>(new Map())
   const [setBundleOffers, setSetBundleOffers] = useState<Map<string, CheapestOffer>>(new Map())
+  const [tcgValues, setTcgValues] = useState<Map<string, number>>(new Map())
   const [mtgstocksPrices, setMtgstocksPrices] = useState<Map<string, MtgstocksPrice>>(new Map())
   const [evData, setEvData] = useState<Map<string, EVData>>(new Map())
   const [activeFilter, setActiveFilter] = useState<DeckFilter>('all')
@@ -450,6 +451,33 @@ export const CommanderDecksGrouped: React.FC<CommanderDecksGroupedProps> = ({ on
     }
     loadCheapest()
   }, [decks])
+
+  // Load per-deck TCGplayer market totals (maintained daily by the TCGCSV job)
+  useEffect(() => {
+    const loadTcgValues = async () => {
+      try {
+        const { data, error } = await queryWithRetry(
+          () => supabase
+            .from('commander_deck_tcg_values')
+            .select('deck_code,deck_name,tcg_market_total')
+            .limit(2000),
+          2,
+          1500,
+        )
+        if (error || !data) return
+        const map = new Map<string, number>()
+        for (const row of data as any[]) {
+          if (row.tcg_market_total != null) {
+            map.set(`${row.deck_code}|${row.deck_name}`, Number(row.tcg_market_total))
+          }
+        }
+        setTcgValues(map)
+      } catch {
+        // TCG column simply stays empty if the table isn't available
+      }
+    }
+    loadTcgValues()
+  }, [])
 
   // Load MTGStocks sealed prices for commander decks
   useEffect(() => {
@@ -727,6 +755,7 @@ export const CommanderDecksGrouped: React.FC<CommanderDecksGroupedProps> = ({ on
               <tr>
                 <th className="px-2 sm:px-3 py-4 w-auto">Set & Deck Name</th>
                 <th className="px-1 sm:px-2 lg:px-3 py-4 text-right text-[var(--color-value)] w-[70px] sm:w-[90px]">Value</th>
+                <th className="px-1 sm:px-2 lg:px-3 py-4 text-right text-[var(--color-tcg)] hidden md:table-cell w-[85px]" title="TCGplayer market value of the cards">TCG</th>
                 <th className="px-1 sm:px-2 lg:px-3 py-4 text-right text-[var(--color-ev)] hidden sm:table-cell w-[70px] sm:w-[90px]">EV</th>
                 <th className="px-1 lg:px-2 py-4 text-right text-[var(--color-value)] hidden lg:table-cell w-[80px]">&gt;$0.25</th>
                 <th className="px-1 lg:px-2 py-4 text-right text-[var(--color-value)]/60 hidden xl:table-cell w-[80px]">&gt;$1.00</th>
@@ -768,6 +797,17 @@ export const CommanderDecksGrouped: React.FC<CommanderDecksGroupedProps> = ({ on
                       </td>
                       <td className="px-1 sm:px-2 lg:px-3 py-2 text-right font-medium font-mono text-[var(--color-value)] text-xs sm:text-base">
                         ${totalValue.toFixed(2)}
+                      </td>
+                      <td className="px-1 sm:px-2 lg:px-3 py-2 text-right hidden md:table-cell">
+                        {(() => {
+                          const totalTcg = groupDecks.reduce((sum, d) => sum + (tcgValues.get(`${d.code}|${d.deck_name}`) || 0), 0)
+                          if (!totalTcg) return null
+                          return (
+                            <span className="font-medium font-mono text-[var(--color-tcg)] text-xs sm:text-base">
+                              ${totalTcg.toFixed(2)}
+                            </span>
+                          )
+                        })()}
                       </td>
                       <td className="px-1 sm:px-2 lg:px-3 py-2 text-right hidden sm:table-cell">
                         {(() => {
@@ -880,6 +920,17 @@ export const CommanderDecksGrouped: React.FC<CommanderDecksGroupedProps> = ({ on
                           </td>
                           <td className="px-1 sm:px-2 lg:px-3 py-3 sm:py-4 text-right font-medium font-mono text-[var(--color-value)] text-xs sm:text-base">
                             ${(deck.total_value || 0).toFixed(2)}
+                          </td>
+                          <td className="px-1 sm:px-2 lg:px-3 py-3 sm:py-4 text-right hidden md:table-cell">
+                            {(() => {
+                              const tcg = tcgValues.get(deckKey)
+                              if (tcg == null) return <span className="text-[var(--text-2)] text-[10px] opacity-40">—</span>
+                              return (
+                                <span className="font-medium font-mono text-[var(--color-tcg)] text-xs sm:text-base">
+                                  ${tcg.toFixed(2)}
+                                </span>
+                              )
+                            })()}
                           </td>
                           <td className="px-1 sm:px-2 lg:px-3 py-3 sm:py-4 text-right hidden sm:table-cell">
                             {(() => {

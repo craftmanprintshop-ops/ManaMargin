@@ -61,6 +61,10 @@ export interface CommanderDeckWithDetails extends CommanderDeck {
   valueOver1?: number
   cardsOver25c?: number
   cardsOver1?: number
+  /** TCGplayer market price per card uuid (from card_tcg_prices) */
+  tcgPrices?: Record<string, number>
+  /** Sum of TCGplayer market prices across the deck */
+  tcgTotal?: number
 }
 
 /**
