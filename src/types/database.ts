@@ -193,6 +193,39 @@ export interface Database {
           shipping_cost?: number
         }
       }
+      push_subscriptions: {
+        Row: {
+          id: string
+          user_id: string
+          endpoint: string
+          p256dh: string
+          auth: string
+          user_agent: string | null
+          enabled: boolean
+          failure_count: number
+          last_sent_at: string | null
+          last_error: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          endpoint: string
+          p256dh: string
+          auth: string
+          user_agent?: string | null
+          enabled?: boolean
+          failure_count?: number
+          last_error?: string | null
+        }
+        Update: {
+          enabled?: boolean
+          failure_count?: number
+          last_error?: string | null
+        }
+        Relationships: []
+      }
       commander_deck_cards: {
         Row: {
           code: string

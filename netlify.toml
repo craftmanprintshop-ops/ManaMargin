@@ -45,6 +45,22 @@
     # Jobs dashboard: always fetch fresh
     Cache-Control = "public, max-age=0, must-revalidate"
 
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    # The catch-all above marks everything immutable for a year. Applied to the
+    # service worker that would make push fixes undeployable — the old worker
+    # would keep running. Must always revalidate.
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/manifest.webmanifest"
+  [headers.values]
+    # Same reason: icon/name/start_url changes must be able to reach installed
+    # home-screen apps.
+    Cache-Control = "public, max-age=0, must-revalidate"
+    Content-Type = "application/manifest+json"
+
 # Environment variables (set these in Netlify dashboard)
 # VITE_SUPABASE_URL - Your Supabase project URL
 # VITE_SUPABASE_ANON_KEY - Your Supabase anonymous/public key
@@ -53,6 +69,12 @@
 [build.environment]
   # Use npm for package management
   NPM_FLAGS = "--legacy-peer-deps"
+
+  # Web Push VAPID public key. Safe to commit — this is the public half and it
+  # is embedded in the client bundle for every visitor anyway. The PRIVATE key
+  # lives only in the deal watcher's .env and never reaches the browser.
+  # Changing this invalidates every existing push subscription.
+  VITE_VAPID_PUBLIC_KEY = "BDWB2BQyqNV0qwwW1Rin8WPSpLVizk0lWCkOC-YiRP6jmDED3H44y9sCyRJLxmzTjpq7GX0bJB3PGbphPSSR0Vc"
 
 # Optional: Build plugins
 # [[plugins]]
