@@ -10,6 +10,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { ROUTES } from '../../utils/constants'
 import { useTheme } from '../../contexts/ThemeContext'
 import { useAuth } from '../../contexts/AuthContext'
+import { DealAlertsToggle } from '../common/DealAlertsToggle'
 
 /**
  * Application header with navigation
@@ -177,6 +178,9 @@ export const Header: React.FC = () => {
                         </button>
                       </div>
                     </div>
+
+                    {/* Deal Alerts (web push opt-in) */}
+                    <DealAlertsToggle />
 
                     {/* Auth Section */}
                     <div className="p-3 border-t border-[var(--border-color-2)]">
