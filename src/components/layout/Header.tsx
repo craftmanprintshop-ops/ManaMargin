@@ -18,11 +18,16 @@ import { DealAlertsToggle } from '../common/DealAlertsToggle'
 export const Header: React.FC = () => {
   const location = useLocation()
   const { theme, toggleTheme } = useTheme()
-  const { user, signInWithEmail, signOut } = useAuth()
+  const { user, signInWithEmail, verifyEmailCode, signOut } = useAuth()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [loginEmail, setLoginEmail] = useState('')
-  const [loginStatus, setLoginStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
+  // Which form is showing, independent of request status — a failed
+  // verification must redisplay the code form (with its error), not fall
+  // back to the email form, and vice versa.
+  const [loginStep, setLoginStep] = useState<'email' | 'code'>('email')
+  const [loginBusy, setLoginBusy] = useState(false)
   const [loginError, setLoginError] = useState('')
+  const [loginCode, setLoginCode] = useState('')
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const settingsRef = useRef<HTMLDivElement>(null)
 
@@ -190,31 +195,90 @@ export const Header: React.FC = () => {
                             {user.email}
                           </span>
                           <button
-                            onClick={signOut}
+                            onClick={() => {
+                              signOut()
+                              setLoginStep('email')
+                              setLoginEmail('')
+                              setLoginCode('')
+                              setLoginError('')
+                            }}
                             className="text-xs text-[var(--text-2)] hover:text-[var(--color-negative)] ml-2 shrink-0 transition-colors"
                           >
                             Sign Out
                           </button>
                         </div>
-                      ) : loginStatus === 'sent' ? (
-                        <div className="text-center py-1">
-                          <p className="text-sm text-[var(--color-positive)] font-medium">Check your email!</p>
-                          <p className="text-[10px] text-[var(--text-2)] mt-1">Click the link to sign in</p>
-                        </div>
+                      ) : loginStep === 'code' ? (
+                        // A 6-digit code, typed here, instead of tapping the emailed link.
+                        // Tapping the link opens Safari, which is a separate storage
+                        // context from an installed home-screen app — on iOS that would
+                        // sign the user in "in Safari" while the app (the only place
+                        // push notifications work) stays logged out.
+                        <form
+                          onSubmit={async (e) => {
+                            e.preventDefault()
+                            if (!loginCode.trim()) return
+                            setLoginBusy(true)
+                            setLoginError('')
+                            const { error } = await verifyEmailCode(loginEmail.trim(), loginCode.trim())
+                            if (error) setLoginError(error)
+                            setLoginBusy(false)
+                            // On success, onAuthStateChange fires and `user` becomes
+                            // truthy, which switches this dropdown to the signed-in view.
+                          }}
+                          className="space-y-2"
+                        >
+                          <p className="text-xs text-[var(--text-2)]">
+                            Enter the 6-digit code sent to <span className="font-medium text-[var(--text-1)]">{loginEmail}</span>
+                          </p>
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            autoComplete="one-time-code"
+                            value={loginCode}
+                            onChange={(e) => setLoginCode(e.target.value)}
+                            placeholder="123456"
+                            maxLength={8}
+                            className="w-full bg-[var(--bg-2)] border border-[var(--border-color)] rounded-lg px-3 py-2 text-sm text-center tracking-[0.3em] text-[var(--text-1)] outline-none focus:border-[var(--brand)] placeholder:text-[var(--text-2)]/50 placeholder:tracking-normal"
+                            required
+                            autoFocus
+                          />
+                          {loginError && (
+                            <p className="text-[10px] text-[var(--color-negative)]">{loginError}</p>
+                          )}
+                          <button
+                            type="submit"
+                            disabled={loginBusy}
+                            className="w-full px-3 py-2 bg-[var(--brand)] hover:bg-[var(--primary-700)] text-white text-sm font-bold rounded-lg transition-colors disabled:opacity-50"
+                          >
+                            {loginBusy ? 'Verifying...' : 'Verify & Sign In'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setLoginStep('email')
+                              setLoginCode('')
+                              setLoginError('')
+                            }}
+                            className="w-full text-[10px] text-[var(--text-2)] hover:text-[var(--text-1)] transition-colors"
+                          >
+                            Use a different email
+                          </button>
+                        </form>
                       ) : (
                         <form
                           onSubmit={async (e) => {
                             e.preventDefault()
                             if (!loginEmail.trim()) return
-                            setLoginStatus('sending')
+                            setLoginBusy(true)
                             setLoginError('')
+                            setLoginCode('')
                             const { error } = await signInWithEmail(loginEmail.trim())
                             if (error) {
                               setLoginError(error)
-                              setLoginStatus('error')
                             } else {
-                              setLoginStatus('sent')
+                              setLoginStep('code')
                             }
+                            setLoginBusy(false)
                           }}
                           className="space-y-2"
                         >
@@ -226,15 +290,15 @@ export const Header: React.FC = () => {
                             className="w-full bg-[var(--bg-2)] border border-[var(--border-color)] rounded-lg px-3 py-2 text-sm text-[var(--text-1)] outline-none focus:border-[var(--brand)] placeholder:text-[var(--text-2)]/50"
                             required
                           />
-                          {loginStatus === 'error' && (
+                          {loginError && (
                             <p className="text-[10px] text-[var(--color-negative)]">{loginError}</p>
                           )}
                           <button
                             type="submit"
-                            disabled={loginStatus === 'sending'}
+                            disabled={loginBusy}
                             className="w-full px-3 py-2 bg-[var(--brand)] hover:bg-[var(--primary-700)] text-white text-sm font-bold rounded-lg transition-colors disabled:opacity-50"
                           >
-                            {loginStatus === 'sending' ? 'Sending...' : 'Sign in with Email'}
+                            {loginBusy ? 'Sending...' : 'Sign in with Email'}
                           </button>
                         </form>
                       )}
