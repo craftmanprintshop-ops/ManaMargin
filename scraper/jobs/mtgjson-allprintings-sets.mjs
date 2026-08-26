@@ -8,9 +8,12 @@
 // This version never truncates. Per set it decides whether an import is
 // needed (new set, size changed, recent release, or a previous run didn't
 // finish it), then does delete-cards + insert-cards for just that set. A
-// success marker is stored in allprintings_sets.raw->_import only after the
-// set's cards are fully imported, so a crash at any point leaves at most one
-// set to be redone on the next run — never a wiped database.
+// success marker is stored in plain columns (import_card_rows,
+// import_source_total, import_completed_at) only after the set's cards are
+// fully imported, so a crash at any point leaves at most one set to be
+// redone on the next run — never a wiped database. (Previously this lived
+// under raw->_import; that key was observed disappearing about a day after
+// being written for reasons never identified, see migration 020.)
 //
 // Env knobs:
 //   SET_CONCURRENCY (default 3), CARD_RPC_BATCH (default 50)
@@ -213,9 +216,13 @@ async function fetchSetWithRetries(code) {
   throw lastErr;
 }
 
-// Fetch existing set rows with their import markers (raw->_import).
+// Fetch existing set rows with their import markers. Plain typed columns
+// (import_card_rows / import_source_total / import_completed_at), not a
+// buried raw->_import jsonb key -- that key was observed going missing about
+// a day after being written, for reasons never identified (see migration
+// 020). Plain columns are a sturdier, independently-checkable alternative.
 async function fetchDbSetMarkers() {
-  const url = `${SUPABASE_URL}/rest/v1/${SETS_TABLE}?select=code,total_set_size,imp:raw->_import&limit=5000`;
+  const url = `${SUPABASE_URL}/rest/v1/${SETS_TABLE}?select=code,total_set_size,import_card_rows,import_source_total,import_completed_at&limit=5000`;
   const res = await fetch(url, { headers: HEADERS, signal: AbortSignal.timeout(300_000) });
   if (!res.ok) {
     const t = await res.text().catch(() => '');
@@ -314,15 +321,14 @@ function mapCardToRow(cardObj, setCode) {
 function importReason(entry, dbRow, now) {
   if (FULL_RELOAD) return 'full reload';
   if (!dbRow) return 'new set';
-  const imp = dbRow.imp;
-  if (!imp || typeof imp.card_rows !== 'number') return 'no completed import on record';
-  if ((imp.source_total ?? null) !== (entry.totalSetSize ?? null)) {
-    return `set size changed (${imp.source_total} -> ${entry.totalSetSize})`;
+  if (typeof dbRow.import_card_rows !== 'number') return 'no completed import on record';
+  if ((dbRow.import_source_total ?? null) !== (entry.totalSetSize ?? null)) {
+    return `set size changed (${dbRow.import_source_total} -> ${entry.totalSetSize})`;
   }
   const rel = entry.releaseDate ? Date.parse(entry.releaseDate) : NaN;
   const isRecentOrUpcoming = !Number.isNaN(rel) && now - rel < RECENT_SET_WINDOW_DAYS * 86_400_000;
   if (isRecentOrUpcoming) {
-    const impAt = imp.imported_at ? Date.parse(imp.imported_at) : 0;
+    const impAt = dbRow.import_completed_at ? Date.parse(dbRow.import_completed_at) : 0;
     if (now - impAt > RECENT_REFRESH_HOURS * 3_600_000) return 'recent set refresh';
   }
   return null;
@@ -359,15 +365,11 @@ async function importSet(entry) {
     }
   }
 
-  // Marker written only after every card batch committed.
-  setRow.raw = {
-    ...setRow.raw,
-    _import: {
-      card_rows: rows.length,
-      source_total: entry.totalSetSize ?? null,
-      imported_at: new Date().toISOString(),
-    },
-  };
+  // Marker written only after every card batch committed. Plain columns,
+  // not the old raw->_import jsonb key -- see fetchDbSetMarkers().
+  setRow.import_card_rows = rows.length;
+  setRow.import_source_total = entry.totalSetSize ?? null;
+  setRow.import_completed_at = new Date().toISOString();
   await withRetry(() => upsertSets([setRow]), `marker upsert ${setRow.code}`);
   return rows.length;
 }
