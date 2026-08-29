@@ -23,6 +23,11 @@ jobs:
           node-version: 22
       - run: npm install
       - run: npx playwright install --with-deps chromium
+      - name: Sync newly-announced sets into known_sets
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node jobs/sync-known-sets.mjs
       - name: Run retailer crawls + Forge & Fire tracked products
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
