@@ -207,6 +207,18 @@ export const Inventory: React.FC = () => {
     return { totalCost, totalValue, totalPL }
   }, [items, getMtgPrice])
 
+  // Shared per-item derived values, used by both the desktop table and the
+  // mobile card layout so the two views can never drift out of sync.
+  const computeItemMetrics = useCallback((item: InventoryItem) => {
+    const avgPrice = getMtgPrice(item)
+    const costToSell = avgPrice !== null ? (avgPrice * item.feePercent / 100) + item.shippingCost : null
+    const actualValue = avgPrice !== null && costToSell !== null ? avgPrice - costToSell : null
+    const pl = actualValue !== null ? actualValue - item.costPaid : null
+    const totalPL = pl !== null ? pl * item.count : null
+    const ebayPrice = getEbayMedian(item)
+    return { avgPrice, costToSell, actualValue, pl, totalPL, ebayPrice }
+  }, [getMtgPrice, getEbayMedian])
+
   const addFromSearch = (result: SearchResult) => {
     addItem({
       setName: result.set_name,
@@ -404,10 +416,115 @@ export const Inventory: React.FC = () => {
         </div>
       )}
 
-      {/* Inventory Table */}
+      {/* Inventory — cards on mobile, table from md up */}
       <div className="bg-[var(--bg-surface)] backdrop-blur-xl rounded-xl border border-[var(--border-color)] shadow-2xl overflow-hidden">
         {items.length > 0 ? (
-          <div className="overflow-x-auto">
+          <>
+            {/* Mobile: one card per item, every field labeled and always visible */}
+            <div className="md:hidden divide-y divide-white/5">
+              {items.map((item) => {
+                const { avgPrice, costToSell, actualValue, pl, totalPL, ebayPrice } = computeItemMetrics(item)
+
+                return (
+                  <div key={item.id} className="p-4">
+                    <div className="flex items-start justify-between gap-3 mb-3">
+                      <div className="min-w-0">
+                        <div className="font-bold text-[var(--text-1)] text-sm truncate">{item.setName}</div>
+                        <div className="text-xs text-[var(--text-2)]">{item.productType}</div>
+                      </div>
+                      <button
+                        onClick={() => removeItem(item.id)}
+                        className="shrink-0 p-2.5 -m-1 hover:bg-red-500/20 rounded-lg text-[var(--text-2)] hover:text-[var(--color-negative)] transition-colors"
+                        aria-label="Remove from inventory"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </div>
+
+                    {/* Editable fields */}
+                    <div className="grid grid-cols-2 gap-3 mb-4">
+                      <label className="block">
+                        <span className="block text-[10px] uppercase tracking-widest font-bold text-[var(--text-2)] mb-1">Cost Paid</span>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={item.costPaid}
+                          onChange={(e) => updateItem(item.id, { costPaid: parseFloat(e.target.value) || 0 })}
+                          className="w-full bg-[var(--bg-2)] border border-[var(--border-color)] rounded-lg px-3 py-2.5 text-sm text-right font-mono text-[var(--text-1)] outline-none focus:border-[var(--brand)]"
+                        />
+                      </label>
+                      <label className="block">
+                        <span className="block text-[10px] uppercase tracking-widest font-bold text-[var(--text-2)] mb-1">Qty</span>
+                        <input
+                          type="number"
+                          min="1"
+                          value={item.count}
+                          onChange={(e) => updateItem(item.id, { count: parseInt(e.target.value) || 1 })}
+                          className="w-full bg-[var(--bg-2)] border border-[var(--border-color)] rounded-lg px-3 py-2.5 text-sm text-center font-mono text-[var(--text-1)] outline-none focus:border-[var(--brand)]"
+                        />
+                      </label>
+                      <label className="block">
+                        <span className="block text-[10px] uppercase tracking-widest font-bold text-[var(--text-2)] mb-1">Fee %</span>
+                        <input
+                          type="number"
+                          step="0.5"
+                          value={item.feePercent}
+                          onChange={(e) => updateItem(item.id, { feePercent: parseFloat(e.target.value) || 0 })}
+                          className="w-full bg-[var(--bg-2)] border border-[var(--border-color)] rounded-lg px-3 py-2.5 text-sm text-right font-mono text-[var(--text-2)] outline-none focus:border-[var(--brand)]"
+                        />
+                      </label>
+                      <label className="block">
+                        <span className="block text-[10px] uppercase tracking-widest font-bold text-[var(--text-2)] mb-1">Ship $</span>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={item.shippingCost}
+                          onChange={(e) => updateItem(item.id, { shippingCost: parseFloat(e.target.value) || 0 })}
+                          className="w-full bg-[var(--bg-2)] border border-[var(--border-color)] rounded-lg px-3 py-2.5 text-sm text-right font-mono text-[var(--text-2)] outline-none focus:border-[var(--brand)]"
+                        />
+                      </label>
+                    </div>
+
+                    {/* Computed values */}
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs pt-3 border-t border-[var(--border-color)]">
+                      <div className="flex justify-between">
+                        <span className="text-[var(--text-2)]">eBay Avg</span>
+                        <span className="font-mono text-[var(--brand)]">{ebayPrice !== null ? `$${ebayPrice.toFixed(2)}` : '—'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-[var(--text-2)]">Avg Value</span>
+                        <span className="font-mono text-[var(--color-ref)]">{avgPrice !== null ? `$${avgPrice.toFixed(2)}` : '—'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-[var(--text-2)]">Cost to Sell</span>
+                        <span className="font-mono text-[var(--text-2)]">{costToSell !== null ? `$${costToSell.toFixed(2)}` : '—'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-[var(--text-2)]">Actual Value</span>
+                        <span className="font-mono font-bold text-[var(--color-value)]">{actualValue !== null ? `$${actualValue.toFixed(2)}` : '—'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-[var(--text-2)]">P/L (ea)</span>
+                        <span className={`font-mono font-bold ${pl !== null && pl >= 0 ? 'text-[var(--color-buy)]' : 'text-[var(--color-negative)]'}`}>
+                          {pl !== null ? `${pl >= 0 ? '+' : ''}$${pl.toFixed(2)}` : '—'}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-[var(--text-2)]">Total P/L</span>
+                        <span className={`font-mono font-bold ${totalPL !== null && totalPL >= 0 ? 'text-[var(--color-buy)]' : 'text-[var(--color-negative)]'}`}>
+                          {totalPL !== null ? `${totalPL >= 0 ? '+' : ''}$${totalPL.toFixed(2)}` : '—'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* Tablet/desktop: full dense table */}
+            <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-sm text-left border-collapse table-fixed">
               <colgroup>
                 <col className="w-[16%]" />
@@ -441,10 +558,7 @@ export const Inventory: React.FC = () => {
               </thead>
               <tbody className="divide-y divide-white/5">
                 {items.map((item) => {
-                  const avgPrice = getMtgPrice(item)
-                  const costToSell = avgPrice !== null ? (avgPrice * item.feePercent / 100) + item.shippingCost : null
-                  const actualValue = avgPrice !== null && costToSell !== null ? avgPrice - costToSell : null
-                  const pl = actualValue !== null ? actualValue - item.costPaid : null
+                  const { avgPrice, costToSell, actualValue, pl, totalPL, ebayPrice } = computeItemMetrics(item)
 
                   return (
                     <tr key={item.id} className="group hover:bg-[var(--bg-hover)] transition-colors">
@@ -499,14 +613,9 @@ export const Inventory: React.FC = () => {
                       </td>
 
                       {/* eBay Avg */}
-                      {(() => {
-                        const ebayPrice = getEbayMedian(item)
-                        return (
-                          <td className="px-3 py-3 text-right font-mono text-xs text-[var(--brand)]">
-                            {ebayPrice !== null ? `$${ebayPrice.toFixed(2)}` : '\u2014'}
-                          </td>
-                        )
-                      })()}
+                      <td className="px-3 py-3 text-right font-mono text-xs text-[var(--brand)]">
+                        {ebayPrice !== null ? `$${ebayPrice.toFixed(2)}` : '\u2014'}
+                      </td>
 
                       {/* Avg Value */}
                       <td className="px-3 py-3 text-right font-mono text-xs text-[var(--color-ref)]">
@@ -529,14 +638,9 @@ export const Inventory: React.FC = () => {
                       </td>
 
                       {/* Total P/L */}
-                      {(() => {
-                        const totalPL = pl !== null ? pl * item.count : null
-                        return (
-                          <td className={`px-3 py-3 text-right font-mono text-xs font-bold ${totalPL !== null && totalPL >= 0 ? 'text-[var(--color-buy)]' : 'text-[var(--color-negative)]'}`}>
-                            {totalPL !== null ? `${totalPL >= 0 ? '+' : ''}$${totalPL.toFixed(2)}` : '\u2014'}
-                          </td>
-                        )
-                      })()}
+                      <td className={`px-3 py-3 text-right font-mono text-xs font-bold ${totalPL !== null && totalPL >= 0 ? 'text-[var(--color-buy)]' : 'text-[var(--color-negative)]'}`}>
+                        {totalPL !== null ? `${totalPL >= 0 ? '+' : ''}$${totalPL.toFixed(2)}` : '\u2014'}
+                      </td>
 
                       {/* Delete */}
                       <td className="px-3 py-3 text-center">
@@ -555,7 +659,8 @@ export const Inventory: React.FC = () => {
                 })}
               </tbody>
             </table>
-          </div>
+            </div>
+          </>
         ) : (
           <div className="py-20 text-center">
             <svg className="w-16 h-16 mx-auto text-[var(--text-2)] opacity-20 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
